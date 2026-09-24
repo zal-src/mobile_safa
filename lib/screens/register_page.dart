@@ -1,0 +1,852 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+import '../services/auth_service.dart';
+import '../theme/app_theme.dart';
+
+class RegisterPage extends StatefulWidget {
+  const RegisterPage({super.key});
+
+  @override
+  State<RegisterPage> createState() => _RegisterPageState();
+}
+
+class _RegisterPageState extends State<RegisterPage> {
+  final _formKey = GlobalKey<FormState>();
+
+  // =========================
+  // USER
+  // =========================
+
+  final _nameController = TextEditingController();
+
+  final _emailController = TextEditingController();
+
+  final _passwordController = TextEditingController();
+
+  final _confirmPasswordController = TextEditingController();
+
+  final _phoneController = TextEditingController();
+
+  final _idCardController = TextEditingController();
+
+  // =========================
+  // ADDRESS
+  // =========================
+
+  final _houseNumberController = TextEditingController();
+
+  final _villageController = TextEditingController();
+
+  final _roadController = TextEditingController();
+
+  final _subdistrictController = TextEditingController();
+
+  final _districtController = TextEditingController();
+
+  final _provinceController = TextEditingController();
+
+  final _postalCodeController = TextEditingController();
+
+  final AuthService _authService = AuthService();
+
+  bool _isLoading = false;
+  bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
+  bool _showAiInsight = false;
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    _phoneController.dispose();
+    _idCardController.dispose();
+
+    _houseNumberController.dispose();
+    _villageController.dispose();
+    _roadController.dispose();
+    _subdistrictController.dispose();
+    _districtController.dispose();
+    _provinceController.dispose();
+    _postalCodeController.dispose();
+
+    super.dispose();
+  }
+
+  // ==================================================
+  // REGISTER
+  // ==================================================
+
+  Future<void> _register() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final user = await _authService.register(
+        fullName: _nameController.text.trim(),
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+        phone: _phoneController.text.trim(),
+        idCard: _idCardController.text.trim(),
+
+        houseNumber: _houseNumberController.text.trim(),
+
+        village: _villageController.text.trim().isEmpty
+            ? null
+            : _villageController.text.trim(),
+
+        road: _roadController.text.trim().isEmpty
+            ? null
+            : _roadController.text.trim(),
+
+        subdistrict: _subdistrictController.text.trim(),
+
+        district: _districtController.text.trim(),
+
+        province: _provinceController.text.trim(),
+
+        postalCode: _postalCodeController.text.trim(),
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('สมัครสมาชิกสำเร็จ: ${user?.fullName}')),
+      );
+
+      Navigator.pop(context);
+    } catch (e) {
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  // ==================================================
+  // VALIDATORS
+  // ==================================================
+
+  String? _validatePhone(String? value) {
+    final text = value?.trim() ?? '';
+
+    if (text.isEmpty) {
+      return 'กรุณากรอกเบอร์โทรศัพท์';
+    }
+
+    if (!RegExp(r'^\d{10}$').hasMatch(text)) {
+      return 'เบอร์โทรศัพท์ต้องมี 10 หลัก';
+    }
+
+    return null;
+  }
+
+  String? _validateIdCard(String? value) {
+    final text = value?.trim() ?? '';
+
+    if (text.isEmpty) {
+      return 'กรุณากรอกเลขบัตรประชาชน';
+    }
+
+    if (!RegExp(r'^\d{13}$').hasMatch(text)) {
+      return 'เลขบัตรประชาชนต้องมี 13 หลัก';
+    }
+
+    return null;
+  }
+
+  String? _validatePostalCode(String? value) {
+    final text = value?.trim() ?? '';
+
+    if (text.isEmpty) {
+      return 'กรุณากรอกรหัสไปรษณีย์';
+    }
+
+    if (!RegExp(r'^\d{5}$').hasMatch(text)) {
+      return 'รหัสไปรษณีย์ต้องมี 5 หลัก';
+    }
+
+    return null;
+  }
+
+  String? _validateConfirmPassword(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'กรุณายืนยันรหัสผ่าน';
+    }
+
+    if (value != _passwordController.text) {
+      return 'รหัสผ่านไม่ตรงกัน';
+    }
+
+    return null;
+  }
+
+  String? _validatePassword(String? value) {
+    final password = value ?? '';
+    if (password.isEmpty) return 'กรุณากรอกรหัสผ่าน';
+    if (password.length < 8) return 'รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร';
+    if (!RegExp(r'[a-z]').hasMatch(password)) {
+      return 'รหัสผ่านต้องมีตัวพิมพ์เล็ก';
+    }
+    if (!RegExp(r'[A-Z]').hasMatch(password)) {
+      return 'รหัสผ่านต้องมีตัวพิมพ์ใหญ่';
+    }
+    if (!RegExp(r'\d').hasMatch(password)) {
+      return 'รหัสผ่านต้องมีตัวเลข';
+    }
+    if (!RegExp(r'[^A-Za-z0-9]').hasMatch(password)) {
+      return 'รหัสผ่านต้องมีอักขระพิเศษ';
+    }
+    return null;
+  }
+
+  InputDecoration _accountFieldDecoration({
+    required String hint,
+    Widget? suffixIcon,
+  }) {
+    return InputDecoration(
+      hintText: hint,
+      suffixIcon: suffixIcon,
+      filled: true,
+      fillColor: Colors.white,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 17, vertical: 17),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(17),
+        borderSide: const BorderSide(color: AppColors.border),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(17),
+        borderSide: const BorderSide(color: AppColors.border),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(17),
+        borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+      ),
+    );
+  }
+
+  Widget _accountLabel(String text, {String? hint}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: RichText(
+        text: TextSpan(
+          style: const TextStyle(
+            color: AppColors.ink,
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+          ),
+          children: [
+            TextSpan(text: text),
+            if (hint != null)
+              TextSpan(
+                text: ' $hint',
+                style: const TextStyle(
+                  color: AppColors.muted,
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _passwordRule(String label, bool valid) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 7),
+      child: Row(
+        children: [
+          Icon(
+            valid ? Icons.check_circle : Icons.radio_button_unchecked,
+            size: 18,
+            color: valid ? AppColors.primary : AppColors.muted,
+          ),
+          const SizedBox(width: 8),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              color: valid ? AppColors.primaryDark : AppColors.muted,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCategoryHeader({
+    required String category,
+    required String title,
+    required String count,
+    required IconData icon,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 52,
+          height: 52,
+          decoration: BoxDecoration(
+            color: AppColors.primarySoft,
+            borderRadius: BorderRadius.circular(18),
+          ),
+          child: Icon(icon, color: AppColors.primary, size: 28),
+        ),
+        const SizedBox(width: 13),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                category,
+                style: const TextStyle(
+                  color: AppColors.primaryDark,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 1.2,
+                ),
+              ),
+              Text(
+                title,
+                style: const TextStyle(
+                  color: AppColors.ink,
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+        ),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 9),
+          decoration: BoxDecoration(
+            color: AppColors.primarySoft,
+            borderRadius: BorderRadius.circular(24),
+          ),
+          child: Text(
+            count,
+            style: const TextStyle(
+              color: AppColors.primaryDark,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAiAssistant() {
+    final checks = <String, bool>{
+      'ชื่อและอีเมล':
+          _nameController.text.trim().isNotEmpty &&
+          _emailController.text.trim().contains('@'),
+      'เบอร์โทรศัพท์ (10 หลัก)':
+          RegExp(r'^\d{10}$').hasMatch(_phoneController.text.trim()),
+      'เลขบัตรประชาชน (13 หลัก)': RegExp(
+        r'^\d{13}$',
+      ).hasMatch(_idCardController.text.trim()),
+      'รหัสผ่านปลอดภัย': _validatePassword(_passwordController.text) == null,
+      'ที่อยู่สำหรับสัญญา':
+          _houseNumberController.text.trim().isNotEmpty &&
+          _provinceController.text.trim().isNotEmpty &&
+          RegExp(r'^\d{5}$').hasMatch(_postalCodeController.text.trim()),
+    };
+    final completed = checks.values.where((value) => value).length;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.primaryBorder),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0a087d66),
+            blurRadius: 12,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: AppColors.primarySoft,
+                  borderRadius: BorderRadius.circular(13),
+                ),
+                child: const Icon(Icons.auto_awesome, color: AppColors.primary),
+              ),
+              const SizedBox(width: 10),
+              const Expanded(
+                child: Text(
+                  'Safa ช่วยตรวจข้อมูล',
+                  style: TextStyle(
+                    color: AppColors.ink,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              Text(
+                '$completed/${checks.length}',
+                style: const TextStyle(
+                  color: AppColors.primaryDark,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          const Text(
+            'ผู้ช่วยจะแนะนำเฉพาะจากข้อมูลที่คุณกรอก ไม่ส่งข้อมูลไปวิเคราะห์ภายนอก',
+            style: TextStyle(color: AppColors.muted, height: 1.45),
+          ),
+          if (_showAiInsight) ...[
+            const SizedBox(height: 12),
+            ...checks.entries.map(
+              (entry) => _passwordRule(entry.key, entry.value),
+            ),
+          ],
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: _isLoading
+                  ? null
+                  : () => setState(() => _showAiInsight = !_showAiInsight),
+              icon: Icon(
+                _showAiInsight
+                    ? Icons.visibility_off_outlined
+                    : Icons.auto_awesome,
+              ),
+              label: Text(
+                _showAiInsight ? 'ซ่อนคำแนะนำ' : 'ตรวจข้อมูลกับ Safa',
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ==================================================
+  // BUILD
+  // ==================================================
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('สมัครสมาชิก')),
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            border: Border(top: BorderSide(color: AppColors.border)),
+          ),
+          child: SizedBox(
+            height: 50,
+            child: ElevatedButton.icon(
+              onPressed: _isLoading ? null : _register,
+              icon: _isLoading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.arrow_forward_rounded),
+              label: Text(
+                _isLoading ? 'กำลังสร้างบัญชี...' : 'บันทึกข้อมูลพื้นฐาน',
+              ),
+            ),
+          ),
+        ),
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SizedBox(height: 8),
+                const Text(
+                  'สร้างบัญชีใหม่',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.ink,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  'กรอกข้อมูลเพื่อเริ่มใช้งาน Safa',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 13, color: AppColors.muted),
+                ),
+                const SizedBox(height: 28),
+
+                _buildCategoryHeader(
+                  category: 'หมวด 01',
+                  title: 'ข้อมูลบัญชี',
+                  count: '1/2',
+                  icon: Icons.person_outline,
+                ),
+                const SizedBox(height: 14),
+                const Text(
+                  'กรอกข้อมูลพื้นฐานเพื่อสร้างบัญชีและใช้จัดทำสัญญาได้อย่างถูกต้อง',
+                  style: TextStyle(
+                    color: AppColors.muted,
+                    fontSize: 14,
+                    height: 1.65,
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // =========================
+                // ข้อมูลส่วนตัว
+                // =========================
+                _accountLabel('ชื่อ-นามสกุล'),
+
+                TextFormField(
+                  controller: _nameController,
+                  enabled: !_isLoading,
+                  decoration: _accountFieldDecoration(hint: 'ชื่อ-นามสกุล'),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'กรุณากรอกชื่อ-นามสกุล';
+                    }
+
+                    return null;
+                  },
+                ),
+
+                const SizedBox(height: 20),
+
+                _accountLabel('อีเมล'),
+
+                TextFormField(
+                  controller: _emailController,
+                  enabled: !_isLoading,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: _accountFieldDecoration(
+                    hint: 'example@email.com',
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'กรุณากรอกอีเมล';
+                    }
+
+                    if (!value.contains('@')) {
+                      return 'รูปแบบอีเมลไม่ถูกต้อง';
+                    }
+
+                    return null;
+                  },
+                ),
+
+                const SizedBox(height: 20),
+
+                _accountLabel('รหัสผ่าน'),
+
+                TextFormField(
+                  controller: _passwordController,
+                  enabled: !_isLoading,
+                  obscureText: _obscurePassword,
+                  onChanged: (_) => setState(() {}),
+                  decoration: _accountFieldDecoration(
+                    hint: 'รหัสผ่าน',
+                    suffixIcon: IconButton(
+                      onPressed: () {
+                        setState(() {
+                          _obscurePassword = !_obscurePassword;
+                        });
+                      },
+                      icon: Icon(
+                        _obscurePassword
+                            ? Icons.visibility
+                            : Icons.visibility_off,
+                      ),
+                    ),
+                  ),
+                  validator: _validatePassword,
+                ),
+
+                const SizedBox(height: 10),
+
+                _passwordRule(
+                  'อย่างน้อย 8 ตัวอักษร',
+                  _passwordController.text.length >= 8,
+                ),
+                _passwordRule(
+                  'ตัวพิมพ์เล็ก (a-z)',
+                  RegExp(r'[a-z]').hasMatch(_passwordController.text),
+                ),
+                _passwordRule(
+                  'ตัวพิมพ์ใหญ่ (A-Z)',
+                  RegExp(r'[A-Z]').hasMatch(_passwordController.text),
+                ),
+                _passwordRule(
+                  'ตัวเลข (0-9)',
+                  RegExp(r'\d').hasMatch(_passwordController.text),
+                ),
+                _passwordRule(
+                  'อักขระพิเศษ (!@#...)',
+                  RegExp(r'[^A-Za-z0-9]').hasMatch(_passwordController.text),
+                ),
+
+                const SizedBox(height: 13),
+
+                _accountLabel('ยืนยันรหัสผ่าน'),
+
+                TextFormField(
+                  controller: _confirmPasswordController,
+                  enabled: !_isLoading,
+                  obscureText: _obscureConfirmPassword,
+                  decoration: _accountFieldDecoration(
+                    hint: 'ยืนยันรหัสผ่าน',
+                    suffixIcon: IconButton(
+                      onPressed: () {
+                        setState(() {
+                          _obscureConfirmPassword = !_obscureConfirmPassword;
+                        });
+                      },
+                      icon: Icon(
+                        _obscureConfirmPassword
+                            ? Icons.visibility_outlined
+                            : Icons.visibility_off_outlined,
+                      ),
+                    ),
+                  ),
+                  validator: _validateConfirmPassword,
+                ),
+
+                const SizedBox(height: 24),
+
+                _accountLabel('ข้อมูลส่วนตัว'),
+
+                const SizedBox(height: 8),
+
+                TextFormField(
+                  controller: _phoneController,
+                  enabled: !_isLoading,
+                  keyboardType: TextInputType.phone,
+                  maxLength: 10,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    LengthLimitingTextInputFormatter(10),
+                  ],
+                  decoration: const InputDecoration(
+                    labelText: 'เบอร์โทรศัพท์',
+                    hintText: 'กรอก 10 หลัก (เช่น 0812345678)',
+                    prefixIcon: Icon(Icons.phone),
+                    border: OutlineInputBorder(),
+                    counterText: '',
+                  ),
+                  validator: _validatePhone,
+                ),
+
+                const SizedBox(height: 16),
+
+                TextFormField(
+                  controller: _idCardController,
+                  enabled: !_isLoading,
+                  keyboardType: TextInputType.number,
+                  maxLength: 13,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    LengthLimitingTextInputFormatter(13),
+                  ],
+                  decoration: const InputDecoration(
+                    labelText: 'เลขบัตรประชาชน',
+                    hintText: 'กรอก 13 หลัก',
+                    prefixIcon: Icon(Icons.badge),
+                    border: OutlineInputBorder(),
+                    counterText: '',
+                  ),
+                  validator: _validateIdCard,
+                ),
+
+                const SizedBox(height: 28),
+
+                // =========================
+                // ที่อยู่
+                // =========================
+                _buildCategoryHeader(
+                  category: 'หมวด 02',
+                  title: 'ที่อยู่สำหรับสัญญา',
+                  count: '2/2',
+                  icon: Icons.location_on_outlined,
+                ),
+
+                const SizedBox(height: 14),
+
+                Text(
+                  'ที่อยู่นี้จะถูกบันทึกไว้ในบัญชี และจะแสดงในเอกสารสัญญาเฉพาะส่วนของผู้กู้',
+                  style: TextStyle(color: Colors.grey.shade600, height: 1.5),
+                ),
+
+                const SizedBox(height: 16),
+
+                TextFormField(
+                  controller: _houseNumberController,
+                  enabled: !_isLoading,
+                  decoration: const InputDecoration(
+                    labelText: 'บ้านเลขที่',
+                    hintText: 'เช่น 123/45',
+                    prefixIcon: Icon(Icons.home_outlined),
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'กรุณากรอกบ้านเลขที่';
+                    }
+
+                    return null;
+                  },
+                ),
+
+                const SizedBox(height: 16),
+
+                TextFormField(
+                  controller: _villageController,
+                  enabled: !_isLoading,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: 'หมู่ (ไม่บังคับ)',
+                    hintText: 'เช่น 5',
+                    prefixIcon: Icon(Icons.location_city),
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                TextFormField(
+                  controller: _roadController,
+                  enabled: !_isLoading,
+                  decoration: const InputDecoration(
+                    labelText: 'ถนน (ไม่บังคับ)',
+                    hintText: 'เช่น ถนนกาญจนวนิช',
+                    prefixIcon: Icon(Icons.add_road_outlined),
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                TextFormField(
+                  controller: _subdistrictController,
+                  enabled: !_isLoading,
+                  decoration: const InputDecoration(
+                    labelText: 'ตำบล / แขวง',
+                    prefixIcon: Icon(Icons.location_on_outlined),
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'กรุณากรอกตำบล / แขวง';
+                    }
+
+                    return null;
+                  },
+                ),
+
+                const SizedBox(height: 16),
+
+                TextFormField(
+                  controller: _districtController,
+                  enabled: !_isLoading,
+                  decoration: const InputDecoration(
+                    labelText: 'อำเภอ / เขต',
+                    prefixIcon: Icon(Icons.location_city_outlined),
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'กรุณากรอกอำเภอ / เขต';
+                    }
+
+                    return null;
+                  },
+                ),
+
+                const SizedBox(height: 16),
+
+                TextFormField(
+                  controller: _provinceController,
+                  enabled: !_isLoading,
+                  decoration: const InputDecoration(
+                    labelText: 'จังหวัด',
+                    prefixIcon: Icon(Icons.map_outlined),
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'กรุณากรอกจังหวัด';
+                    }
+
+                    return null;
+                  },
+                ),
+
+                const SizedBox(height: 16),
+
+                TextFormField(
+                  controller: _postalCodeController,
+                  enabled: !_isLoading,
+                  keyboardType: TextInputType.number,
+                  maxLength: 5,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    LengthLimitingTextInputFormatter(5),
+                  ],
+                  decoration: const InputDecoration(
+                    labelText: 'รหัสไปรษณีย์',
+                    hintText: 'เช่น 90110',
+                    prefixIcon: Icon(Icons.markunread_mailbox_outlined),
+                    border: OutlineInputBorder(),
+                    counterText: '',
+                  ),
+                  validator: _validatePostalCode,
+                ),
+
+                const SizedBox(height: 24),
+
+                _buildAiAssistant(),
+
+                const SizedBox(height: 90),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
