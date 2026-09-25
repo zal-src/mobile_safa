@@ -8,7 +8,7 @@ import 'contract_detail_page.dart';
 import 'contract_list_page.dart';
 import 'contract_role_page.dart';
 import 'login_page.dart';
-import 'payment_contract_list_page.dart';
+import 'knowledge_page.dart';
 import '../theme/app_theme.dart';
 
 class HomePage extends StatefulWidget {
@@ -142,18 +142,7 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  void _openPayments() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => PaymentContractListPage(user: widget.user),
-      ),
-    ).then((_) {
-      if (!mounted) return;
-      setState(() => _currentIndex = 0);
-      _loadDashboard();
-    });
-  }
+
 
   void _openContractDetail(Map<String, dynamic> contract) {
     try {
@@ -191,7 +180,6 @@ class _HomePageState extends State<HomePage> {
 
       case 2:
         setState(() => _currentIndex = 2);
-        _openPayments();
         break;
 
       case 3:
@@ -392,7 +380,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FC),
-      appBar: AppBar(
+      appBar: _currentIndex == 2 ? null : AppBar(
         elevation: 0,
         scrolledUnderElevation: 0,
         backgroundColor: const Color(0xFFF8F9FC),
@@ -415,7 +403,9 @@ class _HomePageState extends State<HomePage> {
           const SizedBox(width: 8),
         ],
       ),
-      body: RefreshIndicator(
+      body: _currentIndex == 2 
+          ? KnowledgePage(user: widget.user)
+          : RefreshIndicator(
         onRefresh: _loadDashboard,
         color: const Color(0xFF101828),
         child: _isLoading
@@ -837,9 +827,9 @@ class _HomePageState extends State<HomePage> {
           label: 'สัญญา',
         ),
         NavigationDestination(
-          icon: Icon(Icons.payments_outlined),
-          selectedIcon: Icon(Icons.payments_rounded),
-          label: 'การชำระเงิน',
+          icon: Icon(Icons.menu_book_outlined),
+          selectedIcon: Icon(Icons.menu_book_rounded),
+          label: 'ความรู้',
         ),
         NavigationDestination(
           icon: Icon(Icons.person_outline),
