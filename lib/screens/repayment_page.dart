@@ -5,6 +5,8 @@ import '../models/loan_contract.dart';
 import '../models/repayment.dart';
 import '../services/repayment_service.dart';
 import '../theme/app_theme.dart';
+import '../utils/responsive.dart';
+import '../widgets/responsive_container.dart';
 
 class RepaymentPage extends StatefulWidget {
   final User user;
@@ -829,10 +831,13 @@ class _RepaymentPageState extends State<RepaymentPage> {
       body: SafeArea(
         child: _isLoading
             ? const Center(child: CircularProgressIndicator())
-            : RefreshIndicator(
+            : ResponsiveBody(
+                child: RefreshIndicator(
                 onRefresh: _refresh,
                 child: ListView(
-                  padding: const EdgeInsets.all(20),
+                  padding: EdgeInsets.all(
+                    Responsive.horizontalPadding(context),
+                  ),
                   children: [
                     _buildHeader(),
 
@@ -903,6 +908,7 @@ class _RepaymentPageState extends State<RepaymentPage> {
                     ],
                   ],
                 ),
+              ),
               ),
       ),
     );

@@ -5,6 +5,8 @@ import '../models/loan_contract.dart';
 import '../models/repayment.dart';
 import '../services/repayment_service.dart';
 import '../services/contract_service.dart';
+import '../utils/responsive.dart';
+import '../widgets/responsive_container.dart';
 import 'repayment_page.dart';
 import '../theme/app_theme.dart';
 
@@ -140,14 +142,17 @@ class _PaymentContractListPageState extends State<PaymentContractListPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('การชำระเงิน')),
-      body: _isLoading
+      body: ResponsiveBody(
+        child: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _contracts.isEmpty
           ? _buildEmptyState()
           : RefreshIndicator(
               onRefresh: _loadContracts,
               child: ListView.builder(
-                padding: const EdgeInsets.all(16),
+                padding: EdgeInsets.all(
+                  Responsive.horizontalPadding(context),
+                ),
                 itemCount: _contracts.length,
                 itemBuilder: (context, index) {
                   final contract = _contracts[index];
@@ -156,6 +161,7 @@ class _PaymentContractListPageState extends State<PaymentContractListPage> {
                 },
               ),
             ),
+      ),
     );
   }
 

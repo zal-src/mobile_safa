@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 
 import '../services/auth_service.dart';
 import '../theme/app_theme.dart';
+import '../utils/responsive.dart';
+import '../widgets/responsive_container.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -487,8 +489,13 @@ class _RegisterPageState extends State<RegisterPage> {
         ),
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+        child: ResponsiveBody(
+          maxWidth: Responsive.formMaxWidth(context),
+          child: SingleChildScrollView(
+            padding: EdgeInsets.symmetric(
+              horizontal: Responsive.horizontalPadding(context),
+              vertical: 24,
+            ),
           child: Form(
             key: _formKey,
             child: Column(
@@ -845,6 +852,7 @@ class _RegisterPageState extends State<RegisterPage> {
               ],
             ),
           ),
+        ),
         ),
       ),
     );

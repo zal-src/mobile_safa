@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../models/user.dart';
 import '../services/auth_service.dart';
 import '../theme/app_theme.dart';
+import '../utils/responsive.dart';
+import '../widgets/responsive_container.dart';
 import 'register_page.dart';
 import 'home_page.dart';
 
@@ -86,17 +88,21 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    final hPadding = Responsive.horizontalPadding(context);
+
     return Scaffold(
       appBar: AppBar(title: const Text('เข้าสู่ระบบ')),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: 30),
+        child: ResponsiveBody(
+          maxWidth: Responsive.formMaxWidth(context),
+          child: SingleChildScrollView(
+            padding: EdgeInsets.symmetric(horizontal: hPadding, vertical: 24),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const SizedBox(height: 30),
 
                 const Icon(
                   Icons.account_balance_wallet_outlined,
@@ -181,7 +187,7 @@ class _LoginPageState extends State<LoginPage> {
                 const SizedBox(height: 28),
 
                 SizedBox(
-                  height: 48,
+                  height: Responsive.value<double>(context, mobile: 48, tablet: 52),
                   child: ElevatedButton(
                     onPressed: _isLoading ? null : _login,
                     child: _isLoading
@@ -210,7 +216,8 @@ class _LoginPageState extends State<LoginPage> {
                   },
                   child: const Text('ยังไม่มีบัญชี? สมัครสมาชิก'),
                 ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

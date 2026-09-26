@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../models/user.dart';
 import '../models/loan_contract.dart';
 import '../services/contract_service.dart';
+import '../utils/responsive.dart';
+import '../widgets/responsive_container.dart';
 import 'contract_detail_page.dart';
 import 'contract_role_page.dart';
 import '../theme/app_theme.dart';
@@ -506,7 +508,8 @@ class _ContractListPageState extends State<ContractListPage> {
       ),
 
       body: SafeArea(
-        child: _isLoading
+        child: ResponsiveBody(
+          child: _isLoading
             ? const Center(child: CircularProgressIndicator())
             : RefreshIndicator(
                 onRefresh: _loadContracts,
@@ -524,13 +527,17 @@ class _ContractListPageState extends State<ContractListPage> {
                       )
                     : ListView.builder(
                         physics: const AlwaysScrollableScrollPhysics(),
-                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+                        padding: EdgeInsets.fromLTRB(
+                          Responsive.horizontalPadding(context), 16,
+                          Responsive.horizontalPadding(context), 100,
+                        ),
                         itemCount: _contracts.length,
                         itemBuilder: (context, index) {
                           return _buildContractCard(_contracts[index]);
                         },
                       ),
               ),
+        ),
       ),
     );
   }

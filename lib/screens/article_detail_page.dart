@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/knowledge_article.dart';
 import '../models/user.dart';
+import '../widgets/responsive_container.dart';
 
 class ArticleDetailPage extends StatelessWidget {
   final KnowledgeArticle article;
@@ -50,7 +51,8 @@ class ArticleDetailPage extends StatelessWidget {
           ),
         ],
       ),
-      body: SingleChildScrollView(
+      body: ResponsiveBody(
+        child: SingleChildScrollView(
         padding: const EdgeInsets.only(bottom: 40),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -255,6 +257,7 @@ class ArticleDetailPage extends StatelessWidget {
             ),
           ],
         ),
+      ),
       ),
     );
   }

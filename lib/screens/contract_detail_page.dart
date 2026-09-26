@@ -5,6 +5,8 @@ import '../models/user.dart';
 import '../models/loan_contract.dart';
 import '../services/contract_service.dart';
 import '../services/pdf_service_printable.dart';
+import '../utils/responsive.dart';
+import '../widgets/responsive_container.dart';
 import 'repayment_page.dart';
 import '../theme/app_theme.dart';
 
@@ -468,13 +470,17 @@ class _ContractDetailPageState extends State<ContractDetailPage> {
       body: SafeArea(
         child: _isLoading
             ? const Center(child: CircularProgressIndicator())
-            : RefreshIndicator(
+            : ResponsiveBody(
+                child: RefreshIndicator(
                 onRefresh: _loadContractData,
 
                 child: SingleChildScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
 
-                  padding: const EdgeInsets.all(20),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: Responsive.horizontalPadding(context),
+                    vertical: 20,
+                  ),
 
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -644,6 +650,7 @@ class _ContractDetailPageState extends State<ContractDetailPage> {
                     ],
                   ),
                 ),
+              ),
               ),
       ),
     );

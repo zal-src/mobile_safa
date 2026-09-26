@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../models/user.dart';
 import '../theme/app_theme.dart';
+import '../utils/responsive.dart';
+import '../widgets/responsive_container.dart';
 import 'create_contract_page.dart';
 
 /// หน้านี้ใช้เลือกบทบาทก่อนสร้างสัญญา
@@ -33,8 +35,13 @@ class ContractRolePage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('สร้างสัญญา')),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(20, 24, 20, 30),
+        child: ResponsiveBody(
+          maxWidth: Responsive.formMaxWidth(context),
+          child: SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(
+            Responsive.horizontalPadding(context), 24,
+            Responsive.horizontalPadding(context), 30,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -112,6 +119,7 @@ class ContractRolePage extends StatelessWidget {
               ),
             ],
           ),
+        ),
         ),
       ),
     );

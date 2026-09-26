@@ -4,6 +4,8 @@ import 'package:intl/intl.dart';
 import '../database/database_helper.dart';
 import '../models/loan_contract.dart';
 import '../models/user.dart';
+import '../utils/responsive.dart';
+import '../widgets/responsive_container.dart';
 import 'contract_detail_page.dart';
 import 'contract_list_page.dart';
 import 'contract_role_page.dart';
@@ -378,6 +380,8 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final hPadding = Responsive.horizontalPadding(context);
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FC),
       appBar: _currentIndex == 2 ? null : AppBar(
@@ -405,7 +409,8 @@ class _HomePageState extends State<HomePage> {
       ),
       body: _currentIndex == 2 
           ? KnowledgePage(user: widget.user)
-          : RefreshIndicator(
+          : ResponsiveBody(
+              child: RefreshIndicator(
         onRefresh: _loadDashboard,
         color: const Color(0xFF101828),
         child: _isLoading
@@ -414,7 +419,7 @@ class _HomePageState extends State<HomePage> {
               )
             : SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
+                padding: EdgeInsets.fromLTRB(hPadding, 8, hPadding, 28),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -429,6 +434,7 @@ class _HomePageState extends State<HomePage> {
                   ],
                 ),
               ),
+      ),
       ),
       bottomNavigationBar: _buildBottomNavigationBar(),
     );

@@ -28,6 +28,15 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Safa',
       theme: AppTheme.light,
+      builder: (context, child) {
+        // Apply responsive theme overrides based on screen size
+        final responsiveTheme = AppTheme.responsiveLight(context);
+
+        return Theme(
+          data: responsiveTheme,
+          child: child ?? const SizedBox.shrink(),
+        );
+      },
       home: const LoginPage(),
     );
   }

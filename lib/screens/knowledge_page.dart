@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../models/user.dart';
 import '../models/knowledge_article.dart';
+import '../utils/responsive.dart';
+import '../widgets/responsive_container.dart';
 import 'article_detail_page.dart';
 import 'financial_health_check_page.dart';
 
@@ -35,8 +37,11 @@ class KnowledgePage extends StatelessWidget {
     final debtArticles = KnowledgeData.articles.where((a) => a.category == 'ความรู้เรื่องหนี้').toList();
     final safeArticles = KnowledgeData.articles.where((a) => a.category == 'ความปลอดภัย').toList();
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(16, 50, 16, 32),
+    final hPadding = Responsive.horizontalPadding(context);
+
+    return ResponsiveBody(
+      child: SingleChildScrollView(
+      padding: EdgeInsets.fromLTRB(hPadding, 50, hPadding, 32),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -91,6 +96,7 @@ class KnowledgePage extends StatelessWidget {
           _buildAssessmentBanner(context),
         ],
       ),
+    ),
     );
   }
 

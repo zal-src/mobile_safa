@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../utils/responsive.dart';
+
 abstract final class AppColors {
   static const ink = Color(0xff101828);
   static const text = Color(0xff203044);
@@ -165,6 +167,60 @@ abstract final class AppTheme {
         color: Color(0xffe7ece9),
         thickness: 1,
         space: 1,
+      ),
+    );
+  }
+
+  /// Returns a responsive version of the light theme.
+  ///
+  /// Scales typography and touch targets based on screen width.
+  /// Usage: `theme: AppTheme.responsiveLight(context)`
+  static ThemeData responsiveLight(BuildContext context) {
+    final base = light;
+    final scale = Responsive.fontScale(context);
+
+    // Only apply scaling if scale != 1.0
+    if (scale == 1.0) return base;
+
+    final baseTextTheme = base.textTheme;
+
+    return base.copyWith(
+      textTheme: baseTextTheme.copyWith(
+        headlineLarge: baseTextTheme.headlineLarge?.copyWith(
+          fontSize: 28 * scale,
+        ),
+        headlineMedium: baseTextTheme.headlineMedium?.copyWith(
+          fontSize: 22 * scale,
+        ),
+        titleLarge: baseTextTheme.titleLarge?.copyWith(
+          fontSize: 18 * scale,
+        ),
+        titleMedium: baseTextTheme.titleMedium?.copyWith(
+          fontSize: 15 * scale,
+        ),
+        bodyLarge: baseTextTheme.bodyLarge?.copyWith(
+          fontSize: 14 * scale,
+        ),
+        bodyMedium: baseTextTheme.bodyMedium?.copyWith(
+          fontSize: 13 * scale,
+        ),
+        labelLarge: baseTextTheme.labelLarge?.copyWith(
+          fontSize: 13 * scale,
+        ),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: base.elevatedButtonTheme.style?.copyWith(
+          minimumSize: WidgetStatePropertyAll(
+            Size.fromHeight(48 * scale),
+          ),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: base.outlinedButtonTheme.style?.copyWith(
+          minimumSize: WidgetStatePropertyAll(
+            Size.fromHeight(48 * scale),
+          ),
+        ),
       ),
     );
   }

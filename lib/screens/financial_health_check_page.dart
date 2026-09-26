@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../utils/responsive.dart';
+import '../widgets/responsive_container.dart';
+
 class FinancialHealthCheckPage extends StatefulWidget {
   const FinancialHealthCheckPage({super.key});
 
@@ -66,7 +69,10 @@ class _FinancialHealthCheckPageState extends State<FinancialHealthCheckPage> {
           ),
         ),
       ),
-      body: _showResult ? _buildResult() : _buildSteps(),
+      body: ResponsiveBody(
+        maxWidth: Responsive.formMaxWidth(context),
+        child: _showResult ? _buildResult() : _buildSteps(),
+      ),
     );
   }
 

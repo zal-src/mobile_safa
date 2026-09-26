@@ -5,6 +5,8 @@ import 'package:intl/intl.dart';
 import '../models/user.dart';
 import '../services/contract_service.dart';
 import '../theme/app_theme.dart';
+import '../utils/responsive.dart';
+import '../widgets/responsive_container.dart';
 
 class CreateContractPage extends StatefulWidget {
   final User user;
@@ -716,10 +718,15 @@ class _CreateContractPageState extends State<CreateContractPage> {
         ),
       ),
       body: SafeArea(
-        child: Form(
+        child: ResponsiveBody(
+          maxWidth: Responsive.formMaxWidth(context),
+          child: Form(
           key: _formKey,
           child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
+            padding: EdgeInsets.fromLTRB(
+              Responsive.horizontalPadding(context), 8,
+              Responsive.horizontalPadding(context), 28,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -898,6 +905,7 @@ class _CreateContractPageState extends State<CreateContractPage> {
               ],
             ),
           ),
+        ),
         ),
       ),
     );
