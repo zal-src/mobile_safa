@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../utils/responsive.dart';
 import '../widgets/responsive_container.dart';
+import '../theme/app_theme.dart';
 
 class FinancialHealthCheckPage extends StatefulWidget {
   const FinancialHealthCheckPage({super.key});
@@ -53,19 +54,27 @@ class _FinancialHealthCheckPageState extends State<FinancialHealthCheckPage> {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FC),
       appBar: AppBar(
-        backgroundColor: Colors.white,
         elevation: 0,
-        centerTitle: true,
+        scrolledUnderElevation: 0,
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1.0),
+          child: Container(color: const Color(0xFFE4E7EC), height: 1.0),
+        ),
+        automaticallyImplyLeading: false,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF101828), size: 20),
+          icon: const Icon(Icons.arrow_back_ios_new,
+              color: AppColors.ink, size: 20),
           onPressed: _prevStep,
         ),
+        leadingWidth: 48,
         title: const Text(
           'เช็กสุขภาพการเงิน',
           style: TextStyle(
-            fontSize: 16,
+            fontSize: 17,
             fontWeight: FontWeight.w700,
-            color: Color(0xFF101828),
+            color: AppColors.ink,
           ),
         ),
       ),

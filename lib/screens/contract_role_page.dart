@@ -33,7 +33,7 @@ class ContractRolePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('สร้างสัญญา')),
+      appBar: AppTheme.buildSafaAppBar(context, title: 'สร้างสัญญา'),
       body: SafeArea(
         child: ResponsiveBody(
           maxWidth: Responsive.formMaxWidth(context),

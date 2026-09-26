@@ -6,6 +6,8 @@ import '../models/loan_contract.dart';
 import '../models/user.dart';
 import '../utils/responsive.dart';
 import '../widgets/responsive_container.dart';
+import '../widgets/onboarding_bottom_sheet.dart';
+import '../services/onboarding_service.dart';
 import 'contract_detail_page.dart';
 import 'contract_list_page.dart';
 import 'contract_role_page.dart';
@@ -37,10 +39,66 @@ class _HomePageState extends State<HomePage> {
   final NumberFormat _moneyFormat = NumberFormat('#,##0.00', 'en_US');
   final DateFormat _dateFormat = DateFormat('dd/MM/yyyy');
 
+  // GlobalKeys สำหรับ spotlight tutorial
+  final _keyWelcomeCard = GlobalKey();
+  final _keySummarySection = GlobalKey();
+  final _keyCreateButton = GlobalKey();
+  final _keyBottomNav = GlobalKey();
+
   @override
   void initState() {
     super.initState();
     _loadDashboard();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _maybeShowOnboarding();
+    });
+  }
+
+  Future<void> _maybeShowOnboarding() async {
+    final seen = await OnboardingService.instance
+        .hasSeenOnboarding(OnboardingService.keyHome);
+    if (!mounted || seen) return;
+    await OnboardingService.instance.markAsSeen(OnboardingService.keyHome);
+    if (!mounted) return;
+
+    // รอให้ UI render ก่อน
+    await Future.delayed(const Duration(milliseconds: 500));
+    if (!mounted) return;
+
+    await SpotlightTutorial.show(
+      context,
+      steps: [
+        TutorialStep(
+          title: 'ยินดีต้อนรับสู่ Safa Qard',
+          description:
+              'หน้านี้คือแดชบอร์ดหลักของคุณ\nดูภาพรวมรายรับ-รายจ่าย และสัญญา Qard Hasan ทั้งหมดได้ที่นี่',
+          targetKey: _keyWelcomeCard,
+          spotlightPadding: const EdgeInsets.all(6),
+        ),
+        TutorialStep(
+          title: 'สรุปยอดเงินของคุณ',
+          description:
+              'ดูยอดเงินที่ให้กู้ เงินที่กู้ และจำนวนสัญญาทั้งหมด\nอัปเดตแบบ real-time ทุกครั้งที่มีการเปลี่ยนแปลง',
+          targetKey: _keySummarySection,
+          spotlightPadding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+        ),
+        TutorialStep(
+          title: 'สร้างสัญญาใหม่',
+          description:
+              'กดปุ่มนี้เพื่อสร้างสัญญา Qard Hasan ใหม่\nเลือกบทบาท (ผู้ให้กู้ หรือ ผู้กู้) แล้วกรอกรายละเอียดทีละขั้น',
+          targetKey: _keyCreateButton,
+          spotlightPadding: const EdgeInsets.all(6),
+        ),
+        TutorialStep(
+          title: 'เมนูนำทาง',
+          description:
+              'ใช้แถบนำทางด้านล่างเพื่อสลับระหว่างหน้า\nภาพรวม → สัญญา → ความรู้ → โปรไฟล์',
+          targetKey: _keyBottomNav,
+          spotlightPadding: const EdgeInsets.all(4),
+          spotlightRadius: 0,
+        ),
+      ],
+    );
   }
 
   Future<void> _loadDashboard() async {
@@ -387,24 +445,41 @@ class _HomePageState extends State<HomePage> {
       appBar: _currentIndex == 2 ? null : AppBar(
         elevation: 0,
         scrolledUnderElevation: 0,
-        backgroundColor: const Color(0xFFF8F9FC),
+        backgroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
-        titleSpacing: 18,
-        title: const Text(
-          'ภาพรวม',
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.w800,
-            color: Color(0xFF101828),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1.0),
+          child: Container(color: Colors.grey.shade200, height: 1.0),
+        ),
+        leading: const Padding(
+          padding: EdgeInsets.only(left: 16.0),
+          child: Icon(
+            Icons.shopping_bag,
+            color: Color(0xFF087443),
+            size: 32,
           ),
         ),
+        leadingWidth: 56,
+        title: null,
         actions: [
           IconButton(
-            tooltip: 'โปรไฟล์',
-            onPressed: _showProfile,
-            icon: const Icon(Icons.person_outline, color: Color(0xFF344054)),
+            icon: const Icon(Icons.notifications_none, color: Colors.black87),
+            onPressed: () {},
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 4),
+          Container(
+            margin: const EdgeInsets.only(right: 16, top: 8, bottom: 8),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.grey.shade300, width: 1),
+            ),
+            child: IconButton(
+              icon: const Icon(Icons.menu, color: Colors.black87, size: 20),
+              onPressed: () {
+                _showMenuDialog();
+              },
+            ),
+          ),
         ],
       ),
       body: _currentIndex == 2 
@@ -423,6 +498,37 @@ class _HomePageState extends State<HomePage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        const Text(
+                          'ภาพรวม',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF101828),
+                          ),
+                        ),
+                        TextButton.icon(
+                          onPressed: () {},
+                          icon: const Icon(Icons.menu_book, color: Color(0xFF087443)),
+                          label: const Text(
+                            'เปิด Profile Book',
+                            style: TextStyle(
+                              color: Color(0xFF087443),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            backgroundColor: const Color(0xFFE8F7F1),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
                     _buildWelcomeCard(),
                     const SizedBox(height: 18),
                     _buildSummarySection(),
@@ -437,6 +543,123 @@ class _HomePageState extends State<HomePage> {
       ),
       ),
       bottomNavigationBar: _buildBottomNavigationBar(),
+    );
+  }
+
+  Widget _buildMenuItem(IconData icon, String title, bool isSelected, VoidCallback onTap, {Color? color}) {
+    final defaultColor = color ?? const Color(0xFF344054);
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFFE8F7F1) : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              color: isSelected ? const Color(0xFF087443) : defaultColor,
+              size: 22,
+            ),
+            const SizedBox(width: 16),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                color: isSelected ? const Color(0xFF087443) : defaultColor,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showMenuDialog() {
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: 'Menu',
+      barrierColor: Colors.black54,
+      transitionDuration: const Duration(milliseconds: 200),
+      pageBuilder: (context, anim1, anim2) {
+        return SafeArea(
+          child: Align(
+            alignment: Alignment.topCenter,
+            child: Container(
+              width: double.infinity,
+              margin: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Row(
+                            children: [
+                              Icon(Icons.shopping_bag, color: Color(0xFF087443), size: 32),
+                            ],
+                          ),
+                          Row(
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.notifications_none),
+                                onPressed: () {},
+                              ),
+                              const SizedBox(width: 4),
+                              Container(
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: Colors.grey.shade300, width: 1),
+                                ),
+                                child: IconButton(
+                                  icon: const Icon(Icons.close, size: 20),
+                                  onPressed: () => Navigator.pop(context),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Divider(height: 1, color: Color(0xFFE4E7EC)),
+                    const SizedBox(height: 8),
+                    _buildMenuItem(Icons.home_outlined, 'หน้าหลัก', true, () => Navigator.pop(context)),
+                    _buildMenuItem(Icons.menu_book, 'Profile Book', false, () {}),
+                    _buildMenuItem(Icons.person_outline, 'โปรไฟล์', false, () {
+                      Navigator.pop(context);
+                      _showProfile();
+                    }),
+                    _buildMenuItem(Icons.sync_alt, 'คำขอแลกเปลี่ยน', false, () {}),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 8.0),
+                      child: Divider(height: 1, color: Color(0xFFE4E7EC)),
+                    ),
+                    _buildMenuItem(Icons.light_mode_outlined, 'ธีมและการแสดงผล', false, () {}),
+                    _buildMenuItem(Icons.logout, 'ออกจากระบบ', false, () {
+                      Navigator.pop(context);
+                      _showLogoutDialog();
+                    }, color: const Color(0xFFD92D20)),
+                    const SizedBox(height: 8),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 

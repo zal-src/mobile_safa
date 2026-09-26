@@ -461,7 +461,7 @@ class _RegisterPageState extends State<RegisterPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('สมัครสมาชิก')),
+      appBar: AppTheme.buildSafaAppBar(context, title: 'สมัครสมาชิก'),
       bottomNavigationBar: SafeArea(
         top: false,
         child: Container(

@@ -675,14 +675,7 @@ class _CreateContractPageState extends State<CreateContractPage> {
 
     return Scaffold(
       backgroundColor: AppColors.page,
-      appBar: AppBar(
-        leading: IconButton(
-          tooltip: 'ย้อนกลับ',
-          onPressed: _isSaving ? null : () => Navigator.pop(context),
-          icon: const Icon(Icons.arrow_back_rounded),
-        ),
-        title: const Text('สร้างสัญญา'),
-      ),
+      appBar: AppTheme.buildSafaAppBar(context, title: 'สร้างสัญญา'),
       bottomNavigationBar: SafeArea(
         top: false,
         child: Container(

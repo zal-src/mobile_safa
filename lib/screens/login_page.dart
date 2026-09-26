@@ -91,7 +91,27 @@ class _LoginPageState extends State<LoginPage> {
     final hPadding = Responsive.horizontalPadding(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('เข้าสู่ระบบ')),
+      appBar: AppBar(
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1.0),
+          child: Container(color: const Color(0xFFE4E7EC), height: 1.0),
+        ),
+        leading: const Padding(
+          padding: EdgeInsets.only(left: 16.0),
+          child: Icon(
+            Icons.shopping_bag,
+            color: AppColors.primary,
+            size: 32,
+          ),
+        ),
+        leadingWidth: 56,
+        title: null,
+        automaticallyImplyLeading: false,
+      ),
       body: SafeArea(
         child: ResponsiveBody(
           maxWidth: Responsive.formMaxWidth(context),
