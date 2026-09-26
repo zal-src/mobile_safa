@@ -171,6 +171,62 @@ abstract final class AppTheme {
     );
   }
 
+  /// สร้าง AppBar แบบ Safa สม่ำเสมอทุกหน้า
+  /// [title] - ชื่อหน้า (optional)
+  /// [showBackButton] - แสดงปุ่มย้อนกลับ (default: true เมื่อ navigator มี route ก่อนหน้า)
+  static AppBar buildSafaAppBar(
+    BuildContext context, {
+    String? title,
+    bool? showBackButton,
+    List<Widget> actions = const [],
+  }) {
+    final canPop = Navigator.of(context).canPop();
+    final showBack = showBackButton ?? canPop;
+
+    return AppBar(
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      backgroundColor: Colors.white,
+      surfaceTintColor: Colors.transparent,
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(1.0),
+        child: Container(color: const Color(0xFFE4E7EC), height: 1.0),
+      ),
+      automaticallyImplyLeading: false,
+      leading: showBack
+          ? IconButton(
+              icon: const Icon(Icons.arrow_back_ios_new,
+                  color: AppColors.ink, size: 20),
+              onPressed: () => Navigator.of(context).pop(),
+            )
+          : Padding(
+              padding: const EdgeInsets.only(left: 16.0),
+              child: const Icon(
+                Icons.shopping_bag,
+                color: AppColors.primary,
+                size: 32,
+              ),
+            ),
+      leadingWidth: showBack ? 48 : 56,
+      title: title != null
+          ? Text(
+              title,
+              style: const TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w700,
+                color: AppColors.ink,
+              ),
+            )
+          : null,
+      actions: [
+        ...actions,
+        if (!showBack) ...[
+          const SizedBox(width: 12),
+        ],
+      ],
+    );
+  }
+
   /// Returns a responsive version of the light theme.
   ///
   /// Scales typography and touch targets based on screen width.

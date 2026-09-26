@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/knowledge_article.dart';
 import '../models/user.dart';
+import '../theme/app_theme.dart';
 import '../widgets/responsive_container.dart';
 
 class ArticleDetailPage extends StatelessWidget {
@@ -28,25 +29,12 @@ class ArticleDetailPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FC),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF101828), size: 20),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          article.category,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-            color: Color(0xFF667085),
-          ),
-        ),
+      appBar: AppTheme.buildSafaAppBar(
+        context,
+        title: article.category,
         actions: [
           IconButton(
-            icon: const Icon(Icons.ios_share, color: Color(0xFF101828)),
+            icon: const Icon(Icons.ios_share, color: AppColors.ink),
             onPressed: () => _showShareModal(context),
           ),
         ],

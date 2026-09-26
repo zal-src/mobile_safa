@@ -2,21 +2,78 @@ import 'package:flutter/material.dart';
 
 import '../models/user.dart';
 import '../models/knowledge_article.dart';
+import '../services/onboarding_service.dart';
 import '../utils/responsive.dart';
 import '../widgets/responsive_container.dart';
+import '../widgets/onboarding_bottom_sheet.dart';
 import 'article_detail_page.dart';
 import 'financial_health_check_page.dart';
 
-class KnowledgePage extends StatelessWidget {
+class KnowledgePage extends StatefulWidget {
   final User user;
 
   const KnowledgePage({super.key, required this.user});
+
+  @override
+  State<KnowledgePage> createState() => _KnowledgePageState();
+}
+
+class _KnowledgePageState extends State<KnowledgePage> {
+  // GlobalKeys สำหรับ spotlight
+  final _keyHeader = GlobalKey();
+  final _keyFirstSection = GlobalKey();
+  final _keyAssessment = GlobalKey();
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _maybeShowOnboarding();
+    });
+  }
+
+  Future<void> _maybeShowOnboarding() async {
+    final seen = await OnboardingService.instance
+        .hasSeenOnboarding(OnboardingService.keyKnowledge);
+    if (!mounted || seen) return;
+    await OnboardingService.instance.markAsSeen(OnboardingService.keyKnowledge);
+    if (!mounted) return;
+
+    await Future.delayed(const Duration(milliseconds: 500));
+    if (!mounted) return;
+
+    await SpotlightTutorial.show(
+      context,
+      steps: [
+        TutorialStep(
+          title: 'คลังความรู้ด้านการเงิน',
+          description:
+              'หน้านี้รวบรวมความรู้ด้านการเงินอิสลาม\nที่ช่วยให้คุณจัดการเงินได้อย่างถูกต้องตามหลักการ',
+          targetKey: _keyHeader,
+          spotlightPadding: const EdgeInsets.all(8),
+        ),
+        TutorialStep(
+          title: 'อ่านบทความแต่ละหมวด',
+          description:
+              'บทความถูกแบ่งเป็น 4 หมวดหลัก\nกฎหมาย · การเงิน · เรื่องหนี้ · ความปลอดภัย\nแตะสักหัวเพื่อเปิดรายละเอียดทันที',
+          targetKey: _keyFirstSection,
+          spotlightPadding: const EdgeInsets.all(6),
+        ),
+        TutorialStep(
+          title: 'เช็กสุขภาพการเงินของคุณ',
+          description:
+              'กด "เริ่มประเมิน" เพื่อตรวจสุขภาพการเงินพร้อมรับ\nคำแนะนำเฉพาะบุคคลในเวลาไม่กี่นาที',
+          targetKey: _keyAssessment,
+          spotlightPadding: const EdgeInsets.all(6),
+        ),
+      ],
+    );
+  }
 
   void _openArticle(BuildContext context, KnowledgeArticle article) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => ArticleDetailPage(article: article, user: user),
+        builder: (context) => ArticleDetailPage(article: article, user: widget.user),
       ),
     );
   }
@@ -41,16 +98,15 @@ class KnowledgePage extends StatelessWidget {
 
     return ResponsiveBody(
       child: SingleChildScrollView(
-      padding: EdgeInsets.fromLTRB(hPadding, 50, hPadding, 32),
+      padding: EdgeInsets.fromLTRB(hPadding, 16, hPadding, 32),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildAppHeader(),
-          const SizedBox(height: 32),
-          _buildHeader(),
+          _buildHeader(key: _keyHeader),
           const SizedBox(height: 24),
           _buildSection(
             context: context,
+            sectionKey: _keyFirstSection,
             title: 'กฎหมายที่ควรรู้',
             subtitle: 'เข้าใจสิทธิและหน้าที่',
             icon: Icons.gavel_rounded,
@@ -93,39 +149,17 @@ class KnowledgePage extends StatelessWidget {
             articles: safeArticles,
           ),
           const SizedBox(height: 24),
-          _buildAssessmentBanner(context),
+          _buildAssessmentBanner(context, key: _keyAssessment),
         ],
       ),
     ),
     );
   }
 
-  Widget _buildAppHeader() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.eco, color: const Color(0xFF4B6F60), size: 28),
-            const SizedBox(width: 8),
-            const Text(
-              'Qard Hasan',
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w800,
-                color: Color(0xFF1A1C3D),
-              ),
-            ),
-          ],
-        ),
-        const Icon(Icons.notifications_none, size: 28, color: Color(0xFF101828)),
-      ],
-    );
-  }
 
-  Widget _buildHeader() {
+  Widget _buildHeader({Key? key}) {
     return Row(
+      key: key,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Expanded(
@@ -160,7 +194,7 @@ class KnowledgePage extends StatelessWidget {
             borderRadius: BorderRadius.circular(20),
           ),
           child: const Icon(
-            Icons.eco,
+            Icons.shopping_bag,
             color: Color(0xFF087443),
             size: 40,
           ),
@@ -171,6 +205,7 @@ class KnowledgePage extends StatelessWidget {
 
   Widget _buildSection({
     required BuildContext context,
+    Key? sectionKey,
     required String title,
     required String subtitle,
     required IconData icon,
@@ -180,6 +215,7 @@ class KnowledgePage extends StatelessWidget {
     required List<KnowledgeArticle> articles,
   }) {
     return Container(
+      key: sectionKey,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
@@ -305,8 +341,9 @@ class KnowledgePage extends StatelessWidget {
     );
   }
 
-  Widget _buildAssessmentBanner(BuildContext context) {
+  Widget _buildAssessmentBanner(BuildContext context, {Key? key}) {
     return Container(
+      key: key,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: const Color(0xFFE8F7F1),

@@ -141,7 +141,7 @@ class _PaymentContractListPageState extends State<PaymentContractListPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('การชำระเงิน')),
+      appBar: AppTheme.buildSafaAppBar(context, title: 'การชำระเงิน'),
       body: ResponsiveBody(
         child: _isLoading
           ? const Center(child: CircularProgressIndicator())

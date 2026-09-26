@@ -328,7 +328,7 @@ class _ContractDetailPageState extends State<ContractDetailPage> {
     final isLender = contract.lenderId == widget.user.userId;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('รายละเอียดสัญญา')),
+      appBar: AppTheme.buildSafaAppBar(context, title: 'รายละเอียดสัญญา'),
 
       body: SafeArea(
         child: _isLoading

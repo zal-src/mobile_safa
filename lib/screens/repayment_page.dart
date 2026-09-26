@@ -827,7 +827,7 @@ class _RepaymentPageState extends State<RepaymentPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('การชำระเงิน')),
+      appBar: AppTheme.buildSafaAppBar(context, title: 'การชำระเงิน'),
       body: SafeArea(
         child: _isLoading
             ? const Center(child: CircularProgressIndicator())
