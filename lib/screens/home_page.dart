@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../database/database_helper.dart';
 import '../models/loan_contract.dart';
 import '../models/user.dart';
+import '../services/auth_service.dart';
 import '../utils/responsive.dart';
 import '../widgets/responsive_container.dart';
 import 'contract_detail_page.dart';
@@ -24,6 +25,10 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final DatabaseHelper _database = DatabaseHelper.instance;
+  final AuthService _authService = AuthService();
+
+  late User _currentUser;
+  Map<String, dynamic>? _currentAddress;
 
   int _currentIndex = 0;
   bool _isLoading = true;
@@ -40,11 +45,12 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+    _currentUser = widget.user;
     _loadDashboard();
   }
 
   Future<void> _loadDashboard() async {
-    final userId = widget.user.userId;
+    final userId = _currentUser.userId;
 
     if (userId == null) {
       if (!mounted) return;
@@ -99,6 +105,8 @@ class _HomePageState extends State<HomePage> {
         [userId, userId],
       );
 
+      final addressResult = await _database.getUserAddress(userId);
+
       if (!mounted) return;
 
       setState(() {
@@ -107,6 +115,7 @@ class _HomePageState extends State<HomePage> {
             (borrowedResult.first['total'] as num?)?.toDouble() ?? 0;
         _contractCount = (countResult.first['total'] as num?)?.toInt() ?? 0;
         _recentContracts = recentResult;
+        _currentAddress = addressResult;
         _isLoading = false;
       });
     } catch (e) {
@@ -122,11 +131,45 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  String _formatAddress(Map<String, dynamic>? address) {
+    if (address == null) {
+      return 'ไม่ได้ระบุที่อยู่';
+    }
+
+    final parts = <String>[];
+    final addressText = (address['address'] as String?)?.trim();
+    if (addressText != null && addressText.isNotEmpty) {
+      parts.add(addressText);
+    }
+
+    final subdistrict = (address['subdistrict'] as String?)?.trim();
+    if (subdistrict != null && subdistrict.isNotEmpty) {
+      parts.add('ตำบล$subdistrict');
+    }
+
+    final district = (address['district'] as String?)?.trim();
+    if (district != null && district.isNotEmpty) {
+      parts.add('อำเภอ$district');
+    }
+
+    final province = (address['province'] as String?)?.trim();
+    if (province != null && province.isNotEmpty) {
+      parts.add(province);
+    }
+
+    final postalCode = (address['postal_code'] as String?)?.trim();
+    if (postalCode != null && postalCode.isNotEmpty) {
+      parts.add('รหัสไปรษณีย์ $postalCode');
+    }
+
+    return parts.isNotEmpty ? parts.join(' ') : 'ไม่ได้ระบุที่อยู่';
+  }
+
   void _openCreateContract() {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => ContractRolePage(user: widget.user),
+        builder: (context) => ContractRolePage(user: _currentUser),
       ),
     ).then((_) => _loadDashboard());
   }
@@ -135,7 +178,7 @@ class _HomePageState extends State<HomePage> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => ContractListPage(user: widget.user),
+        builder: (context) => ContractListPage(user: _currentUser),
       ),
     ).then((_) {
       if (!mounted) return;
@@ -154,7 +197,7 @@ class _HomePageState extends State<HomePage> {
         context,
         MaterialPageRoute(
           builder: (context) =>
-              ContractDetailPage(user: widget.user, contract: loanContract),
+              ContractDetailPage(user: _currentUser, contract: loanContract),
         ),
       ).then((_) => _loadDashboard());
     } catch (e) {
@@ -244,7 +287,7 @@ class _HomePageState extends State<HomePage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            widget.user.fullName,
+                            _currentUser.fullName,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
@@ -255,7 +298,7 @@ class _HomePageState extends State<HomePage> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            widget.user.email,
+                            _currentUser.email,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
@@ -281,27 +324,52 @@ class _HomePageState extends State<HomePage> {
                 _ProfileInfoRow(
                   icon: Icons.person_outline,
                   title: 'ชื่อ-นามสกุล',
-                  value: widget.user.fullName,
+                  value: _currentUser.fullName,
                 ),
                 _ProfileInfoRow(
                   icon: Icons.email_outlined,
                   title: 'อีเมล',
-                  value: widget.user.email,
+                  value: _currentUser.email,
                 ),
-                if (widget.user.phone != null &&
-                    widget.user.phone!.trim().isNotEmpty)
+                if (_currentUser.phone != null &&
+                    _currentUser.phone!.trim().isNotEmpty)
                   _ProfileInfoRow(
                     icon: Icons.phone_outlined,
                     title: 'เบอร์โทรศัพท์',
-                    value: widget.user.phone!,
+                    value: _currentUser.phone!,
                   ),
-                if (widget.user.idCard != null &&
-                    widget.user.idCard!.trim().isNotEmpty)
+                if (_currentUser.idCard != null &&
+                    _currentUser.idCard!.trim().isNotEmpty)
                   _ProfileInfoRow(
                     icon: Icons.badge_outlined,
                     title: 'เลขบัตรประชาชน',
-                    value: widget.user.idCard!,
+                    value: _currentUser.idCard!,
                   ),
+                if (_currentAddress != null)
+                  _ProfileInfoRow(
+                    icon: Icons.home_outlined,
+                    title: 'ที่อยู่',
+                    value: _formatAddress(_currentAddress),
+                  ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: FilledButton.icon(
+                    onPressed: () {
+                      Navigator.pop(sheetContext);
+                      _showEditProfileDialog();
+                    },
+                    icon: const Icon(Icons.edit_outlined),
+                    label: const Text('แก้ไขข้อมูลบัญชี'),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                  ),
+                ),
                 const SizedBox(height: 8),
                 SizedBox(
                   width: double.infinity,
@@ -328,6 +396,209 @@ class _HomePageState extends State<HomePage> {
         );
       },
     );
+  }
+
+  Future<void> _showEditProfileDialog() async {
+    final formKey = GlobalKey<FormState>();
+    final fullNameController = TextEditingController(text: _currentUser.fullName);
+    final emailController = TextEditingController(text: _currentUser.email);
+    final phoneController = TextEditingController(text: _currentUser.phone ?? '');
+    final idCardController = TextEditingController(text: _currentUser.idCard ?? '');
+    final houseNumberController = TextEditingController(
+      text: (_currentAddress?['address'] as String?)?.replaceFirst('บ้านเลขที่ ', '').split(' ').first ?? '',
+    );
+    final villageController = TextEditingController(
+      text: (_currentAddress?['address'] as String?)?.contains('หมู่') == true
+          ? (_currentAddress?['address'] as String?)
+              ?.split('หมู่')
+              .last
+              .trim()
+              .split(' ')
+              .first ?? ''
+          : '',
+    );
+    final roadController = TextEditingController(
+      text: (_currentAddress?['address'] as String?)?.contains('ถนน') == true
+          ? (_currentAddress?['address'] as String?)
+              ?.split('ถนน')
+              .last
+              .trim()
+              .split(' ')
+              .first ?? ''
+          : '',
+    );
+    final subdistrictController = TextEditingController(text: _currentAddress?['subdistrict'] ?? '');
+    final districtController = TextEditingController(text: _currentAddress?['district'] ?? '');
+    final provinceController = TextEditingController(text: _currentAddress?['province'] ?? '');
+    final postalCodeController = TextEditingController(text: _currentAddress?['postal_code'] ?? '');
+    final passwordController = TextEditingController();
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('แก้ไขข้อมูลบัญชี'),
+          content: SingleChildScrollView(
+            child: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TextFormField(
+                    controller: fullNameController,
+                    decoration: const InputDecoration(labelText: 'ชื่อ-นามสกุล'),
+                    validator: (value) =>
+                        (value == null || value.trim().isEmpty) ? 'กรุณากรอกชื่อ-นามสกุล' : null,
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: const InputDecoration(labelText: 'อีเมล'),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'กรุณากรอกอีเมล';
+                      }
+                      return RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
+                              .hasMatch(value.trim())
+                          ? null
+                          : 'รูปแบบอีเมลไม่ถูกต้อง';
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: phoneController,
+                    keyboardType: TextInputType.phone,
+                    decoration: const InputDecoration(labelText: 'เบอร์โทรศัพท์'),
+                    validator: (value) {
+                      final text = value?.trim() ?? '';
+                      if (text.isEmpty) return 'กรุณากรอกเบอร์โทรศัพท์';
+                      return RegExp(r'^\d{10}$').hasMatch(text)
+                          ? null
+                          : 'เบอร์โทรศัพท์ต้องมี 10 หลัก';
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: idCardController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(labelText: 'เลขบัตรประชาชน'),
+                    validator: (value) {
+                      final text = value?.trim() ?? '';
+                      if (text.isEmpty) return 'กรุณากรอกเลขบัตรประชาชน';
+                      return RegExp(r'^\d{13}$').hasMatch(text)
+                          ? null
+                          : 'เลขบัตรประชาชนต้องมี 13 หลัก';
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: houseNumberController,
+                    decoration: const InputDecoration(labelText: 'บ้านเลขที่'),
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: villageController,
+                    decoration: const InputDecoration(labelText: 'หมู่'),
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: roadController,
+                    decoration: const InputDecoration(labelText: 'ถนน'),
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: subdistrictController,
+                    decoration: const InputDecoration(labelText: 'ตำบล'),
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: districtController,
+                    decoration: const InputDecoration(labelText: 'อำเภอ'),
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: provinceController,
+                    decoration: const InputDecoration(labelText: 'จังหวัด'),
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: postalCodeController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(labelText: 'รหัสไปรษณีย์'),
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: passwordController,
+                    obscureText: true,
+                    decoration: const InputDecoration(
+                      labelText: 'รหัสผ่านใหม่ (เว้นว่างถ้าไม่ต้องการเปลี่ยน)',
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('ยกเลิก'),
+            ),
+            FilledButton(
+              onPressed: () {
+                if (formKey.currentState!.validate()) {
+                  Navigator.pop(dialogContext, true);
+                }
+              },
+              child: const Text('บันทึก'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (result != true || _currentUser.userId == null) {
+      return;
+    }
+
+    final messenger = ScaffoldMessenger.maybeOf(context);
+
+    try {
+      final updatedUser = await _authService.updateProfile(
+        userId: _currentUser.userId!,
+        fullName: fullNameController.text,
+        email: emailController.text,
+        password: passwordController.text,
+        phone: phoneController.text,
+        idCard: idCardController.text,
+        houseNumber: houseNumberController.text,
+        village: villageController.text,
+        road: roadController.text,
+        subdistrict: subdistrictController.text,
+        district: districtController.text,
+        province: provinceController.text,
+        postalCode: postalCodeController.text,
+      );
+
+      if (!mounted) return;
+
+      if (updatedUser != null) {
+        final refreshedAddress = await _database.getUserAddress(_currentUser.userId!);
+        setState(() {
+          _currentUser = updatedUser;
+          _currentAddress = refreshedAddress;
+        });
+        messenger?.showSnackBar(
+          const SnackBar(content: Text('อัปเดตข้อมูลบัญชีสำเร็จ')),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      messenger?.showSnackBar(
+        SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
+      );
+    }
   }
 
   void _showLogoutDialog() {
@@ -475,7 +746,7 @@ class _HomePageState extends State<HomePage> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  widget.user.fullName,
+                  _currentUser.fullName,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
@@ -618,7 +889,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildContractCard(Map<String, dynamic> contract) {
-    final userId = widget.user.userId;
+    final userId = _currentUser.userId;
     final lenderId = (contract['lender_id'] as num?)?.toInt();
 
     final isLender = lenderId == userId;

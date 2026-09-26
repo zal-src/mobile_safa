@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../database/database_helper.dart';
 import '../models/user.dart';
 import '../models/loan_contract.dart';
 import '../services/contract_service.dart';
@@ -25,7 +24,6 @@ class ContractDetailPage extends StatefulWidget {
 }
 
 class _ContractDetailPageState extends State<ContractDetailPage> {
-  final DatabaseHelper _database = DatabaseHelper.instance;
   final ContractService _contractService = ContractService();
 
   final PrintablePdfService _printablePdfService = PrintablePdfService();
@@ -35,27 +33,6 @@ class _ContractDetailPageState extends State<ContractDetailPage> {
   late LoanContract _contract;
 
   bool _isLoading = true;
-
-  bool _lenderSigned = false;
-  bool _borrowerSigned = false;
-
-  bool get currentUserSigned {
-    final userId = widget.user.userId;
-
-    if (userId == null) {
-      return false;
-    }
-
-    if (userId == _contract.lenderId) {
-      return _lenderSigned;
-    }
-
-    if (userId == _contract.borrowerId) {
-      return _borrowerSigned;
-    }
-
-    return false;
-  }
 
   @override
   void initState() {
@@ -95,8 +72,6 @@ class _ContractDetailPageState extends State<ContractDetailPage> {
 
         _isLoading = false;
       });
-
-      await _loadSignatureStatus();
     } catch (e) {
       if (!mounted) return;
 
@@ -113,108 +88,6 @@ class _ContractDetailPageState extends State<ContractDetailPage> {
         ),
       );
     }
-  }
-
-  Future<void> _loadSignatureStatus() async {
-    final contractId = _contract.contractId;
-
-    if (contractId == null) {
-      return;
-    }
-
-    final lenderSigned = await _database.hasSignature(
-      contractId,
-      _contract.lenderId,
-    );
-    final borrowerSigned = await _database.hasSignature(
-      contractId,
-      _contract.borrowerId,
-    );
-
-    if (!mounted) return;
-
-    setState(() {
-      _lenderSigned = lenderSigned;
-      _borrowerSigned = borrowerSigned;
-    });
-  }
-
-  Widget _buildSignatureStatus({
-    required String title,
-    required bool signed,
-  }) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade300),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            signed ? Icons.check_circle : Icons.schedule,
-            color: signed ? Colors.green : Colors.orange,
-          ),
-          const SizedBox(width: 12),
-          Expanded(child: Text(title)),
-          Text(
-            signed ? 'ลงชื่อแล้ว' : 'ยังไม่ลงชื่อ',
-            style: TextStyle(
-              color: signed ? Colors.green : Colors.orange,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _signContract() async {
-    final contractId = _contract.contractId;
-    final userId = widget.user.userId;
-
-    if (contractId == null || userId == null || currentUserSigned) {
-      return;
-    }
-
-    try {
-      await _database.insertSignature({
-        'contract_id': contractId,
-        'user_id': userId,
-      });
-
-      await _loadSignatureStatus();
-
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('ลงลายมือชื่อเรียบร้อยแล้ว')),
-      );
-    } catch (e) {
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'ลงลายมือชื่อไม่สำเร็จ: '
-            '${e.toString().replaceFirst('Exception: ', '')}',
-          ),
-        ),
-      );
-    }
-  }
-
-  Widget _buildSignatureButton({required bool currentUserSigned}) {
-    return ElevatedButton.icon(
-      onPressed: currentUserSigned ? null : _signContract,
-      icon: Icon(
-        currentUserSigned ? Icons.verified : Icons.draw,
-      ),
-      label: Text(
-        currentUserSigned ? 'ลงลายมือชื่อแล้ว' : 'ลงลายมือชื่อสัญญา',
-      ),
-    );
   }
 
   // ============================================================
@@ -375,8 +248,6 @@ class _ContractDetailPageState extends State<ContractDetailPage> {
   Widget _buildStatusCard() {
     final statusColor = _statusColor();
 
-    final bothSigned = _lenderSigned && _borrowerSigned;
-
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
@@ -418,14 +289,6 @@ class _ContractDetailPageState extends State<ContractDetailPage> {
                 fontWeight: FontWeight.bold,
               ),
             )
-          else if (bothSigned)
-            const Text(
-              'ผู้ให้กู้และผู้กู้ลงลายมือชื่อครบแล้ว',
-              style: TextStyle(
-                color: Colors.green,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
         ],
       ),
     );
@@ -519,31 +382,6 @@ class _ContractDetailPageState extends State<ContractDetailPage> {
                       const SizedBox(height: 20),
 
                       // ==================================================
-                      // สถานะการลงลายมือชื่อ
-                      // ==================================================
-                      const Text(
-                        'สถานะการลงลายมือชื่อ',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-
-                      const SizedBox(height: 12),
-
-                      _buildSignatureStatus(
-                        title: 'ผู้ให้กู้',
-                        signed: _lenderSigned,
-                      ),
-
-                      _buildSignatureStatus(
-                        title: 'ผู้กู้',
-                        signed: _borrowerSigned,
-                      ),
-
-                      const SizedBox(height: 20),
-
-                      // ==================================================
                       // ข้อมูลสัญญา
                       // ==================================================
                       const Text(
@@ -608,15 +446,6 @@ class _ContractDetailPageState extends State<ContractDetailPage> {
                           value: contract.notes!,
                           icon: Icons.notes,
                         ),
-
-                      const SizedBox(height: 10),
-
-                      // ==================================================
-                      // ปุ่มลงลายมือชื่อ
-                      // ==================================================
-                      _buildSignatureButton(
-                        currentUserSigned: currentUserSigned,
-                      ),
 
                       const SizedBox(height: 10),
 
