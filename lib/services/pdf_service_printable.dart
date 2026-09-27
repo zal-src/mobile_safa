@@ -82,12 +82,12 @@ class PrintablePdfService {
       _lineRow('ลำดับที่', '____________________', regularFont),
       _lineRow(
         'ทำที่',
-        '___________________________________________',
+        'ผ่านระบบออนไลน์ของ SAFA ',
         regularFont,
       ),
       _lineRow(
         'วันที่',
-        '${contract.loanDate}    เดือน __________________    พ.ศ. __________',
+        '${contract.loanDate} ',
         regularFont,
       ),
       pw.SizedBox(height: 10),
@@ -116,7 +116,7 @@ class PrintablePdfService {
       _article(
         'ข้อ ๑',
         'จำนวนเงินตามข้อมูลในระบบ: $amount บาท '
-            '(________________________________________________ บาท ______ สตางค์) '
+            
             'ข้อความและเงื่อนไขการกู้ยืมให้คู่สัญญาตรวจสอบและกรอกเพิ่มเติมก่อนลงนาม',
         regularFont,
         boldFont,
@@ -139,9 +139,7 @@ class PrintablePdfService {
       ),
       _article(
         'ข้อ ๔',
-        'ดอกเบี้ยหรือค่าตอบแทน (ถ้ามี): ${contract.interestRate.toStringAsFixed(2)}% '
-            'หรือ ________________________________________________________________\n'
-            'หากไม่มี ให้ระบุว่า “ไม่มี”',
+        'ดอกเบี้ยหรือค่าตอบแทน  ${contract.interestRate.toStringAsFixed(2)}% ',
         regularFont,
         boldFont,
       ),

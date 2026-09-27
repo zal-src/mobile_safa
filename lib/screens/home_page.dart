@@ -874,26 +874,16 @@ class _HomePageState extends State<HomePage> {
                               ),
                             ],
                           ),
-                          Row(
-                            children: [
-                              IconButton(
-                                tooltip: 'การแจ้งเตือน',
-                                icon: const Icon(Icons.notifications_none),
-                                onPressed: () {},
-                              ),
-                              const SizedBox(width: 4),
-                              Container(
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  border: Border.all(color: Colors.grey.shade300, width: 1),
-                                ),
-                                child: IconButton(
-                                  tooltip: 'ปิดเมนู',
-                                  icon: const Icon(Icons.close, size: 20),
-                                  onPressed: () => Navigator.pop(context),
-                                ),
-                              ),
-                            ],
+                          Container(
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.grey.shade300, width: 1),
+                            ),
+                            child: IconButton(
+                              tooltip: 'ปิดเมนู',
+                              icon: const Icon(Icons.close, size: 20),
+                              onPressed: () => Navigator.pop(context),
+                            ),
                           ),
                         ],
                       ),

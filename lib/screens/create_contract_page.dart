@@ -659,7 +659,7 @@ class _CreateContractPageState extends State<CreateContractPage> {
             textInputAction: TextInputAction.next,
             decoration: _fieldDecoration(
               _counterpartyHint,
-              label: '$_counterpartyLabel (ไม่ต้องมีในระบบก็ได้)',
+              label: '$_counterpartyLabel ',
             ),
             validator: _validateEmail,
           ),
