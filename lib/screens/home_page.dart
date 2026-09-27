@@ -620,6 +620,8 @@ class _HomePageState extends State<HomePage> {
       return;
     }
 
+    if (!mounted) return;
+
     final messenger = ScaffoldMessenger.maybeOf(context);
 
     try {
@@ -722,18 +724,10 @@ class _HomePageState extends State<HomePage> {
           preferredSize: const Size.fromHeight(1.0),
           child: Container(color: Colors.grey.shade200, height: 1.0),
         ),
-        leading: const Padding(
-          padding: EdgeInsets.only(left: 16.0),
-          child: Icon(
-            Icons.shopping_bag,
-            color: Color(0xFF087443),
-            size: 32,
-          ),
-        ),
-        leadingWidth: 56,
         title: null,
         actions: [
           IconButton(
+            tooltip: 'การแจ้งเตือน',
             icon: const Icon(Icons.notifications_none, color: Colors.black87),
             onPressed: () {},
           ),
@@ -745,6 +739,7 @@ class _HomePageState extends State<HomePage> {
               border: Border.all(color: Colors.grey.shade300, width: 1),
             ),
             child: IconButton(
+              tooltip: 'เมนูหลัก',
               icon: const Icon(Icons.menu, color: Colors.black87, size: 20),
               onPressed: () {
                 _showMenuDialog();
@@ -779,22 +774,6 @@ class _HomePageState extends State<HomePage> {
                             fontSize: 24,
                             fontWeight: FontWeight.w800,
                             color: Color(0xFF101828),
-                          ),
-                        ),
-                        TextButton.icon(
-                          onPressed: () {},
-                          icon: const Icon(Icons.menu_book, color: Color(0xFF087443)),
-                          label: const Text(
-                            'เปิด Profile Book',
-                            style: TextStyle(
-                              color: Color(0xFF087443),
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          style: TextButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                            backgroundColor: const Color(0xFFE8F7F1),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                           ),
                         ),
                       ],
@@ -880,12 +859,19 @@ class _HomePageState extends State<HomePage> {
                         children: [
                           const Row(
                             children: [
-                              Icon(Icons.shopping_bag, color: Color(0xFF087443), size: 32),
+                              Text(
+                                'เมนู',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                             ],
                           ),
                           Row(
                             children: [
                               IconButton(
+                                tooltip: 'การแจ้งเตือน',
                                 icon: const Icon(Icons.notifications_none),
                                 onPressed: () {},
                               ),
@@ -896,6 +882,7 @@ class _HomePageState extends State<HomePage> {
                                   border: Border.all(color: Colors.grey.shade300, width: 1),
                                 ),
                                 child: IconButton(
+                                  tooltip: 'ปิดเมนู',
                                   icon: const Icon(Icons.close, size: 20),
                                   onPressed: () => Navigator.pop(context),
                                 ),
@@ -908,12 +895,10 @@ class _HomePageState extends State<HomePage> {
                     const Divider(height: 1, color: Color(0xFFE4E7EC)),
                     const SizedBox(height: 8),
                     _buildMenuItem(Icons.home_outlined, 'หน้าหลัก', true, () => Navigator.pop(context)),
-                    _buildMenuItem(Icons.menu_book, 'Profile Book', false, () {}),
                     _buildMenuItem(Icons.person_outline, 'โปรไฟล์', false, () {
                       Navigator.pop(context);
                       _showProfile();
                     }),
-                    _buildMenuItem(Icons.sync_alt, 'คำขอแลกเปลี่ยน', false, () {}),
                     const Padding(
                       padding: EdgeInsets.symmetric(vertical: 8.0),
                       child: Divider(height: 1, color: Color(0xFFE4E7EC)),
@@ -936,6 +921,7 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildWelcomeCard() {
     return Container(
+      key: _keyWelcomeCard,
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
@@ -993,6 +979,7 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildSummarySection() {
     return Column(
+      key: _keySummarySection,
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1274,6 +1261,7 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildCreateContractButton() {
     return SizedBox(
+      key: _keyCreateButton,
       width: double.infinity,
       height: 54,
       child: FilledButton.icon(
@@ -1297,6 +1285,7 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildBottomNavigationBar() {
     return NavigationBar(
+      key: _keyBottomNav,
       selectedIndex: _currentIndex,
       onDestinationSelected: _onBottomNavigationTap,
       backgroundColor: Colors.white,

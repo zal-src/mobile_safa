@@ -4,9 +4,11 @@ import 'package:intl/intl.dart';
 
 import '../models/user.dart';
 import '../services/contract_service.dart';
+import '../services/onboarding_service.dart';
 import '../theme/app_theme.dart';
 import '../utils/responsive.dart';
 import '../widgets/responsive_container.dart';
+import '../widgets/onboarding_bottom_sheet.dart';
 
 class CreateContractPage extends StatefulWidget {
   final User user;
@@ -21,6 +23,11 @@ class CreateContractPage extends StatefulWidget {
 class _CreateContractPageState extends State<CreateContractPage> {
   final ContractService _contractService = ContractService();
   final _formKey = GlobalKey<FormState>();
+
+  // GlobalKeys สำหรับ spotlight tutorial
+  final _keySteps = GlobalKey();
+  final _keyCounterparty = GlobalKey();
+  final _keyActionBtn = GlobalKey();
 
   final _counterpartyEmailController = TextEditingController();
   final _counterpartyNameController = TextEditingController();
@@ -55,6 +62,49 @@ class _CreateContractPageState extends State<CreateContractPage> {
 
     // วันให้กู้/วันเริ่มสัญญาเป็นวันนี้เท่านั้น
     _loanDateController.text = _formatDate(_today());
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _maybeShowOnboarding();
+    });
+  }
+
+  Future<void> _maybeShowOnboarding() async {
+    final seen = await OnboardingService.instance
+        .hasSeenOnboarding(OnboardingService.keyCreateContract);
+    if (!mounted || seen) return;
+    await OnboardingService.instance.markAsSeen(OnboardingService.keyCreateContract);
+    if (!mounted) return;
+
+    await Future.delayed(const Duration(milliseconds: 400));
+    if (!mounted) return;
+
+    await SpotlightTutorial.show(
+      context,
+      steps: [
+        TutorialStep(
+          title: 'ขั้นตอนการสร้างสัญญา',
+          description:
+              'มีทั้งหมด 3 ขั้น: ข้อมูลคู่สัญญา → รายละเอียดเงินกู้ → บันทึก\nทำทีละขั้น ระบบจะตรวจสอบให้อัตโนมัติ',
+          targetKey: _keySteps,
+          spotlightPadding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
+        ),
+        TutorialStep(
+          title: 'กรอกข้อมูลคู่สัญญา',
+          description:
+              'ใส่อีเมลของคนที่คุณจะทำสัญญาด้วย\nถ้าเขายังไม่มีบัญชี ระบบจะสร้างให้อัตโนมัติ',
+          targetKey: _keyCounterparty,
+          spotlightPadding: const EdgeInsets.all(8),
+        ),
+        TutorialStep(
+          title: 'กดเพื่อไปขั้นต่อไป',
+          description:
+              'เมื่อกรอกครบแล้ว กดปุ่มนี้เพื่อไปขั้นถัดไป\nขั้นสุดท้ายจะสรุปข้อมูลก่อนบันทึกจริง',
+          targetKey: _keyActionBtn,
+          spotlightPadding: const EdgeInsets.all(6),
+          spotlightRadius: 10,
+        ),
+      ],
+    );
   }
 
   @override
@@ -413,6 +463,7 @@ class _CreateContractPageState extends State<CreateContractPage> {
     final labels = ['ข้อมูลของคุณ', 'รายละเอียดเงินกู้', 'ตรวจสอบ'];
 
     return Row(
+      key: _keySteps,
       children: List.generate(labels.length, (index) {
         final isActive = index == _currentStep;
         final isComplete = index < _currentStep;
@@ -601,6 +652,7 @@ class _CreateContractPageState extends State<CreateContractPage> {
           ],
           const SizedBox(height: 11),
           TextFormField(
+            key: _keyCounterparty,
             controller: _counterpartyEmailController,
             enabled: !_isSaving,
             keyboardType: TextInputType.emailAddress,
@@ -685,6 +737,7 @@ class _CreateContractPageState extends State<CreateContractPage> {
             border: Border(top: BorderSide(color: AppColors.border)),
           ),
           child: SizedBox(
+            key: _keyActionBtn,
             height: 50,
             child: ElevatedButton.icon(
               onPressed: _isSaving ? null : _handlePrimaryAction,

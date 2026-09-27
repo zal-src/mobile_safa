@@ -165,8 +165,9 @@ class _SpotlightTutorialState extends State<SpotlightTutorial>
     _spotAnim = CurvedAnimation(parent: _spotCtrl, curve: Curves.easeInOut);
 
     // เริ่ม animation
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _computeSpotlight();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await _computeSpotlight();
+      if (!mounted) return;
       _overlayCtrl.forward();
       Future.delayed(const Duration(milliseconds: 100), () {
         if (mounted) _spotCtrl.forward();
@@ -188,19 +189,32 @@ class _SpotlightTutorialState extends State<SpotlightTutorial>
   // ---------------------------------------------------------------------------
   // คำนวณตำแหน่ง spotlight จาก GlobalKey
   // ---------------------------------------------------------------------------
-  void _computeSpotlight() {
+  Future<void> _computeSpotlight() async {
     final step = widget.steps[_currentStep];
     if (step.targetKey == null) {
-      setState(() => _spotlightRect = null);
+      if (mounted) setState(() => _spotlightRect = null);
       return;
     }
 
     final key = step.targetKey!;
     final ctx = key.currentContext;
     if (ctx == null) {
-      setState(() => _spotlightRect = null);
+      if (mounted) setState(() => _spotlightRect = null);
       return;
     }
+
+    try {
+      await Scrollable.ensureVisible(
+        ctx,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+        alignment: 0.5,
+      );
+    } catch (_) {
+      // Ignored if not inside scrollable
+    }
+
+    if (!mounted || !ctx.mounted) return;
 
     final box = ctx.findRenderObject() as RenderBox?;
     if (box == null || !box.hasSize) {
@@ -225,34 +239,55 @@ class _SpotlightTutorialState extends State<SpotlightTutorial>
   // ---------------------------------------------------------------------------
   // Navigation
   // ---------------------------------------------------------------------------
+  bool _isAnimating = false;
+
   Future<void> _goNext() async {
-    if (_currentStep < widget.steps.length - 1) {
-      await _cardCtrl.reverse();
-      await _spotCtrl.reverse();
-      setState(() => _currentStep++);
-      _computeSpotlight();
-      _spotCtrl.forward();
-      _cardCtrl.forward();
-    } else {
-      await _dismiss();
-      widget.onCompleted?.call();
+    if (_isAnimating) return;
+    _isAnimating = true;
+    try {
+      if (_currentStep < widget.steps.length - 1) {
+        await Future.wait([_cardCtrl.reverse(), _spotCtrl.reverse()]);
+        setState(() => _currentStep++);
+        await _computeSpotlight();
+        _spotCtrl.forward();
+        await _cardCtrl.forward();
+      } else {
+        await _dismiss();
+        widget.onCompleted?.call();
+      }
+    } catch (_) {
+    } finally {
+      if (mounted) _isAnimating = false;
     }
   }
 
   Future<void> _goBack() async {
-    if (_currentStep > 0) {
-      await _cardCtrl.reverse();
-      await _spotCtrl.reverse();
-      setState(() => _currentStep--);
-      _computeSpotlight();
-      _spotCtrl.forward();
-      _cardCtrl.forward();
+    if (_isAnimating) return;
+    _isAnimating = true;
+    try {
+      if (_currentStep > 0) {
+        await Future.wait([_cardCtrl.reverse(), _spotCtrl.reverse()]);
+        setState(() => _currentStep--);
+        await _computeSpotlight();
+        _spotCtrl.forward();
+        await _cardCtrl.forward();
+      }
+    } catch (_) {
+    } finally {
+      if (mounted) _isAnimating = false;
     }
   }
 
   Future<void> _skip() async {
-    await _dismiss();
-    widget.onSkipped?.call();
+    if (_isAnimating) return;
+    _isAnimating = true;
+    try {
+      await _dismiss();
+      widget.onSkipped?.call();
+    } catch (_) {
+    } finally {
+      if (mounted) _isAnimating = false;
+    }
   }
 
   Future<void> _dismiss() async {
@@ -311,7 +346,7 @@ class _SpotlightTutorialState extends State<SpotlightTutorial>
                     ? null
                     : MediaQuery.of(context).padding.bottom + 16,
                 top: _cardAboveSpotlight
-                    ? MediaQuery.of(context).padding.top + (_spotlightRect?.bottom ?? 0) + 12
+                    ? MediaQuery.of(context).padding.top + 16
                     : null,
               child: AnimatedBuilder(
                 animation: _cardAnim,

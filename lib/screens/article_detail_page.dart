@@ -34,6 +34,7 @@ class ArticleDetailPage extends StatelessWidget {
         title: article.category,
         actions: [
           IconButton(
+            tooltip: 'แชร์บทความ',
             icon: const Icon(Icons.ios_share, color: AppColors.ink),
             onPressed: () => _showShareModal(context),
           ),

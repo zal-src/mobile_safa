@@ -186,19 +186,6 @@ class _KnowledgePageState extends State<KnowledgePage> {
             ],
           ),
         ),
-        Container(
-          width: 80,
-          height: 80,
-          decoration: BoxDecoration(
-            color: const Color(0xFFE8F7F1),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: const Icon(
-            Icons.shopping_bag,
-            color: Color(0xFF087443),
-            size: 40,
-          ),
-        ),
       ],
     );
   }

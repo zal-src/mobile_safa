@@ -195,18 +195,12 @@ abstract final class AppTheme {
       automaticallyImplyLeading: false,
       leading: showBack
           ? IconButton(
+              tooltip: 'ย้อนกลับ',
               icon: const Icon(Icons.arrow_back_ios_new,
                   color: AppColors.ink, size: 20),
               onPressed: () => Navigator.of(context).pop(),
             )
-          : Padding(
-              padding: const EdgeInsets.only(left: 16.0),
-              child: const Icon(
-                Icons.shopping_bag,
-                color: AppColors.primary,
-                size: 32,
-              ),
-            ),
+          : null,
       leadingWidth: showBack ? 48 : 56,
       title: title != null
           ? Text(

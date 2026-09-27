@@ -64,6 +64,7 @@ class _FinancialHealthCheckPageState extends State<FinancialHealthCheckPage> {
         ),
         automaticallyImplyLeading: false,
         leading: IconButton(
+          tooltip: 'ย้อนกลับ',
           icon: const Icon(Icons.arrow_back_ios_new,
               color: AppColors.ink, size: 20),
           onPressed: _prevStep,

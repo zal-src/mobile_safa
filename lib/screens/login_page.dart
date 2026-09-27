@@ -100,15 +100,6 @@ class _LoginPageState extends State<LoginPage> {
           preferredSize: const Size.fromHeight(1.0),
           child: Container(color: const Color(0xFFE4E7EC), height: 1.0),
         ),
-        leading: const Padding(
-          padding: EdgeInsets.only(left: 16.0),
-          child: Icon(
-            Icons.shopping_bag,
-            color: AppColors.primary,
-            size: 32,
-          ),
-        ),
-        leadingWidth: 56,
         title: null,
         automaticallyImplyLeading: false,
       ),
@@ -183,6 +174,7 @@ class _LoginPageState extends State<LoginPage> {
                     prefixIcon: const Icon(Icons.lock),
                     border: const OutlineInputBorder(),
                     suffixIcon: IconButton(
+                      tooltip: _obscurePassword ? 'แสดงรหัสผ่าน' : 'ซ่อนรหัสผ่าน',
                       onPressed: () {
                         setState(() {
                           _obscurePassword = !_obscurePassword;

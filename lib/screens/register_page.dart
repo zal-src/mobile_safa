@@ -590,6 +590,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   decoration: _accountFieldDecoration(
                     hint: 'รหัสผ่าน',
                     suffixIcon: IconButton(
+                      tooltip: _obscurePassword ? 'แสดงรหัสผ่าน' : 'ซ่อนรหัสผ่าน',
                       onPressed: () {
                         setState(() {
                           _obscurePassword = !_obscurePassword;
@@ -639,6 +640,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   decoration: _accountFieldDecoration(
                     hint: 'ยืนยันรหัสผ่าน',
                     suffixIcon: IconButton(
+                      tooltip: _obscureConfirmPassword ? 'แสดงรหัสผ่าน' : 'ซ่อนรหัสผ่าน',
                       onPressed: () {
                         setState(() {
                           _obscureConfirmPassword = !_obscureConfirmPassword;
