@@ -10,6 +10,7 @@ import '../widgets/onboarding_bottom_sheet.dart';
 import 'contract_detail_page.dart';
 import 'contract_role_page.dart';
 import '../theme/app_theme.dart';
+import 'ai_chat_page.dart';
 
 class ContractListPage extends StatefulWidget {
   final User user;
@@ -552,9 +553,14 @@ class _ContractListPageState extends State<ContractListPage> {
         title: const Text('สัญญาของฉัน'),
         actions: [
           IconButton(
-            tooltip: 'การแจ้งเตือน',
-            icon: const Icon(Icons.notifications_none, color: Colors.black87),
-            onPressed: () {},
+            tooltip: 'ค้นหาด้วย AI',
+            icon: const Icon(Icons.search, color: Colors.black87),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const AiChatPage()),
+              );
+            },
           ),
           const SizedBox(width: 12),
         ],

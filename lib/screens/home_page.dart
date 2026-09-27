@@ -14,6 +14,7 @@ import 'contract_list_page.dart';
 import 'contract_role_page.dart';
 import 'login_page.dart';
 import 'knowledge_page.dart';
+import 'ai_chat_page.dart';
 import '../theme/app_theme.dart';
 
 class HomePage extends StatefulWidget {
@@ -727,9 +728,14 @@ class _HomePageState extends State<HomePage> {
         title: null,
         actions: [
           IconButton(
-            tooltip: 'การแจ้งเตือน',
-            icon: const Icon(Icons.notifications_none, color: Colors.black87),
-            onPressed: () {},
+            tooltip: 'ค้นหาด้วย AI',
+            icon: const Icon(Icons.search, color: Colors.black87),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const AiChatPage()),
+              );
+            },
           ),
           const SizedBox(width: 4),
           Container(
