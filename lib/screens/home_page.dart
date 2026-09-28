@@ -863,16 +863,12 @@ class _HomePageState extends State<HomePage> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Row(
-                            children: [
-                              Text(
-                                'เมนู',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
+                          const Text(
+                            'เมนู',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                           Container(
                             decoration: BoxDecoration(
@@ -890,7 +886,80 @@ class _HomePageState extends State<HomePage> {
                     ),
                     const Divider(height: 1, color: Color(0xFFE4E7EC)),
                     const SizedBox(height: 8),
-                    _buildMenuItem(Icons.home_outlined, 'หน้าหลัก', true, () => Navigator.pop(context)),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF8F9FC),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 42,
+                              height: 42,
+                              decoration: const BoxDecoration(
+                                color: Color(0xFFE8F7F1),
+                                borderRadius: BorderRadius.all(Radius.circular(12)),
+                              ),
+                              child: const Icon(Icons.person_outline, color: Color(0xFF087443)),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    _currentUser.fullName,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w700,
+                                      color: Color(0xFF101828),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    _currentUser.email,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey.shade600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    _buildMenuItem(Icons.home_outlined, 'หน้าหลัก', true, () {
+                      Navigator.pop(context);
+                    }),
+                    _buildMenuItem(Icons.description_outlined, 'สัญญา', false, () {
+                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ContractListPage(user: _currentUser),
+                        ),
+                      );
+                    }),
+                    _buildMenuItem(Icons.menu_book_outlined, 'ความรู้', false, () {
+                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => KnowledgePage(user: _currentUser),
+                        ),
+                      );
+                    }),
                     _buildMenuItem(Icons.person_outline, 'โปรไฟล์', false, () {
                       Navigator.pop(context);
                       _showProfile();
