@@ -165,6 +165,10 @@ class ContractService {
         .toList();
   }
 
+  Future<void> markContractAsCompleted(int contractId) async {
+    await _database.updateContractStatus(contractId, 'completed');
+  }
+
   Future<LoanContract> createContractByEmail({
     required int lenderId,
     required String borrowerEmail,

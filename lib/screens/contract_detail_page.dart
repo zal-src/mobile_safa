@@ -129,11 +129,24 @@ class _ContractDetailPageState extends State<ContractDetailPage> {
   // แสดงข้อความสถานะ
   // ============================================================
 
-  String _statusText() => _contract.status == 'completed'
-      ? 'ชำระเงินครบแล้ว'
-      : _contract.status == 'active'
-          ? 'พร้อมพิมพ์และจัดการต่อ'
-          : 'สถานะสัญญา: ${_contract.status}';
+  String _statusText() {
+    if (_contract.status == 'completed') {
+      return 'ชำระเงินครบแล้ว';
+    }
+    if (_contract.status == 'active') {
+      final returnDate = DateTime.tryParse(_contract.returnDate);
+      if (returnDate != null) {
+        final today = DateTime.now();
+        final returnDateOnly = DateTime(returnDate.year, returnDate.month, returnDate.day);
+        final todayOnly = DateTime(today.year, today.month, today.day);
+        if (todayOnly.isAfter(returnDateOnly)) {
+          return 'เกินกำหนด';
+        }
+      }
+      return 'พร้อมพิมพ์และจัดการต่อ';
+    }
+    return 'สถานะสัญญา: ${_contract.status}';
+  }
 
   // ============================================================
   // สีสถานะ
@@ -143,7 +156,17 @@ class _ContractDetailPageState extends State<ContractDetailPage> {
     if (_contract.status == 'completed') {
       return Colors.green;
     }
-
+    if (_contract.status == 'active') {
+      final returnDate = DateTime.tryParse(_contract.returnDate);
+      if (returnDate != null) {
+        final today = DateTime.now();
+        final returnDateOnly = DateTime(returnDate.year, returnDate.month, returnDate.day);
+        final todayOnly = DateTime(today.year, today.month, today.day);
+        if (todayOnly.isAfter(returnDateOnly)) {
+          return Colors.red;
+        }
+      }
+    }
     return AppColors.primary;
   }
 
@@ -155,10 +178,19 @@ class _ContractDetailPageState extends State<ContractDetailPage> {
     if (_contract.status == 'completed') {
       return Icons.task_alt;
     }
-
-    return _contract.status == 'completed'
-        ? Icons.task_alt
-        : Icons.description_outlined;
+    if (_contract.status == 'active') {
+      final returnDate = DateTime.tryParse(_contract.returnDate);
+      if (returnDate != null) {
+        final today = DateTime.now();
+        final returnDateOnly = DateTime(returnDate.year, returnDate.month, returnDate.day);
+        final todayOnly = DateTime(today.year, today.month, today.day);
+        if (todayOnly.isAfter(returnDateOnly)) {
+          return Icons.warning_amber_rounded;
+        }
+      }
+      return Icons.description_outlined;
+    }
+    return Icons.description_outlined;
   }
 
   // ============================================================
@@ -297,6 +329,53 @@ class _ContractDetailPageState extends State<ContractDetailPage> {
   // ============================================================
   // ปุ่มการชำระเงิน
   // ============================================================
+  
+  Future<void> _markAsCompleted() async {
+    final contractId = _contract.contractId;
+    if (contractId == null) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('ยืนยันการชำระครบแล้ว'),
+        content: const Text('คุณแน่ใจหรือไม่ว่าสัญญาฉบับนี้มีการชำระเงินครบถ้วนแล้ว?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('ยกเลิก'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: FilledButton.styleFrom(backgroundColor: Colors.green),
+            child: const Text('ยืนยัน'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      await _contractService.markContractAsCompleted(contractId);
+      await _loadContractData();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('เปลี่ยนสถานะสัญญาเป็นชำระครบแล้ว')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('เกิดข้อผิดพลาด: $e')),
+      );
+    }
+  }
 
   Widget _buildRepaymentButton() {
     // ถ้าชำระครบแล้ว
@@ -310,10 +389,26 @@ class _ContractDetailPageState extends State<ContractDetailPage> {
       );
     }
 
-    return OutlinedButton.icon(
-      onPressed: _openRepaymentPage,
-      icon: const Icon(Icons.payments),
-      label: const Text('ดูการชำระเงิน'),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        OutlinedButton.icon(
+          onPressed: _openRepaymentPage,
+          icon: const Icon(Icons.payments),
+          label: const Text('ดูการชำระเงิน'),
+        ),
+        if (_contract.status == 'active') ...[
+          const SizedBox(height: 10),
+          FilledButton.icon(
+            onPressed: _markAsCompleted,
+            icon: const Icon(Icons.check_circle_outline),
+            label: const Text('เสร็จสิ้น (จ่ายครบแล้ว)'),
+            style: FilledButton.styleFrom(
+              backgroundColor: Colors.green,
+            ),
+          ),
+        ]
+      ],
     );
   }
 

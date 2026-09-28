@@ -34,6 +34,8 @@ class _ContractListPageState extends State<ContractListPage> {
   Map<String, dynamic>? _currentAddress;
 
   List<LoanContract> _contracts = [];
+  
+  String _selectedFilter = 'ทั้งหมด';
 
   bool _isLoading = true;
 
@@ -140,6 +142,22 @@ class _ContractListPageState extends State<ContractListPage> {
   }
 
   // ============================================================
+  // กรองสัญญา
+  // ============================================================
+
+  List<LoanContract> get _filteredContracts {
+    if (_selectedFilter == 'ทั้งหมด') return _contracts;
+    
+    return _contracts.where((contract) {
+      final status = _statusText(contract);
+      if (_selectedFilter == 'มีผลแล้ว' && status == 'มีผลแล้ว') return true;
+      if (_selectedFilter == 'เกินกำหนด' && status == 'เกินกำหนด') return true;
+      if (_selectedFilter == 'เสร็จสิ้น' && status == 'ชำระครบแล้ว') return true;
+      return false;
+    }).toList();
+  }
+
+  // ============================================================
   // เปิดหน้าสร้างสัญญา
   // ============================================================
 
@@ -183,16 +201,24 @@ class _ContractListPageState extends State<ContractListPage> {
   // ============================================================
 
   String _statusText(LoanContract contract) {
+    if (contract.status == 'active') {
+      final returnDate = DateTime.tryParse(contract.returnDate);
+      if (returnDate != null) {
+        final today = DateTime.now();
+        final returnDateOnly = DateTime(returnDate.year, returnDate.month, returnDate.day);
+        final todayOnly = DateTime(today.year, today.month, today.day);
+        if (todayOnly.isAfter(returnDateOnly)) {
+          return 'เกินกำหนด';
+        }
+      }
+      return 'มีผลแล้ว';
+    }
+
     switch (contract.status) {
       case 'draft':
         return 'รอลงลายมือชื่อ';
-
-      case 'active':
-        return 'มีผลแล้ว';
-
       case 'completed':
         return 'ชำระครบแล้ว';
-
       default:
         return contract.status;
     }
@@ -203,16 +229,24 @@ class _ContractListPageState extends State<ContractListPage> {
   // ============================================================
 
   Color _statusColor(LoanContract contract) {
+    if (contract.status == 'active') {
+      final returnDate = DateTime.tryParse(contract.returnDate);
+      if (returnDate != null) {
+        final today = DateTime.now();
+        final returnDateOnly = DateTime(returnDate.year, returnDate.month, returnDate.day);
+        final todayOnly = DateTime(today.year, today.month, today.day);
+        if (todayOnly.isAfter(returnDateOnly)) {
+          return Colors.red;
+        }
+      }
+      return AppColors.primary;
+    }
+
     switch (contract.status) {
       case 'draft':
         return AppColors.accent;
-
-      case 'active':
-        return AppColors.primary;
-
       case 'completed':
         return AppColors.primary;
-
       default:
         return Colors.grey;
     }
@@ -223,16 +257,24 @@ class _ContractListPageState extends State<ContractListPage> {
   // ============================================================
 
   IconData _statusIcon(LoanContract contract) {
+    if (contract.status == 'active') {
+      final returnDate = DateTime.tryParse(contract.returnDate);
+      if (returnDate != null) {
+        final today = DateTime.now();
+        final returnDateOnly = DateTime(returnDate.year, returnDate.month, returnDate.day);
+        final todayOnly = DateTime(today.year, today.month, today.day);
+        if (todayOnly.isAfter(returnDateOnly)) {
+          return Icons.warning_amber_rounded;
+        }
+      }
+      return Icons.verified;
+    }
+
     switch (contract.status) {
       case 'draft':
         return Icons.pending_actions;
-
-      case 'active':
-        return Icons.verified;
-
       case 'completed':
         return Icons.task_alt;
-
       default:
         return Icons.info_outline;
     }
@@ -1192,29 +1234,71 @@ class _ContractListPageState extends State<ContractListPage> {
             : RefreshIndicator(
                 key: _keyContractList,
                 onRefresh: _loadContracts,
-                child: _contracts.isEmpty
-                    ? LayoutBuilder(
-                        builder: (context, constraints) {
-                          return SingleChildScrollView(
-                            physics: const AlwaysScrollableScrollPhysics(),
-                            child: SizedBox(
-                              height: constraints.maxHeight,
-                              child: _buildEmptyState(),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // ตัวกรองสถานะ
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: Responsive.horizontalPadding(context),
+                        vertical: 12,
+                      ),
+                      child: Row(
+                        children: ['ทั้งหมด', 'มีผลแล้ว', 'เกินกำหนด', 'เสร็จสิ้น'].map((filter) {
+                          final isSelected = _selectedFilter == filter;
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: ChoiceChip(
+                              label: Text(filter),
+                              selected: isSelected,
+                              onSelected: (selected) {
+                                if (selected) {
+                                  setState(() => _selectedFilter = filter);
+                                }
+                              },
+                              selectedColor: AppColors.primary,
+                              labelStyle: TextStyle(
+                                color: isSelected ? Colors.white : Colors.black87,
+                                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
                             ),
                           );
-                        },
-                      )
-                    : ListView.builder(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        padding: EdgeInsets.fromLTRB(
-                          Responsive.horizontalPadding(context), 16,
-                          Responsive.horizontalPadding(context), 100,
-                        ),
-                        itemCount: _contracts.length,
-                        itemBuilder: (context, index) {
-                          return _buildContractCard(_contracts[index]);
-                        },
+                        }).toList(),
                       ),
+                    ),
+                    
+                    // รายการสัญญา
+                    Expanded(
+                      child: _filteredContracts.isEmpty
+                          ? LayoutBuilder(
+                              builder: (context, constraints) {
+                                return SingleChildScrollView(
+                                  physics: const AlwaysScrollableScrollPhysics(),
+                                  child: SizedBox(
+                                    height: constraints.maxHeight,
+                                    child: _buildEmptyState(),
+                                  ),
+                                );
+                              },
+                            )
+                          : ListView.builder(
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              padding: EdgeInsets.fromLTRB(
+                                Responsive.horizontalPadding(context), 4,
+                                Responsive.horizontalPadding(context), 100,
+                              ),
+                              itemCount: _filteredContracts.length,
+                              itemBuilder: (context, index) {
+                                return _buildContractCard(_filteredContracts[index]);
+                              },
+                            ),
+                    ),
+                  ],
+                ),
               ),
         ),
       ),

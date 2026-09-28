@@ -80,16 +80,8 @@ class PrintablePdfService {
       ),
       pw.SizedBox(height: 16),
       _lineRow('ลำดับที่', '____________________', regularFont),
-      _lineRow(
-        'ทำที่',
-        'ผ่านระบบออนไลน์ของ SAFA ',
-        regularFont,
-      ),
-      _lineRow(
-        'วันที่',
-        '${contract.loanDate} ',
-        regularFont,
-      ),
+      _lineRow('ทำที่', 'ผ่านระบบออนไลน์ของ SAFA ', regularFont),
+      _lineRow('วันที่', '${_formatThaiDate(contract.loanDate)} ', regularFont),
       pw.SizedBox(height: 10),
       pw.Text('คู่สัญญา', style: pw.TextStyle(font: boldFont, fontSize: 13)),
       pw.SizedBox(height: 5),
@@ -116,7 +108,6 @@ class PrintablePdfService {
       _article(
         'ข้อ ๑',
         'จำนวนเงินตามข้อมูลในระบบ: $amount บาท '
-            
             'ข้อความและเงื่อนไขการกู้ยืมให้คู่สัญญาตรวจสอบและกรอกเพิ่มเติมก่อนลงนาม',
         regularFont,
         boldFont,
@@ -131,8 +122,7 @@ class PrintablePdfService {
       ),
       _article(
         'ข้อ ๓',
-        'วันครบกำหนดตามข้อมูลในระบบ: ${contract.returnDate} '
-            'หรือวันที่ __________________ เดือน __________________ พ.ศ. __________ '
+        'วันครบกำหนดตามข้อมูลในระบบ:วันที่ ${_formatThaiDate(contract.returnDate)}'
             'ให้คู่สัญญาตรวจสอบและแก้ไขให้ตรงกับข้อตกลงจริง',
         regularFont,
         boldFont,
@@ -345,6 +335,29 @@ class PrintablePdfService {
     return values
         .where((value) => value != null && value.toString().trim().isNotEmpty)
         .join(' ');
+  }
+
+  String _formatThaiDate(String dateStr) {
+    if (dateStr.isEmpty) return dateStr;
+    final DateTime? date = DateTime.tryParse(dateStr);
+    if (date == null) return dateStr;
+
+    final List<String> thaiMonths = [
+      'มกราคม',
+      'กุมภาพันธ์',
+      'มีนาคม',
+      'เมษายน',
+      'พฤษภาคม',
+      'มิถุนายน',
+      'กรกฎาคม',
+      'สิงหาคม',
+      'กันยายน',
+      'ตุลาคม',
+      'พฤศจิกายน',
+      'ธันวาคม',
+    ];
+
+    return '${date.day} ${thaiMonths[date.month - 1]} ${date.year + 543}';
   }
 
   String _money(double amount) => amount.toStringAsFixed(2);
