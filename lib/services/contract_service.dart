@@ -169,6 +169,10 @@ class ContractService {
     await _database.updateContractStatus(contractId, 'completed');
   }
 
+  Future<void> updatePaidInstallments(int contractId, int paidInstallments) async {
+    await _database.updateContractPaidInstallments(contractId, paidInstallments);
+  }
+
   Future<LoanContract> createContractByEmail({
     required int lenderId,
     required String borrowerEmail,

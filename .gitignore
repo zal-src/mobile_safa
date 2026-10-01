@@ -45,4 +45,8 @@ app.*.map.json
 /android/app/release
 
 # API Keys / Secrets
+# ไฟล์จริง → ignore (ไม่ขึ้น Git)
+.env
 lib/config/app_secrets.dart
+# ไฟล์ตัวอย่าง → อนุญาตให้ขึ้น Git ได้
+!.env.example
