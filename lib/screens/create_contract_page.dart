@@ -10,6 +10,13 @@ import '../utils/responsive.dart';
 import '../widgets/responsive_container.dart';
 import '../widgets/onboarding_bottom_sheet.dart';
 
+bool canUseMonthlyRepayment({
+  required DateTime loanDate,
+  required DateTime returnDate,
+}) {
+  return loanDate.year != returnDate.year || loanDate.month != returnDate.month;
+}
+
 class CreateContractPage extends StatefulWidget {
   final User user;
   final String role;
@@ -139,6 +146,17 @@ class _CreateContractPageState extends State<CreateContractPage> {
     return a.year == b.year && a.month == b.month && a.day == b.day;
   }
 
+  bool get _canUseMonthlyRepayment {
+    final loanDate = _parseDate(_loanDateController.text);
+    final returnDate = _parseDate(_returnDateController.text);
+
+    if (loanDate == null || returnDate == null) {
+      return true;
+    }
+
+    return canUseMonthlyRepayment(loanDate: loanDate, returnDate: returnDate);
+  }
+
   String _formatDate(DateTime date) {
     final value = _dateOnly(date);
     return '${value.year.toString().padLeft(4, '0')}-'
@@ -197,6 +215,17 @@ class _CreateContractPageState extends State<CreateContractPage> {
     if (loanDate != null && selected.isBefore(loanDate)) {
       _showError('วันคืนเงินต้องไม่ก่อนวันให้กู้');
       return;
+    }
+
+    if (_repaymentType == 'รายเดือน' &&
+        loanDate != null &&
+        !canUseMonthlyRepayment(loanDate: loanDate, returnDate: selected)) {
+      setState(() {
+        _repaymentType = 'ครั้งเดียว';
+      });
+      _showError(
+        'ไม่สามารถเลือกชำระรายเดือนได้ เมื่อวันคืนเงินอยู่ในเดือนเดียวกับวันให้กู้',
+      );
     }
 
     setState(() {
@@ -302,6 +331,14 @@ class _CreateContractPageState extends State<CreateContractPage> {
 
     if (returnDate.isBefore(loanDate)) {
       _showError('วันคืนเงินต้องไม่ก่อนวันให้กู้');
+      return;
+    }
+
+    if (_repaymentType == 'รายเดือน' &&
+        !canUseMonthlyRepayment(loanDate: loanDate, returnDate: returnDate)) {
+      _showError(
+        'ไม่สามารถเลือกชำระรายเดือนได้ เมื่อวันคืนเงินอยู่ในเดือนเดียวกับวันให้กู้',
+      );
       return;
     }
 
@@ -614,30 +651,7 @@ class _CreateContractPageState extends State<CreateContractPage> {
                 label: 'ที่อยู่ตามทะเบียนบ้าน',
               ),
             ),
-            Row(
-              children: [
-                const Icon(
-                  Icons.info_outline,
-                  size: 16,
-                  color: AppColors.muted,
-                ),
-                const SizedBox(width: 7),
-                const Expanded(
-                  child: Text(
-                    'กรอกที่อยู่ที่ต้องการแสดงในสัญญา',
-                    style: TextStyle(fontSize: 11, color: AppColors.muted),
-                  ),
-                ),
-              ],
-            ),
-            TextFormField(
-              enabled: !_isSaving,
-              maxLines: 2,
-              decoration: _fieldDecoration(
-                'ระบุที่อยู่ที่ต้องการแสดงในสัญญา',
-                label: 'ที่อยู่สำหรับสัญญา',
-              ),
-            ),
+
           ] else ...[
             const SizedBox(height: 11),
             TextFormField(
@@ -704,7 +718,7 @@ class _CreateContractPageState extends State<CreateContractPage> {
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              'เงื่อนไขวันที่: วันให้กู้ถูกกำหนดเป็นวันนี้เท่านั้นและแก้ไขไม่ได้ ส่วนวันคืนเงินเลือกได้ตั้งแต่วันนี้เป็นต้นไป และไม่สามารถเลือกวันที่ย้อนหลังได้',
+              'เงื่อนไขวันที่: วันให้กู้ถูกกำหนดเป็นวันนี้เท่านั้นและแก้ไขไม่ได้ ส่วนวันคืนเงินเลือกได้ตั้งแต่วันนี้เป็นต้นไป และไม่สามารถเลือกวันที่ย้อนหลังได้ หากวันคืนเงินอยู่ในเดือนเดียวกับวันให้กู้ จะไม่สามารถเลือก “ชำระรายเดือน” ได้',
               style: const TextStyle(
                 color: Color(0xff176b5b),
                 height: 1.5,
@@ -888,18 +902,15 @@ class _CreateContractPageState extends State<CreateContractPage> {
                       prefixIcon: Icon(Icons.payments_outlined),
                       border: OutlineInputBorder(),
                     ),
-                    items: const [
-                      DropdownMenuItem(
+                    items: [
+                      const DropdownMenuItem(
                         value: 'ครั้งเดียว',
                         child: Text('ชำระครั้งเดียว'),
                       ),
                       DropdownMenuItem(
                         value: 'รายเดือน',
-                        child: Text('ชำระรายเดือน'),
-                      ),
-                      DropdownMenuItem(
-                        value: 'รายสัปดาห์',
-                        child: Text('ชำระรายสัปดาห์'),
+                        enabled: _canUseMonthlyRepayment,
+                        child: const Text('ชำระรายเดือน'),
                       ),
                     ],
                     onChanged: _isSaving

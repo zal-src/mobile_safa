@@ -55,7 +55,6 @@ class _RegisterPageState extends State<RegisterPage> {
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
-  bool _showAiInsight = false;
 
   @override
   void dispose() {
@@ -355,105 +354,6 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  Widget _buildAiAssistant() {
-    final checks = <String, bool>{
-      'ชื่อและอีเมล':
-          _nameController.text.trim().isNotEmpty &&
-          _emailController.text.trim().contains('@'),
-      'เบอร์โทรศัพท์ (10 หลัก)':
-          RegExp(r'^\d{10}$').hasMatch(_phoneController.text.trim()),
-      'เลขบัตรประชาชน (13 หลัก)': RegExp(
-        r'^\d{13}$',
-      ).hasMatch(_idCardController.text.trim()),
-      'รหัสผ่านปลอดภัย': _validatePassword(_passwordController.text) == null,
-      'ที่อยู่สำหรับสัญญา':
-          _houseNumberController.text.trim().isNotEmpty &&
-          _provinceController.text.trim().isNotEmpty &&
-          RegExp(r'^\d{5}$').hasMatch(_postalCodeController.text.trim()),
-    };
-    final completed = checks.values.where((value) => value).length;
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppColors.primaryBorder),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0a087d66),
-            blurRadius: 12,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  color: AppColors.primarySoft,
-                  borderRadius: BorderRadius.circular(13),
-                ),
-                child: const Icon(Icons.auto_awesome, color: AppColors.primary),
-              ),
-              const SizedBox(width: 10),
-              const Expanded(
-                child: Text(
-                  'Safa ช่วยตรวจข้อมูล',
-                  style: TextStyle(
-                    color: AppColors.ink,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
-              Text(
-                '$completed/${checks.length}',
-                style: const TextStyle(
-                  color: AppColors.primaryDark,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          const Text(
-            'ผู้ช่วยจะแนะนำเฉพาะจากข้อมูลที่คุณกรอก ไม่ส่งข้อมูลไปวิเคราะห์ภายนอก',
-            style: TextStyle(color: AppColors.muted, height: 1.45),
-          ),
-          if (_showAiInsight) ...[
-            const SizedBox(height: 12),
-            ...checks.entries.map(
-              (entry) => _passwordRule(entry.key, entry.value),
-            ),
-          ],
-          const SizedBox(height: 12),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: _isLoading
-                  ? null
-                  : () => setState(() => _showAiInsight = !_showAiInsight),
-              icon: Icon(
-                _showAiInsight
-                    ? Icons.visibility_off_outlined
-                    : Icons.auto_awesome,
-              ),
-              label: Text(
-                _showAiInsight ? 'ซ่อนคำแนะนำ' : 'ตรวจข้อมูลกับ Safa',
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   // ==================================================
   // BUILD
   // ==================================================
@@ -513,7 +413,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
                 const SizedBox(height: 6),
                 const Text(
-                  'กรอกข้อมูลเพื่อเริ่มใช้งาน Safa',
+                  'กรอกข้อมูลเพื่อเริ่มใช้งาน',
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 13, color: AppColors.muted),
                 ),
@@ -845,10 +745,6 @@ class _RegisterPageState extends State<RegisterPage> {
                   ),
                   validator: _validatePostalCode,
                 ),
-
-                const SizedBox(height: 24),
-
-                _buildAiAssistant(),
 
                 const SizedBox(height: 90),
               ],

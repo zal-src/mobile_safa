@@ -329,53 +329,6 @@ class _ContractDetailPageState extends State<ContractDetailPage> {
   // ============================================================
   // ปุ่มการชำระเงิน
   // ============================================================
-  
-  Future<void> _markAsCompleted() async {
-    final contractId = _contract.contractId;
-    if (contractId == null) return;
-
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('ยืนยันการชำระครบแล้ว'),
-        content: const Text('คุณแน่ใจหรือไม่ว่าสัญญาฉบับนี้มีการชำระเงินครบถ้วนแล้ว?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('ยกเลิก'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: FilledButton.styleFrom(backgroundColor: Colors.green),
-            child: const Text('ยืนยัน'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed != true) return;
-
-    setState(() {
-      _isLoading = true;
-    });
-
-    try {
-      await _contractService.markContractAsCompleted(contractId);
-      await _loadContractData();
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('เปลี่ยนสถานะสัญญาเป็นชำระครบแล้ว')),
-      );
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _isLoading = false;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('เกิดข้อผิดพลาด: $e')),
-      );
-    }
-  }
 
   Widget _buildRepaymentButton() {
     // ถ้าชำระครบแล้ว
@@ -396,18 +349,7 @@ class _ContractDetailPageState extends State<ContractDetailPage> {
           onPressed: _openRepaymentPage,
           icon: const Icon(Icons.payments),
           label: const Text('ดูการชำระเงิน'),
-        ),
-        if (_contract.status == 'active') ...[
-          const SizedBox(height: 10),
-          FilledButton.icon(
-            onPressed: _markAsCompleted,
-            icon: const Icon(Icons.check_circle_outline),
-            label: const Text('เสร็จสิ้น (จ่ายครบแล้ว)'),
-            style: FilledButton.styleFrom(
-              backgroundColor: Colors.green,
-            ),
-          ),
-        ]
+        )
       ],
     );
   }

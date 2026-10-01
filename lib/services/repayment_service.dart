@@ -3,6 +3,21 @@ import '../models/loan_contract.dart';
 import '../models/repayment.dart';
 
 class RepaymentService {
+  static int calculateInstallmentCount({
+    required DateTime loanDate,
+    required DateTime returnDate,
+  }) {
+    if (returnDate.isBefore(loanDate)) {
+      return 1;
+    }
+
+    final monthDiff =
+        ((returnDate.year - loanDate.year) * 12) +
+            (returnDate.month - loanDate.month);
+
+    return monthDiff <= 0 ? 1 : monthDiff + 1;
+  }
+
   final DatabaseHelper _database = DatabaseHelper.instance;
 
   // ============================================================
@@ -170,10 +185,12 @@ class RepaymentService {
 
     final borrowerId =
         contract['borrower_id'] as int;
+    final lenderId =
+        contract['lender_id'] as int;
 
-    if (userId != borrowerId) {
+    if (userId != borrowerId && userId != lenderId) {
       throw Exception(
-        'เฉพาะผู้กู้เท่านั้นที่สามารถบันทึกการชำระเงินได้',
+        'เฉพาะผู้กู้หรือผู้ให้กู้เท่านั้นที่สามารถบันทึกการชำระเงินได้',
       );
     }
 
@@ -227,10 +244,12 @@ class RepaymentService {
 
     final borrowerId =
         contract['borrower_id'] as int;
+    final lenderId =
+        contract['lender_id'] as int;
 
-    if (userId != borrowerId) {
+    if (userId != borrowerId && userId != lenderId) {
       throw Exception(
-        'เฉพาะผู้กู้เท่านั้นที่สามารถเปลี่ยนสถานะการชำระเงินได้',
+        'เฉพาะผู้กู้หรือผู้ให้กู้เท่านั้นที่สามารถเปลี่ยนสถานะการชำระเงินได้',
       );
     }
 

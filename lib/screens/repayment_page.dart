@@ -27,6 +27,20 @@ class _RepaymentPageState extends State<RepaymentPage> {
   bool _isCreatingPlan = false;
   int _installmentCount = 1;
 
+  int get _autoInstallmentCount {
+    final loanDate = DateTime.tryParse(widget.contract.loanDate);
+    final returnDate = DateTime.tryParse(widget.contract.returnDate);
+
+    if (loanDate == null || returnDate == null) {
+      return 1;
+    }
+
+    return RepaymentService.calculateInstallmentCount(
+      loanDate: loanDate,
+      returnDate: returnDate,
+    );
+  }
+
   bool get _isLender => widget.user.userId == widget.contract.lenderId;
 
   bool get _isBorrower => widget.user.userId == widget.contract.borrowerId;
@@ -60,6 +74,7 @@ class _RepaymentPageState extends State<RepaymentPage> {
   @override
   void initState() {
     super.initState();
+    _installmentCount = _autoInstallmentCount;
     _loadRepayments();
   }
 
@@ -159,11 +174,16 @@ class _RepaymentPageState extends State<RepaymentPage> {
       _isCreatingPlan = true;
     });
 
+    final calculatedInstallments = _autoInstallmentCount;
+    setState(() {
+      _installmentCount = calculatedInstallments;
+    });
+
     try {
       await _repaymentService.createRepaymentPlan(
         widget.contract,
         userId: userId,
-        installmentCount: _installmentCount,
+        installmentCount: calculatedInstallments,
       );
 
       await _loadRepayments();
@@ -193,8 +213,8 @@ class _RepaymentPageState extends State<RepaymentPage> {
   // ============================================================
 
   Future<void> _markAsPaid(Repayment repayment) async {
-    if (!_isBorrower) {
-      _showMessage('เฉพาะผู้กู้เท่านั้นที่สามารถบันทึกการชำระเงินได้');
+    if (!_isBorrower && !_isLender) {
+      _showMessage('เฉพาะผู้กู้หรือผู้ให้กู้อย่างใดอย่างหนึ่งเท่านั้นที่สามารถบันทึกการชำระเงินได้');
       return;
     }
 
@@ -253,8 +273,8 @@ class _RepaymentPageState extends State<RepaymentPage> {
   // ============================================================
 
   Future<void> _markAsPending(Repayment repayment) async {
-    if (!_isBorrower) {
-      _showMessage('เฉพาะผู้กู้เท่านั้นที่สามารถเปลี่ยนสถานะได้');
+    if (!_isBorrower && !_isLender) {
+      _showMessage('เฉพาะผู้กู้หรือผู้ให้กู้อย่างใดอย่างหนึ่งเท่านั้นที่สามารถเปลี่ยนสถานะได้');
       return;
     }
 
@@ -297,6 +317,51 @@ class _RepaymentPageState extends State<RepaymentPage> {
       if (!mounted) return;
 
       _showMessage(e.toString().replaceFirst('Exception: ', ''));
+    }
+  }
+
+  Future<void> _markAllAsPaid() async {
+    if (!_isBorrower && !_isLender) {
+      _showMessage('เฉพาะผู้กู้หรือผู้ให้กู้อย่างใดอย่างหนึ่งเท่านั้นที่สามารถบันทึกการชำระเงินได้');
+      return;
+    }
+
+    final unpaid = _repayments.where((item) => item.status != 'paid').toList();
+    if (unpaid.isEmpty) {
+      _showMessage('ทุกงวดชำระแล้ว');
+      return;
+    }
+
+    final confirmed = await _showConfirmDialog(
+      title: 'ยืนยันการชำระครบทั้งหมด',
+      content: 'คุณต้องการทำเครื่องหมายว่าชำระเงินครบทั้งหมดแล้วหรือไม่?',
+      confirmText: 'ชำระหมดแล้ว',
+    );
+
+    if (!confirmed) return;
+
+    for (final repayment in unpaid) {
+      if (repayment.repaymentId == null) continue;
+
+      try {
+        await _repaymentService.markAsPaid(
+          repaymentId: repayment.repaymentId!,
+          userId: widget.user.userId!,
+        );
+      } catch (e) {
+        _showMessage(e.toString().replaceFirst('Exception: ', ''));
+        return;
+      }
+    }
+
+    await _loadRepayments();
+
+    if (!mounted) return;
+
+    if (_allPaid) {
+      await _showCompletedDialog();
+    } else {
+      _showMessage('บันทึกการชำระเงินทั้งหมดเรียบร้อยแล้ว');
     }
   }
 
@@ -623,29 +688,29 @@ class _RepaymentPageState extends State<RepaymentPage> {
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
-          const Text('เลือกจำนวนงวดที่ผู้กู้ต้องชำระ'),
+          const Text('จำนวนงวดถูกคำนวณจากช่วงเดือนของวันให้กู้ถึงวันคืนเงิน'),
           const SizedBox(height: 14),
-          DropdownButtonFormField<int>(
-            initialValue: _installmentCount,
-            decoration: const InputDecoration(
-              labelText: 'จำนวนงวด',
-              border: OutlineInputBorder(),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey.shade300),
+              borderRadius: BorderRadius.circular(12),
             ),
-            items: List.generate(12, (index) => index + 1).map((value) {
-              return DropdownMenuItem<int>(
-                value: value,
-                child: Text('$value งวด'),
-              );
-            }).toList(),
-            onChanged: _isCreatingPlan
-                ? null
-                : (value) {
-                    if (value == null) return;
-
-                    setState(() {
-                      _installmentCount = value;
-                    });
-                  },
+            child: Row(
+              children: [
+                const Icon(Icons.calendar_month_outlined),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'จำนวนงวด: $_installmentCount งวด',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 14),
           FilledButton.icon(
@@ -705,6 +770,20 @@ class _RepaymentPageState extends State<RepaymentPage> {
                     ),
                   ),
                 ),
+                if (_isBorrower || _isLender)
+                  Checkbox(
+                    value: isPaid,
+                    onChanged: _isCreatingPlan
+                        ? null
+                        : (value) async {
+                            if (value == null) return;
+                            if (value) {
+                              await _markAsPaid(repayment);
+                            } else {
+                              await _markAsPending(repayment);
+                            }
+                          },
+                  ),
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 10,
@@ -758,7 +837,7 @@ class _RepaymentPageState extends State<RepaymentPage> {
 
             const SizedBox(height: 14),
 
-            if (_isBorrower && !isPaid)
+            if ((_isBorrower || _isLender) && !isPaid)
               FilledButton.icon(
                 onPressed: () {
                   _markAsPaid(repayment);
@@ -767,36 +846,31 @@ class _RepaymentPageState extends State<RepaymentPage> {
                 label: const Text('จ่ายแล้ว'),
               ),
 
-            if (_isBorrower && isPaid)
-              OutlinedButton.icon(
-                onPressed: () {
-                  _markAsPending(repayment);
-                },
-                icon: const Icon(Icons.undo),
-                label: const Text('เปลี่ยนกลับเป็นยังไม่ชำระ'),
-              ),
-
-            if (_isLender)
+            if ((_isBorrower || _isLender) && isPaid)
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(10),
-                  color: Colors.grey.shade100,
+                  color: Colors.green.shade50,
+                  border: Border.all(color: Colors.green.shade200),
                 ),
                 child: const Row(
                   children: [
-                    Icon(Icons.info_outline, size: 18, color: Colors.grey),
+                    Icon(Icons.check_circle, color: Colors.green),
                     SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'ผู้ให้กู้สามารถดูสถานะได้ '
-                        'แต่ผู้กู้เป็นผู้บันทึกการชำระเงิน',
-                        style: TextStyle(fontSize: 12, color: Colors.grey),
+                        'ชำระแล้ว',
+                        style: TextStyle(
+                          color: Colors.green,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
+
           ],
         ),
       ),
@@ -905,6 +979,15 @@ class _RepaymentPageState extends State<RepaymentPage> {
                         (index) =>
                             _buildRepaymentCard(_repayments[index], index),
                       ),
+
+                      if ((_isBorrower || _isLender) && _repayments.any((r) => r.status != 'paid')) ...[
+                        const SizedBox(height: 20),
+                        FilledButton.icon(
+                          onPressed: _markAllAsPaid,
+                          icon: const Icon(Icons.check_circle_outline),
+                          label: const Text('ชำระหมดแล้ว'),
+                        ),
+                      ],
                     ],
                   ],
                 ),
