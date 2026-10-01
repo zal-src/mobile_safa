@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:intl/intl.dart';
 
 import '../models/user.dart';
 import '../services/contract_service.dart';
@@ -9,6 +7,25 @@ import '../theme/app_theme.dart';
 import '../utils/responsive.dart';
 import '../widgets/responsive_container.dart';
 import '../widgets/onboarding_bottom_sheet.dart';
+import '../widgets/create_contract/contract_progress_steps.dart';
+import '../widgets/create_contract/counterparty_details_form.dart';
+import '../widgets/create_contract/contract_details_form.dart';
+import '../widgets/create_contract/contract_date_utils.dart';
+import '../widgets/create_contract/contract_validators.dart';
+
+// =============================================================================
+// CreateContractPage
+// - หน้าสร้างสัญญาเงินกู้ (Qard Hasan)
+// - แบ่งเป็น 2 ขั้นตอน: (0) ข้อมูลคู่สัญญา → (1) รายละเอียดสัญญา
+//
+// Widget ย่อยที่เกี่ยวข้อง (ดูใน lib/widgets/create_contract/):
+//   - contract_progress_steps.dart   → แถบขั้นตอน 1/2/3
+//   - counterparty_details_form.dart → ฟอร์มข้อมูลคู่สัญญา (Step 0)
+//   - contract_details_form.dart     → ฟอร์มรายละเอียดสัญญา (Step 1)
+//   - contract_form_styles.dart      → style/decoration ของ field ต่างๆ
+//   - contract_date_utils.dart       → helper วันที่ (format, parse, today)
+//   - contract_validators.dart       → validation email/amount/returnDate
+// =============================================================================
 
 bool canUseMonthlyRepayment({
   required DateTime loanDate,
@@ -36,6 +53,7 @@ class _CreateContractPageState extends State<CreateContractPage> {
   final _keyCounterparty = GlobalKey();
   final _keyActionBtn = GlobalKey();
 
+  // Controllers
   final _counterpartyEmailController = TextEditingController();
   final _counterpartyNameController = TextEditingController();
   final _counterpartyPhoneController = TextEditingController();
@@ -47,33 +65,49 @@ class _CreateContractPageState extends State<CreateContractPage> {
   final _purposeController = TextEditingController();
   final _notesController = TextEditingController();
 
-  final DateFormat _displayDateFormat = DateFormat('dd/MM/yyyy');
-
+  // State
   bool _isSaving = false;
   int _currentStep = 0;
   String _repaymentType = 'ครั้งเดียว';
 
+  // Getters
   bool get _isLender => widget.role == 'lender';
   bool get _isBorrower => widget.role == 'borrower';
-
   String get _counterpartyText => _isLender ? 'ผู้กู้' : 'ผู้ให้กู้';
-
   String get _counterpartyLabel => _isLender ? 'อีเมลผู้กู้' : 'อีเมลผู้ให้กู้';
-
   String get _counterpartyHint =>
       _isLender ? 'กรอกอีเมลของผู้กู้' : 'กรอกอีเมลของผู้ให้กู้';
+
+  // -------------------------------------------------------------------------
+  // Lifecycle
+  // -------------------------------------------------------------------------
 
   @override
   void initState() {
     super.initState();
-
     // วันให้กู้/วันเริ่มสัญญาเป็นวันนี้เท่านั้น
-    _loanDateController.text = _formatDate(_today());
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _maybeShowOnboarding();
-    });
+    _loanDateController.text = ContractDateUtils.formatDate(ContractDateUtils.today());
+    WidgetsBinding.instance.addPostFrameCallback((_) => _maybeShowOnboarding());
   }
+
+  @override
+  void dispose() {
+    _counterpartyEmailController.dispose();
+    _counterpartyNameController.dispose();
+    _counterpartyPhoneController.dispose();
+    _counterpartyIdCardController.dispose();
+    _counterpartyAddressController.dispose();
+    _amountController.dispose();
+    _loanDateController.dispose();
+    _returnDateController.dispose();
+    _purposeController.dispose();
+    _notesController.dispose();
+    super.dispose();
+  }
+
+  // -------------------------------------------------------------------------
+  // Onboarding Tutorial
+  // -------------------------------------------------------------------------
 
   Future<void> _maybeShowOnboarding() async {
     final seen = await OnboardingService.instance
@@ -114,6 +148,7 @@ class _CreateContractPageState extends State<CreateContractPage> {
     );
   }
 
+<<<<<<< HEAD
   @override
   void dispose() {
     _counterpartyEmailController.dispose();
@@ -179,12 +214,17 @@ class _CreateContractPageState extends State<CreateContractPage> {
     final date = _parseDate(value);
     return date == null ? '' : _displayDateFormat.format(date);
   }
+=======
+  // -------------------------------------------------------------------------
+  // Date Picker (ใช้ ContractDateUtils → contract_date_utils.dart)
+  // -------------------------------------------------------------------------
+>>>>>>> 274f8123b4db71dacc04a21caab381247f7f7fb1
 
   Future<void> _selectReturnDate() async {
     if (_isSaving) return;
 
-    final today = _today();
-    final current = _parseDate(_returnDateController.text);
+    final today = ContractDateUtils.today();
+    final current = ContractDateUtils.parseDate(_returnDateController.text);
 
     DateTime initialDate = today;
     if (current != null && !current.isBefore(today)) {
@@ -203,15 +243,13 @@ class _CreateContractPageState extends State<CreateContractPage> {
 
     if (selectedDate == null || !mounted) return;
 
-    final selected = _dateOnly(selectedDate);
-    final loanDate = _parseDate(_loanDateController.text);
+    final selected = ContractDateUtils.dateOnly(selectedDate);
+    final loanDate = ContractDateUtils.parseDate(_loanDateController.text);
 
-    // ตรวจซ้ำทั้งฝั่ง UI และ logic ก่อนเก็บข้อมูล
     if (selected.isBefore(today)) {
       _showError('วันคืนเงินต้องไม่เป็นวันที่ย้อนหลัง');
       return;
     }
-
     if (loanDate != null && selected.isBefore(loanDate)) {
       _showError('วันคืนเงินต้องไม่ก่อนวันให้กู้');
       return;
@@ -229,66 +267,41 @@ class _CreateContractPageState extends State<CreateContractPage> {
     }
 
     setState(() {
-      _returnDateController.text = _formatDate(selected);
+      _returnDateController.text = ContractDateUtils.formatDate(selected);
+      
+      // คำนวณรูปแบบการชำระเงินอัตโนมัติ
+      final loanDateVal = loanDate ?? today;
+      final diffDays = selected.difference(loanDateVal).inDays;
+      if (diffDays >= 30) {
+        _repaymentType = 'รายเดือน';
+      } else {
+        _repaymentType = 'ครั้งเดียว';
+      }
     });
   }
 
-  // ==========================================================
-  // VALIDATION
-  // ==========================================================
+  // -------------------------------------------------------------------------
+  // Validators (ใช้ ContractValidators → contract_validators.dart)
+  // -------------------------------------------------------------------------
 
-  String? _validateEmail(String? value) {
-    final email = value?.trim() ?? '';
+  String? _validateEmail(String? value) => ContractValidators.validateEmail(
+        value,
+        counterpartyText: _counterpartyText,
+        currentUserEmail: widget.user.email,
+      );
 
-    if (email.isEmpty) return 'กรุณาระบุอีเมล$_counterpartyText';
+  String? _validateAmount(String? value) =>
+      ContractValidators.validateAmount(value);
 
-    final emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
-    if (!emailRegex.hasMatch(email)) {
-      return 'รูปแบบอีเมลไม่ถูกต้อง';
-    }
+  String? _validateReturnDate(String? value) =>
+      ContractValidators.validateReturnDate(
+        value,
+        loanDateText: _loanDateController.text,
+      );
 
-    if (widget.user.email.trim().toLowerCase() == email.toLowerCase()) {
-      return 'ไม่สามารถสร้างสัญญากับตัวเองได้';
-    }
-
-    return null;
-  }
-
-  String? _validateAmount(String? value) {
-    final text = value?.trim().replaceAll(',', '') ?? '';
-
-    if (text.isEmpty) return 'กรุณาระบุจำนวนเงิน';
-
-    final amount = double.tryParse(text);
-    if (amount == null) return 'กรุณาระบุจำนวนเงินเป็นตัวเลข';
-    if (amount <= 0) return 'จำนวนเงินต้องมากกว่า 0';
-
-    return null;
-  }
-
-  String? _validateReturnDate(String? value) {
-    final text = value?.trim() ?? '';
-    if (text.isEmpty) return 'กรุณาเลือกวันคืนเงิน';
-
-    final selected = _parseDate(text);
-    if (selected == null) return 'รูปแบบวันที่ไม่ถูกต้อง';
-
-    final today = _today();
-    if (selected.isBefore(today)) {
-      return 'วันคืนเงินต้องไม่เป็นวันที่ย้อนหลัง';
-    }
-
-    final loanDate = _parseDate(_loanDateController.text);
-    if (loanDate != null && selected.isBefore(loanDate)) {
-      return 'วันคืนเงินต้องไม่ก่อนวันให้กู้';
-    }
-
-    return null;
-  }
-
-  // ==========================================================
-  // SUBMIT
-  // ==========================================================
+  // -------------------------------------------------------------------------
+  // Submit
+  // -------------------------------------------------------------------------
 
   Future<void> _submit() async {
     if (_isSaving) return;
@@ -296,44 +309,31 @@ class _CreateContractPageState extends State<CreateContractPage> {
     final form = _formKey.currentState;
     if (form == null || !form.validate()) return;
 
-    // role ต้องเป็นค่าที่ระบบรองรับเท่านั้น
     if (!_isLender && !_isBorrower) {
       _showError('ไม่พบบทบาทที่ถูกต้อง กรุณากลับไปเลือกบทบาทใหม่');
       return;
     }
 
-    // --------------------------------------------------------
-    // ตรวจวันที่อีกครั้งก่อนบันทึกจริง
-    // --------------------------------------------------------
-    final today = _today();
-    final loanDate = _parseDate(_loanDateController.text);
-    final returnDate = _parseDate(_returnDateController.text);
+    final today = ContractDateUtils.today();
+    final loanDate = ContractDateUtils.parseDate(_loanDateController.text);
+    final returnDate = ContractDateUtils.parseDate(_returnDateController.text);
 
-    if (loanDate == null) {
-      _showError('ไม่พบวันให้กู้');
-      return;
-    }
-
-    if (!_isSameDate(loanDate, today)) {
+    if (loanDate == null) { _showError('ไม่พบวันให้กู้'); return; }
+    if (!ContractDateUtils.isSameDate(loanDate, today)) {
       _showError('วันให้กู้ต้องเป็นวันที่ปัจจุบันเท่านั้น');
       return;
     }
-
-    if (returnDate == null) {
-      _showError('กรุณาเลือกวันคืนเงิน');
-      return;
-    }
-
+    if (returnDate == null) { _showError('กรุณาเลือกวันคืนเงิน'); return; }
     if (returnDate.isBefore(today)) {
       _showError('วันคืนเงินต้องไม่เป็นวันที่ย้อนหลัง');
       return;
     }
-
     if (returnDate.isBefore(loanDate)) {
       _showError('วันคืนเงินต้องไม่ก่อนวันให้กู้');
       return;
     }
 
+<<<<<<< HEAD
     if (_repaymentType == 'รายเดือน' &&
         !canUseMonthlyRepayment(loanDate: loanDate, returnDate: returnDate)) {
       _showError(
@@ -345,21 +345,16 @@ class _CreateContractPageState extends State<CreateContractPage> {
     // --------------------------------------------------------
     // ตรวจจำนวนเงิน
     // --------------------------------------------------------
+=======
+>>>>>>> 274f8123b4db71dacc04a21caab381247f7f7fb1
     final amountText = _amountController.text.trim().replaceAll(',', '');
     final amount = double.tryParse(amountText);
-
     if (amount == null || amount <= 0) {
       _showError('กรุณาระบุจำนวนเงินให้ถูกต้อง');
       return;
     }
 
-    // --------------------------------------------------------
-    // ตรวจอีเมลคู่สัญญา
-    // --------------------------------------------------------
-    final counterpartyEmail = _counterpartyEmailController.text
-        .trim()
-        .toLowerCase();
-
+    final counterpartyEmail = _counterpartyEmailController.text.trim().toLowerCase();
     if (counterpartyEmail.isEmpty) {
       _showError('กรุณาระบุอีเมล$_counterpartyText');
       return;
@@ -370,9 +365,7 @@ class _CreateContractPageState extends State<CreateContractPage> {
       return;
     }
 
-    setState(() {
-      _isSaving = true;
-    });
+    setState(() => _isSaving = true);
 
     try {
       final contract = await _contractService.createContractByRole(
@@ -380,8 +373,8 @@ class _CreateContractPageState extends State<CreateContractPage> {
         role: widget.role,
         counterpartyEmail: counterpartyEmail,
         amount: amount,
-        loanDate: _formatDate(loanDate),
-        returnDate: _formatDate(returnDate),
+        loanDate: ContractDateUtils.formatDate(loanDate),
+        returnDate: ContractDateUtils.formatDate(returnDate),
         repaymentType: _repaymentType,
         purpose: _emptyToNull(_purposeController.text),
         notes: _buildNotesForContract(),
@@ -392,23 +385,15 @@ class _CreateContractPageState extends State<CreateContractPage> {
       );
 
       if (!mounted) return;
-
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('สร้างสัญญา ${contract.agreementId} สำเร็จ')),
       );
-
-      // ส่ง true กลับไปให้หน้าก่อนหน้ารู้ว่ามีการสร้างสัญญาสำเร็จ
       Navigator.pop(context, true);
     } catch (e) {
       if (!mounted) return;
-
       _showError(e.toString().replaceFirst('Exception: ', ''));
     } finally {
-      if (mounted) {
-        setState(() {
-          _isSaving = false;
-        });
-      }
+      if (mounted) setState(() => _isSaving = false);
     }
   }
 
@@ -418,9 +403,12 @@ class _CreateContractPageState extends State<CreateContractPage> {
       setState(() => _currentStep = 1);
       return;
     }
-
     _submit();
   }
+
+  // -------------------------------------------------------------------------
+  // Helpers
+  // -------------------------------------------------------------------------
 
   String _buildCounterpartyNotes() {
     final details = <String, String>{
@@ -430,20 +418,18 @@ class _CreateContractPageState extends State<CreateContractPage> {
       'ที่อยู่': _counterpartyAddressController.text.trim(),
     };
     final filled = details.entries
-        .where((entry) => entry.value.isNotEmpty)
-        .map((entry) => '${entry.key}: ${entry.value}')
+        .where((e) => e.value.isNotEmpty)
+        .map((e) => '${e.key}: ${e.value}')
         .join('\n');
     return filled.isEmpty ? '' : 'ข้อมูลคู่สัญญาจากแบบฟอร์ม:\n$filled';
   }
 
   String? _buildNotesForContract() {
     final notes = _notesController.text.trim();
-    final counterpartyNotes = _buildCounterpartyNotes();
-    if (notes.isEmpty) {
-      return counterpartyNotes.isEmpty ? null : counterpartyNotes;
-    }
-    if (counterpartyNotes.isEmpty) return notes;
-    return '$notes\n\n$counterpartyNotes';
+    final cpNotes = _buildCounterpartyNotes();
+    if (notes.isEmpty) return cpNotes.isEmpty ? null : cpNotes;
+    if (cpNotes.isEmpty) return notes;
+    return '$notes\n\n$cpNotes';
   }
 
   String? _emptyToNull(String value) {
@@ -457,6 +443,7 @@ class _CreateContractPageState extends State<CreateContractPage> {
     );
   }
 
+<<<<<<< HEAD
   // ==========================================================
   // UI HELPERS
   // ==========================================================
@@ -734,10 +721,15 @@ class _CreateContractPageState extends State<CreateContractPage> {
   // ==========================================================
   // BUILD
   // ==========================================================
+=======
+  // -------------------------------------------------------------------------
+  // Build
+  // -------------------------------------------------------------------------
+>>>>>>> 274f8123b4db71dacc04a21caab381247f7f7fb1
 
   @override
   Widget build(BuildContext context) {
-    final today = _today();
+    final today = ContractDateUtils.today();
 
     return Scaffold(
       backgroundColor: AppColors.page,
@@ -781,117 +773,48 @@ class _CreateContractPageState extends State<CreateContractPage> {
         child: ResponsiveBody(
           maxWidth: Responsive.formMaxWidth(context),
           child: Form(
-          key: _formKey,
-          child: SingleChildScrollView(
-            padding: EdgeInsets.fromLTRB(
-              Responsive.horizontalPadding(context), 8,
-              Responsive.horizontalPadding(context), 28,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: 4),
-                const Text(
-                  'Safa',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.primaryDark,
+            key: _formKey,
+            child: SingleChildScrollView(
+              padding: EdgeInsets.fromLTRB(
+                Responsive.horizontalPadding(context), 8,
+                Responsive.horizontalPadding(context), 28,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Safa',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.primaryDark,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 18),
-                const Text(
-                  'สร้างสัญญาเงินกู้',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.ink,
+                  const SizedBox(height: 18),
+                  const Text(
+                    'สร้างสัญญาเงินกู้',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.ink,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 4),
-                const Text(
-                  'กรอกข้อมูลคู่สัญญาและรายละเอียดเงินกู้',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 13, color: AppColors.muted),
-                ),
-                const SizedBox(height: 22),
-                _buildProgressSteps(),
-                const SizedBox(height: 22),
-                _buildCounterpartyDetails(),
-
-                if (_currentStep == 1) ...[
+                  const SizedBox(height: 4),
+                  const Text(
+                    'กรอกข้อมูลคู่สัญญาและรายละเอียดเงินกู้',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 13, color: AppColors.muted),
+                  ),
                   const SizedBox(height: 22),
-
-                  // ------------------------------------------------------
-                  // ข้อมูลสัญญา: เหมือนกันทั้ง 2 role
-                  // ------------------------------------------------------
-                  _buildSectionTitle('ข้อมูลสัญญา'),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _amountController,
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    textInputAction: TextInputAction.next,
-                    enabled: !_isSaving,
-                    decoration: const InputDecoration(
-                      labelText: 'จำนวนเงิน',
-                      hintText: 'เช่น 10000',
-                      prefixIcon: Icon(Icons.account_balance_wallet_outlined),
-                      suffixText: 'บาท',
-                      border: OutlineInputBorder(),
-                    ),
-                    validator: _validateAmount,
+                  ContractProgressSteps(
+                    currentStep: _currentStep,
+                    stepsKey: _keySteps,
                   ),
-
-                  const SizedBox(height: 16),
-
-                  // วันให้กู้ = วันนี้เท่านั้น และปิดการกดทั้งหมด
-                  TextFormField(
-                    controller: _loanDateController,
-                    readOnly: true,
-                    enabled: false,
-                    decoration: InputDecoration(
-                      labelText: 'วันให้กู้',
-                      helperText:
-                          'กำหนดเป็นวันที่ปัจจุบันเท่านั้น และแก้ไขไม่ได้',
-                      helperMaxLines: 2,
-                      prefixIcon: const Icon(Icons.calendar_today_outlined),
-                      border: const OutlineInputBorder(),
-                      disabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.grey.shade400),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 7),
-                  Text(
-                    'วันนี้คือ ${_displayDate(_formatDate(today))}',
-                    style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // วันคืนเงิน: เปิดปฏิทิน แต่ปฏิทินล็อกวันที่ย้อนหลัง
-                  TextFormField(
-                    controller: _returnDateController,
-                    readOnly: true,
-                    enabled: !_isSaving,
-                    onTap: _isSaving ? null : _selectReturnDate,
-                    decoration: const InputDecoration(
-                      labelText: 'วันคืนเงิน',
-                      hintText: 'เลือกวันคืนเงิน',
-                      helperText: 'เลือกได้ตั้งแต่วันนี้เป็นต้นไป',
-                      prefixIcon: Icon(Icons.event_available_outlined),
-                      suffixIcon: Icon(Icons.calendar_month_outlined),
-                      border: OutlineInputBorder(),
-                    ),
-                    validator: _validateReturnDate,
-                  ),
-
                   const SizedBox(height: 22),
+<<<<<<< HEAD
 
                   _buildSectionTitle('รูปแบบการชำระเงิน'),
                   const SizedBox(height: 12),
@@ -921,48 +844,47 @@ class _CreateContractPageState extends State<CreateContractPage> {
                               _repaymentType = value;
                             });
                           },
+=======
+                  CounterpartyDetailsForm(
+                    isLender: _isLender,
+                    isSaving: _isSaving,
+                    counterpartyText: _counterpartyText,
+                    counterpartyLabel: _counterpartyLabel,
+                    counterpartyHint: _counterpartyHint,
+                    nameController: _counterpartyNameController,
+                    phoneController: _counterpartyPhoneController,
+                    idCardController: _counterpartyIdCardController,
+                    addressController: _counterpartyAddressController,
+                    emailController: _counterpartyEmailController,
+                    counterpartyKey: _keyCounterparty,
+                    validateEmail: _validateEmail,
+>>>>>>> 274f8123b4db71dacc04a21caab381247f7f7fb1
                   ),
 
-                  const SizedBox(height: 22),
-
-                  _buildSectionTitle('รายละเอียดเพิ่มเติม'),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _purposeController,
-                    enabled: !_isSaving,
-                    maxLines: 2,
-                    textInputAction: TextInputAction.next,
-                    decoration: const InputDecoration(
-                      labelText: 'วัตถุประสงค์การกู้',
-                      hintText: 'ระบุวัตถุประสงค์ เช่น ค่าใช้จ่ายส่วนตัว',
-                      prefixIcon: Icon(Icons.assignment_outlined),
-                      border: OutlineInputBorder(),
+                  if (_currentStep == 1) ...[
+                    const SizedBox(height: 22),
+                    ContractDetailsForm(
+                      isSaving: _isSaving,
+                      amountController: _amountController,
+                      loanDateController: _loanDateController,
+                      returnDateController: _returnDateController,
+                      purposeController: _purposeController,
+                      notesController: _notesController,
+                      repaymentType: _repaymentType,
+                      todayFormatted: ContractDateUtils.displayDate(
+                        ContractDateUtils.formatDate(today),
+                      ),
+                      validateAmount: _validateAmount,
+                      validateReturnDate: _validateReturnDate,
+                      onReturnDateTap: _selectReturnDate,
                     ),
-                  ),
+                  ],
 
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _notesController,
-                    enabled: !_isSaving,
-                    maxLines: 3,
-                    decoration: const InputDecoration(
-                      labelText: 'หมายเหตุ',
-                      hintText: 'รายละเอียดเพิ่มเติม',
-                      prefixIcon: Icon(Icons.notes_outlined),
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-
-                  const SizedBox(height: 24),
-                  _buildDateRuleCard(),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 90),
                 ],
-
-                const SizedBox(height: 90),
-              ],
+              ),
             ),
           ),
-        ),
         ),
       ),
     );

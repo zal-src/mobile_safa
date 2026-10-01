@@ -343,6 +343,7 @@ class _KnowledgePageState extends State<KnowledgePage> {
 
       if (updatedUser != null) {
         final refreshedAddress = await _database.getUserAddress(_currentUser.userId!);
+        if (!mounted) return;
         setState(() {
           _currentUser = updatedUser;
           _currentAddress = refreshedAddress;

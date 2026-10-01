@@ -6,7 +6,6 @@ import '../services/contract_service.dart';
 import '../services/pdf_service_printable.dart';
 import '../utils/responsive.dart';
 import '../widgets/responsive_container.dart';
-import 'repayment_page.dart';
 import '../theme/app_theme.dart';
 
 class ContractDetailPage extends StatefulWidget {
@@ -241,39 +240,6 @@ class _ContractDetailPageState extends State<ContractDetailPage> {
   }
 
   // ============================================================
-  // เปิดหน้าการชำระเงิน
-  // ============================================================
-
-  Future<void> _openRepaymentPage() async {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) =>
-            RepaymentPage(user: widget.user, contract: _contract),
-      ),
-    );
-
-    // เมื่อกลับจากหน้าชำระเงิน
-    // ให้โหลดสถานะสัญญาใหม่ทันที
-
-    if (result == true) {
-      await _loadContractData();
-
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('อัปเดตสถานะสัญญาแล้ว')));
-    } else {
-      // แม้หน้าชำระเงินไม่ได้ส่ง true กลับมา
-      // ก็โหลดข้อมูลใหม่เพื่อให้แน่ใจว่า
-      // แสดงสถานะล่าสุดจากฐานข้อมูล
-
-      await _loadContractData();
-    }
-  }
-
-  // ============================================================
   // กล่องสถานะสัญญา
   // ============================================================
 
@@ -327,9 +293,143 @@ class _ContractDetailPageState extends State<ContractDetailPage> {
   }
 
   // ============================================================
+  // บันทึกช่วยจำการชำระเงิน (งวด)
+  // ============================================================
+
+  Future<void> _updateInstallments(int newValue) async {
+    final contractId = _contract.contractId;
+    if (contractId == null) return;
+    try {
+      await _contractService.updatePaidInstallments(contractId, newValue);
+      await _loadContractData();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('เกิดข้อผิดพลาด: $e')),
+      );
+    }
+  }
+
+  int _calculateTotalInstallments() {
+    final loanDate = DateTime.tryParse(_contract.loanDate);
+    final returnDate = DateTime.tryParse(_contract.returnDate);
+    if (loanDate == null || returnDate == null) return 1;
+
+    int months = (returnDate.year - loanDate.year) * 12 + returnDate.month - loanDate.month;
+    if (returnDate.day < loanDate.day) {
+      months--;
+    }
+    return months > 0 ? months : 1;
+  }
+
+  Widget _buildInstallmentTracker() {
+    if (_contract.repaymentType != 'รายเดือน' || _contract.status == 'completed') {
+      return const SizedBox.shrink();
+    }
+
+    final isLender = _contract.lenderId == widget.user.userId;
+    final title = isLender ? 'เช็คยอดรับชำระแล้ว (เตือนความจำ)' : 'เช็คยอดชำระแล้ว (เตือนความจำ)';
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 20),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.primarySoft,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.check_circle_outline, color: AppColors.primary),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            '* แตะที่งวดเพื่อทำเครื่องหมายว่าชำระแล้ว',
+            style: TextStyle(fontSize: 12, color: Colors.grey),
+          ),
+          const SizedBox(height: 16),
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: _calculateTotalInstallments(),
+            itemBuilder: (context, index) {
+              final installmentNum = index + 1;
+              final isPaid = installmentNum <= _contract.paidInstallments;
+
+              return InkWell(
+                onTap: () {
+                  if (isPaid) {
+                    _updateInstallments(index); // ยกเลิกอันนี้และอันถัดๆ ไป
+                  } else {
+                    _updateInstallments(installmentNum); // เลือกอันนี้และก่อนหน้า
+                  }
+                },
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+                  decoration: BoxDecoration(
+                    border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        isPaid ? Icons.check_circle : Icons.circle_outlined,
+                        color: isPaid ? AppColors.primary : Colors.grey,
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        'งวดที่ $installmentNum',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: isPaid ? FontWeight.bold : FontWeight.normal,
+                          color: isPaid ? Colors.black : Colors.grey.shade700,
+                        ),
+                      ),
+                      const Spacer(),
+                      if (isPaid)
+                        const Text(
+                          'ชำระแล้ว',
+                          style: TextStyle(color: AppColors.primary, fontSize: 13, fontWeight: FontWeight.bold),
+                        ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 16),
+          const Center(
+            child: Text(
+              '* ข้อมูลนี้บันทึกไว้ในเครื่องของคุณเท่านั้น สำหรับช่วยเตือนความจำส่วนตัว',
+              style: TextStyle(fontSize: 12, color: Colors.grey),
+              textAlign: TextAlign.center,
+            ),
+          )
+        ],
+      ),
+    );
+  }
+
+  // ============================================================
   // ปุ่มการชำระเงิน
   // ============================================================
 
+<<<<<<< HEAD
   Widget _buildRepaymentButton() {
     // ถ้าชำระครบแล้ว
     // ยังสามารถเข้าไปดูประวัติการชำระเงินได้
@@ -352,6 +452,25 @@ class _ContractDetailPageState extends State<ContractDetailPage> {
         )
       ],
     );
+=======
+  Widget _buildCompletionButton() {
+    if (_contract.status == 'active') {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          FilledButton.icon(
+            onPressed: _markAsCompleted,
+            icon: const Icon(Icons.check_circle_outline),
+            label: const Text('เสร็จสิ้น (จ่ายครบแล้ว)'),
+            style: FilledButton.styleFrom(
+              backgroundColor: Colors.green,
+            ),
+          ),
+        ],
+      );
+    }
+    return const SizedBox.shrink();
+>>>>>>> 274f8123b4db71dacc04a21caab381247f7f7fb1
   }
 
   // ============================================================
@@ -487,9 +606,14 @@ class _ContractDetailPageState extends State<ContractDetailPage> {
                       const SizedBox(height: 10),
 
                       // ==================================================
-                      // ปุ่มการชำระเงิน
+                      // เช็คยอดชำระเงิน (งวด)
                       // ==================================================
-                      _buildRepaymentButton(),
+                      _buildInstallmentTracker(),
+
+                      // ==================================================
+                      // ปุ่มการชำระเงิน (ตอนนี้เป็นแค่ปุ่มปิดสัญญา)
+                      // ==================================================
+                      _buildCompletionButton(),
 
                       const SizedBox(height: 10),
 

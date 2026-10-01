@@ -12,6 +12,7 @@ class LoanContract {
   final String? notes;
   final String repaymentType;
   final String status;
+  final int paidInstallments;
   final String? createdAt;
   final String? updatedAt;
 
@@ -29,6 +30,7 @@ class LoanContract {
     this.notes,
     required this.repaymentType,
     this.status = 'draft',
+    this.paidInstallments = 0,
     this.createdAt,
     this.updatedAt,
   });
@@ -48,6 +50,7 @@ class LoanContract {
       'notes': notes,
       'repayment_type': repaymentType,
       'status': status,
+      'paid_installments': paidInstallments,
       'created_at': createdAt,
       'updated_at': updatedAt,
     };
@@ -69,6 +72,7 @@ class LoanContract {
       notes: map['notes'] as String?,
       repaymentType: map['repayment_type'] as String,
       status: map['status'] as String? ?? 'draft',
+      paidInstallments: map['paid_installments'] as int? ?? 0,
       createdAt: map['created_at'] as String?,
       updatedAt: map['updated_at'] as String?,
     );

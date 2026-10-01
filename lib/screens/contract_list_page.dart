@@ -34,6 +34,7 @@ class _ContractListPageState extends State<ContractListPage> {
   Map<String, dynamic>? _currentAddress;
 
   List<LoanContract> _contracts = [];
+  String? _latestAgreementId;
   
   String _selectedFilter = 'ทั้งหมด';
 
@@ -117,10 +118,22 @@ class _ContractListPageState extends State<ContractListPage> {
         widget.user.userId!,
       );
 
+      String? latestId;
+      if (contracts.isNotEmpty) {
+        final sortedByDate = List<LoanContract>.from(contracts)
+          ..sort((a, b) {
+            final dateA = DateTime.tryParse(a.createdAt ?? '') ?? DateTime(2000);
+            final dateB = DateTime.tryParse(b.createdAt ?? '') ?? DateTime(2000);
+            return dateB.compareTo(dateA);
+          });
+        latestId = sortedByDate.first.agreementId;
+      }
+
       if (!mounted) return;
 
       setState(() {
         _contracts = contracts;
+        _latestAgreementId = latestId;
         _isLoading = false;
       });
     } catch (e) {
@@ -146,15 +159,39 @@ class _ContractListPageState extends State<ContractListPage> {
   // ============================================================
 
   List<LoanContract> get _filteredContracts {
-    if (_selectedFilter == 'ทั้งหมด') return _contracts;
-    
-    return _contracts.where((contract) {
-      final status = _statusText(contract);
-      if (_selectedFilter == 'มีผลแล้ว' && status == 'มีผลแล้ว') return true;
-      if (_selectedFilter == 'เกินกำหนด' && status == 'เกินกำหนด') return true;
-      if (_selectedFilter == 'เสร็จสิ้น' && status == 'ชำระครบแล้ว') return true;
-      return false;
-    }).toList();
+    List<LoanContract> filtered;
+    if (_selectedFilter == 'ทั้งหมด') {
+      filtered = List.from(_contracts);
+    } else {
+      filtered = _contracts.where((contract) {
+        final status = _statusText(contract);
+        if (_selectedFilter == 'มีผลแล้ว' && status == 'มีผลแล้ว') return true;
+        if (_selectedFilter == 'เกินกำหนด' && status == 'เกินกำหนด') return true;
+        if (_selectedFilter == 'เสร็จสิ้น' && status == 'ชำระครบแล้ว') return true;
+        return false;
+      }).toList();
+    }
+
+    int getPriority(LoanContract c) {
+      final text = _statusText(c);
+      if (text == 'เกินกำหนด') return 4;
+      if (text == 'มีผลแล้ว') return 3; // ต้องชำระ
+      if (text == 'รอลงลายมือชื่อ') return 2;
+      if (text == 'ชำระครบแล้ว') return 1;
+      return 0;
+    }
+
+    filtered.sort((a, b) {
+      final pA = getPriority(a);
+      final pB = getPriority(b);
+      if (pA != pB) return pB.compareTo(pA); // เรียงจากมากไปน้อย (เกินกำหนด/มีผลแล้ว ขึ้นก่อน)
+      
+      final dateA = DateTime.tryParse(a.createdAt ?? '') ?? DateTime(2000);
+      final dateB = DateTime.tryParse(b.createdAt ?? '') ?? DateTime(2000);
+      return dateB.compareTo(dateA); // ถ้า priority เท่ากัน เรียงตามวันที่ล่าสุด
+    });
+
+    return filtered;
   }
 
   // ============================================================
@@ -300,7 +337,7 @@ class _ContractListPageState extends State<ContractListPage> {
   // Card ของสัญญา
   // ============================================================
 
-  Widget _buildContractCard(LoanContract contract) {
+  Widget _buildContractCard(LoanContract contract, {bool isLatest = false}) {
     final statusColor = _statusColor(contract);
 
     final role = _roleText(contract);
@@ -356,9 +393,35 @@ class _ContractListPageState extends State<ContractListPage> {
 
                         const SizedBox(height: 4),
 
-                        Text(
-                          'บทบาท: $role',
-                          style: TextStyle(color: Colors.grey.shade600),
+                        Row(
+                          children: [
+                            Text(
+                              'บทบาท: $role',
+                              style: TextStyle(color: Colors.grey.shade600),
+                            ),
+                            if (isLatest) ...[
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: const Text('ล่าสุด', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                              ),
+                            ],
+                            if (contract.status == 'active') ...[
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: Colors.orange.shade700,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: const Text('ต้องชำระ', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                              ),
+                            ],
+                          ],
                         ),
                       ],
                     ),
@@ -833,6 +896,7 @@ class _ContractListPageState extends State<ContractListPage> {
 
       if (updatedUser != null) {
         final refreshedAddress = await _database.getUserAddress(_currentUser.userId!);
+        if (!mounted) return;
         setState(() {
           _currentUser = updatedUser;
           _currentAddress = refreshedAddress;
@@ -1293,7 +1357,10 @@ class _ContractListPageState extends State<ContractListPage> {
                               ),
                               itemCount: _filteredContracts.length,
                               itemBuilder: (context, index) {
-                                return _buildContractCard(_filteredContracts[index]);
+                                return _buildContractCard(
+                                  _filteredContracts[index],
+                                  isLatest: _filteredContracts[index].agreementId == _latestAgreementId,
+                                );
                               },
                             ),
                     ),

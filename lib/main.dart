@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'database/database_helper.dart';
 import 'screens/login_page.dart';
@@ -7,6 +8,9 @@ import 'theme/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // โหลดค่าจากไฟล์ .env ก่อนอื่น
+  await dotenv.load(fileName: '.env');
 
   await DatabaseHelper.instance.database;
 

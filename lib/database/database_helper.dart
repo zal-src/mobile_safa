@@ -30,9 +30,16 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: _createDatabase,
+      onUpgrade: _upgradeDatabase,
     );
+  }
+
+  Future<void> _upgradeDatabase(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute('ALTER TABLE loan_contracts ADD COLUMN paid_installments INTEGER DEFAULT 0');
+    }
   }
 
   Future<void> _createDatabase(
@@ -74,6 +81,7 @@ class DatabaseHelper {
         notes TEXT,
         repayment_type TEXT NOT NULL,
         status TEXT DEFAULT 'draft',
+        paid_installments INTEGER DEFAULT 0,
         created_at TEXT DEFAULT CURRENT_TIMESTAMP,
         updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
 
@@ -102,25 +110,6 @@ class DatabaseHelper {
 
         FOREIGN KEY (user_id)
           REFERENCES users(user_id)
-      )
-    ''');
-
-    // =========================
-    // REPAYMENTS
-    // =========================
-
-    await db.execute('''
-      CREATE TABLE repayments (
-        repayment_id INTEGER PRIMARY KEY AUTOINCREMENT,
-        contract_id INTEGER NOT NULL,
-        amount REAL NOT NULL,
-        due_date TEXT NOT NULL,
-        paid_date TEXT,
-        status TEXT DEFAULT 'pending',
-        notes TEXT,
-
-        FOREIGN KEY (contract_id)
-          REFERENCES loan_contracts(contract_id)
       )
     ''');
 
@@ -356,6 +345,23 @@ class DatabaseHelper {
         'status': status,
         'updated_at':
             DateTime.now().toIso8601String(),
+      },
+      where: 'contract_id = ?',
+      whereArgs: [contractId],
+    );
+  }
+
+  Future<int> updateContractPaidInstallments(
+    int contractId,
+    int paidInstallments,
+  ) async {
+    final db = await database;
+
+    return await db.update(
+      'loan_contracts',
+      {
+        'paid_installments': paidInstallments,
+        'updated_at': DateTime.now().toIso8601String(),
       },
       where: 'contract_id = ?',
       whereArgs: [contractId],
