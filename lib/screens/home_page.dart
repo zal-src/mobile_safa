@@ -16,6 +16,9 @@ import 'login_page.dart';
 import 'knowledge_page.dart';
 import 'ai_chat_page.dart';
 import '../theme/app_theme.dart';
+import '../localization/app_localizations.dart';
+import '../localization/language_controller.dart';
+import '../widgets/language_switch_button.dart';
 
 class HomePage extends StatefulWidget {
   final User user;
@@ -410,6 +413,28 @@ class _HomePageState extends State<HomePage> {
                     title: 'ที่อยู่',
                     value: _formatAddress(_currentAddress),
                   ),
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8F9FC),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: const Color(0xFFE4E7EC)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.language, color: AppColors.primary, size: 22),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          sheetContext.l10n.isThai ? 'ภาษา / Language' : 'Language / ภาษา',
+                          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                        ),
+                      ),
+                      const LanguageSwitchButton(),
+                    ],
+                  ),
+                ),
                 const SizedBox(height: 16),
                 SizedBox(
                   width: double.infinity,
@@ -728,7 +753,7 @@ class _HomePageState extends State<HomePage> {
         title: null,
         actions: [
           IconButton(
-            tooltip: 'ค้นหาด้วย AI',
+            tooltip: context.l10n.aiAdvisor,
             icon: const Icon(Icons.search, color: Colors.black87),
             onPressed: () {
               Navigator.push(
@@ -738,6 +763,8 @@ class _HomePageState extends State<HomePage> {
             },
           ),
           const SizedBox(width: 4),
+          const Center(child: LanguageSwitchButton()),
+          const SizedBox(width: 8),
           Container(
             margin: const EdgeInsets.only(right: 16, top: 8, bottom: 8),
             decoration: BoxDecoration(
@@ -745,7 +772,7 @@ class _HomePageState extends State<HomePage> {
               border: Border.all(color: Colors.grey.shade300, width: 1),
             ),
             child: IconButton(
-              tooltip: 'เมนูหลัก',
+              tooltip: context.l10n.isThai ? 'เมนูหลัก' : 'Main Menu',
               icon: const Icon(Icons.menu, color: Colors.black87, size: 20),
               onPressed: () {
                 _showMenuDialog();
@@ -967,6 +994,15 @@ class _HomePageState extends State<HomePage> {
                     const Padding(
                       padding: EdgeInsets.symmetric(vertical: 8.0),
                       child: Divider(height: 1, color: Color(0xFFE4E7EC)),
+                    ),
+                    _buildMenuItem(
+                      Icons.language,
+                      context.l10n.isThai ? 'เปลี่ยนภาษา (Switch to English)' : 'Change Language (สลับเป็นภาษาไทย)',
+                      false,
+                      () {
+                        Navigator.pop(context);
+                        LanguageController.instance.toggleLanguage();
+                      },
                     ),
                     _buildMenuItem(Icons.light_mode_outlined, 'ธีมและการแสดงผล', false, () {}),
                     _buildMenuItem(Icons.logout, 'ออกจากระบบ', false, () {
@@ -1369,26 +1405,26 @@ class _HomePageState extends State<HomePage> {
 
         return const TextStyle(fontSize: 11, color: Color(0xFF667085));
       }),
-      destinations: const [
+      destinations: [
         NavigationDestination(
-          icon: Icon(Icons.grid_view_outlined),
-          selectedIcon: Icon(Icons.grid_view_rounded),
-          label: 'ภาพรวม',
+          icon: const Icon(Icons.grid_view_outlined),
+          selectedIcon: const Icon(Icons.grid_view_rounded),
+          label: context.l10n.translate('overview', defaultText: 'ภาพรวม'),
         ),
         NavigationDestination(
-          icon: Icon(Icons.description_outlined),
-          selectedIcon: Icon(Icons.description_rounded),
-          label: 'สัญญา',
+          icon: const Icon(Icons.description_outlined),
+          selectedIcon: const Icon(Icons.description_rounded),
+          label: context.l10n.navContracts,
         ),
         NavigationDestination(
-          icon: Icon(Icons.menu_book_outlined),
-          selectedIcon: Icon(Icons.menu_book_rounded),
-          label: 'ความรู้',
+          icon: const Icon(Icons.menu_book_outlined),
+          selectedIcon: const Icon(Icons.menu_book_rounded),
+          label: context.l10n.navKnowledge,
         ),
         NavigationDestination(
-          icon: Icon(Icons.person_outline),
-          selectedIcon: Icon(Icons.person_rounded),
-          label: 'โปรไฟล์',
+          icon: const Icon(Icons.person_outline),
+          selectedIcon: const Icon(Icons.person_rounded),
+          label: context.l10n.navProfile,
         ),
       ],
     );

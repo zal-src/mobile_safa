@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 
+import '../localization/app_localizations.dart';
 import '../models/user.dart';
 import '../services/auth_service.dart';
 import '../theme/app_theme.dart';
 import '../utils/responsive.dart';
+import '../widgets/language_switch_button.dart';
 import '../widgets/responsive_container.dart';
-import 'register_page.dart';
 import 'home_page.dart';
+import 'register_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -53,7 +55,7 @@ class _LoginPageState extends State<LoginPage> {
 
       if (user == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('อีเมลหรือรหัสผ่านไม่ถูกต้อง')),
+          SnackBar(content: Text(context.l10n.translate('loginFailed'))),
         );
 
         return;
@@ -61,12 +63,12 @@ class _LoginPageState extends State<LoginPage> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('เข้าสู่ระบบสำเร็จ ยินดีต้อนรับ ${user.fullName}'),
+          content: Text(
+            '${context.l10n.translate('loginSuccess')} ${context.l10n.welcome} ${user.fullName}',
+          ),
         ),
       );
 
-      // ตอนนี้ยังไม่มี HomePage
-      // จึงกลับไปหน้าก่อนหน้า
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => HomePage(user: user)),
@@ -89,6 +91,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     final hPadding = Responsive.horizontalPadding(context);
+    final l10n = context.l10n;
 
     return Scaffold(
       appBar: AppBar(
@@ -102,6 +105,10 @@ class _LoginPageState extends State<LoginPage> {
         ),
         title: null,
         automaticallyImplyLeading: false,
+        actions: const [
+          Center(child: LanguageSwitchButton()),
+          SizedBox(width: 16),
+        ],
       ),
       body: SafeArea(
         child: ResponsiveBody(
@@ -115,119 +122,130 @@ class _LoginPageState extends State<LoginPage> {
                 children: [
                   const SizedBox(height: 30),
 
-                const Icon(
-                  Icons.account_balance_wallet_outlined,
-                  size: 64,
-                  color: AppColors.primary,
-                ),
-
-                const SizedBox(height: 20),
-
-                const Text(
-                  'Safa',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.ink,
+                  const Icon(
+                    Icons.account_balance_wallet_outlined,
+                    size: 64,
+                    color: AppColors.primary,
                   ),
-                ),
 
-                const SizedBox(height: 10),
+                  const SizedBox(height: 20),
 
-                const Text(
-                  'เข้าสู่ระบบ',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 14, color: Color(0xff667085)),
-                ),
-
-                const SizedBox(height: 40),
-
-                TextFormField(
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(
-                    labelText: 'อีเมล',
-                    prefixIcon: Icon(Icons.email),
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'กรุณากรอกอีเมล';
-                    }
-
-                    if (!value.contains('@')) {
-                      return 'รูปแบบอีเมลไม่ถูกต้อง';
-                    }
-
-                    return null;
-                  },
-                ),
-
-                const SizedBox(height: 16),
-
-                TextFormField(
-                  controller: _passwordController,
-                  obscureText: _obscurePassword,
-                  decoration: InputDecoration(
-                    labelText: 'รหัสผ่าน',
-                    prefixIcon: const Icon(Icons.lock),
-                    border: const OutlineInputBorder(),
-                    suffixIcon: IconButton(
-                      tooltip: _obscurePassword ? 'แสดงรหัสผ่าน' : 'ซ่อนรหัสผ่าน',
-                      onPressed: () {
-                        setState(() {
-                          _obscurePassword = !_obscurePassword;
-                        });
-                      },
-                      icon: Icon(
-                        _obscurePassword
-                            ? Icons.visibility
-                            : Icons.visibility_off,
-                      ),
+                  const Text(
+                    'Safa',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.ink,
                     ),
                   ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'กรุณากรอกรหัสผ่าน';
-                    }
 
-                    return null;
-                  },
-                ),
+                  const SizedBox(height: 10),
 
-                const SizedBox(height: 28),
-
-                SizedBox(
-                  height: Responsive.value<double>(context, mobile: 48, tablet: 52),
-                  child: ElevatedButton(
-                    onPressed: _isLoading ? null : _login,
-                    child: _isLoading
-                        ? const SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(),
-                          )
-                        : const Text(
-                            'เข้าสู่ระบบ',
-                            style: TextStyle(fontSize: 17),
-                          ),
+                  Text(
+                    l10n.login,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontSize: 14, color: Color(0xff667085)),
                   ),
-                ),
 
-                const SizedBox(height: 16),
+                  const SizedBox(height: 40),
 
-                TextButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const RegisterPage(),
+                  TextFormField(
+                    controller: _emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: InputDecoration(
+                      labelText: l10n.email,
+                      prefixIcon: const Icon(Icons.email),
+                      border: const OutlineInputBorder(),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return l10n.translate('enterEmail');
+                      }
+
+                      if (!value.contains('@')) {
+                        return l10n.translate(
+                          'invalidEmail',
+                          defaultText: 'รูปแบบอีเมลไม่ถูกต้อง',
+                        );
+                      }
+
+                      return null;
+                    },
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  TextFormField(
+                    controller: _passwordController,
+                    obscureText: _obscurePassword,
+                    decoration: InputDecoration(
+                      labelText: l10n.password,
+                      prefixIcon: const Icon(Icons.lock),
+                      border: const OutlineInputBorder(),
+                      suffixIcon: IconButton(
+                        tooltip: _obscurePassword
+                            ? (l10n.isThai ? 'แสดงรหัสผ่าน' : 'Show password')
+                            : (l10n.isThai ? 'ซ่อนรหัสผ่าน' : 'Hide password'),
+                        onPressed: () {
+                          setState(() {
+                            _obscurePassword = !_obscurePassword;
+                          });
+                        },
+                        icon: Icon(
+                          _obscurePassword
+                              ? Icons.visibility
+                              : Icons.visibility_off,
+                        ),
                       ),
-                    );
-                  },
-                  child: const Text('ยังไม่มีบัญชี? สมัครสมาชิก'),
-                ),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return l10n.translate('enterPassword');
+                      }
+
+                      return null;
+                    },
+                  ),
+
+                  const SizedBox(height: 28),
+
+                  SizedBox(
+                    height: Responsive.value<double>(
+                      context,
+                      mobile: 48,
+                      tablet: 52,
+                    ),
+                    child: ElevatedButton(
+                      onPressed: _isLoading ? null : _login,
+                      child: _isLoading
+                          ? const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(),
+                            )
+                          : Text(
+                              l10n.login,
+                              style: const TextStyle(fontSize: 17),
+                            ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const RegisterPage(),
+                        ),
+                      );
+                    },
+                    child: Text(
+                      '${l10n.translate('noAccount')} ${l10n.register}',
+                    ),
+                  ),
                 ],
               ),
             ),

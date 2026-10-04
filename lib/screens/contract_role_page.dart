@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../localization/app_localizations.dart';
 import '../models/user.dart';
 import '../theme/app_theme.dart';
 import '../utils/responsive.dart';
@@ -32,94 +33,105 @@ class ContractRolePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+
     return Scaffold(
-      appBar: AppTheme.buildSafaAppBar(context, title: 'สร้างสัญญา'),
+      appBar: AppTheme.buildSafaAppBar(
+        context,
+        title: l10n.createContract,
+        showLanguageSwitch: true,
+      ),
       body: SafeArea(
         child: ResponsiveBody(
           maxWidth: Responsive.formMaxWidth(context),
           child: SingleChildScrollView(
-          padding: EdgeInsets.fromLTRB(
-            Responsive.horizontalPadding(context), 24,
-            Responsive.horizontalPadding(context), 30,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const SizedBox(height: 12),
-              Center(
-                child: Container(
-                  width: 76,
-                  height: 76,
-                  decoration: BoxDecoration(
-                    color: AppColors.primarySoft,
-                    borderRadius: BorderRadius.circular(18),
-                  ),
-                  child: const Icon(
-                    Icons.description_outlined,
-                    size: 42,
-                    color: AppColors.primary,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-              const Text(
-                'เลือกบทบาทของคุณ',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xff101828),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'คุณมีบทบาทอะไรในสัญญานี้?',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
-              ),
-              const SizedBox(height: 32),
-              _RoleButton(
-                icon: Icons.account_balance_wallet_outlined,
-                title: 'ฉันเป็นผู้ให้กู้',
-                subtitle: 'ผู้ให้กู้',
-                description: 'สร้างสัญญาในฐานะผู้ให้กู้ และระบุอีเมลของผู้กู้',
-                color: AppColors.primary,
-                onTap: () => _selectRole(context, 'lender'),
-              ),
-              const SizedBox(height: 14),
-              _RoleButton(
-                icon: Icons.person_outline,
-                title: 'ฉันเป็นผู้กู้',
-                subtitle: 'ผู้กู้',
-                description: 'สร้างสัญญาในฐานะผู้กู้ และระบุอีเมลของผู้ให้กู้',
-                color: AppColors.accent,
-                onTap: () => _selectRole(context, 'borrower'),
-              ),
-              const SizedBox(height: 24),
-              Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.border),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(Icons.info_outline, color: AppColors.muted),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        'ข้อมูลของบัญชีที่เข้าสู่ระบบจะถูกใช้เป็นข้อมูลของคุณอัตโนมัติ โดยไม่ต้องกรอกข้อมูลส่วนตัวของคุณซ้ำ',
-                        style: TextStyle(color: AppColors.muted, height: 1.5),
-                      ),
+            padding: EdgeInsets.fromLTRB(
+              Responsive.horizontalPadding(context),
+              24,
+              Responsive.horizontalPadding(context),
+              30,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SizedBox(height: 12),
+                Center(
+                  child: Container(
+                    width: 76,
+                    height: 76,
+                    decoration: BoxDecoration(
+                      color: AppColors.primarySoft,
+                      borderRadius: BorderRadius.circular(18),
                     ),
-                  ],
+                    child: const Icon(
+                      Icons.description_outlined,
+                      size: 42,
+                      color: AppColors.primary,
+                    ),
+                  ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 24),
+                Text(
+                  l10n.selectRoleTitle,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xff101828),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  l10n.selectRoleSubtitle,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
+                ),
+                const SizedBox(height: 32),
+                _RoleButton(
+                  icon: Icons.account_balance_wallet_outlined,
+                  title: l10n.roleLenderTitle,
+                  subtitle: l10n.translate('roleLenderSubtitle'),
+                  description: l10n.translate('roleLenderDesc'),
+                  color: AppColors.primary,
+                  onTap: () => _selectRole(context, 'lender'),
+                ),
+                const SizedBox(height: 14),
+                _RoleButton(
+                  icon: Icons.person_outline,
+                  title: l10n.roleBorrowerTitle,
+                  subtitle: l10n.translate('roleBorrowerSubtitle'),
+                  description: l10n.translate('roleBorrowerDesc'),
+                  color: AppColors.accent,
+                  onTap: () => _selectRole(context, 'borrower'),
+                ),
+                const SizedBox(height: 24),
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(Icons.info_outline, color: AppColors.muted),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          l10n.roleAutoFillNotice,
+                          style: const TextStyle(
+                            color: AppColors.muted,
+                            height: 1.5,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
         ),
       ),
     );

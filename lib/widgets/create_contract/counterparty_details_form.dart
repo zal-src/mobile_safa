@@ -16,6 +16,8 @@ class CounterpartyDetailsForm extends StatelessWidget {
   final TextEditingController emailController;
   final Key? counterpartyKey;
   final String? Function(String?) validateEmail;
+  final String? Function(String?) validatePhone;
+  final String? Function(String?) validateIdCard;
 
   const CounterpartyDetailsForm({
     super.key,
@@ -31,6 +33,8 @@ class CounterpartyDetailsForm extends StatelessWidget {
     required this.emailController,
     this.counterpartyKey,
     required this.validateEmail,
+    required this.validatePhone,
+    required this.validateIdCard,
   });
 
   @override
@@ -87,6 +91,7 @@ class CounterpartyDetailsForm extends StatelessWidget {
               FilteringTextInputFormatter.digitsOnly,
               LengthLimitingTextInputFormatter(10),
             ],
+            validator: validatePhone,
             decoration: ContractFormStyles.fieldDecoration(
               'กรอก 10 หลัก เช่น 0812345678',
               label: 'เบอร์โทรศัพท์',
@@ -103,6 +108,7 @@ class CounterpartyDetailsForm extends StatelessWidget {
               FilteringTextInputFormatter.digitsOnly,
               LengthLimitingTextInputFormatter(13),
             ],
+            validator: validateIdCard,
             decoration: ContractFormStyles.fieldDecoration(
               'กรอก 13 หลัก',
               label: isLender ? 'เลขบัตรประชาชน (ผู้กู้)' : 'เลขบัตรประชาชน',
