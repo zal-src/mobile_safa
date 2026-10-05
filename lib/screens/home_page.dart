@@ -65,8 +65,9 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _maybeShowOnboarding() async {
-    final seen = await OnboardingService.instance
-        .hasSeenOnboarding(OnboardingService.keyHome);
+    final seen = await OnboardingService.instance.hasSeenOnboarding(
+      OnboardingService.keyHome,
+    );
     if (!mounted || seen) return;
     await OnboardingService.instance.markAsSeen(OnboardingService.keyHome);
     if (!mounted) return;
@@ -90,7 +91,10 @@ class _HomePageState extends State<HomePage> {
           description:
               'ดูยอดเงินที่ให้กู้ เงินที่กู้ และจำนวนสัญญาทั้งหมด\nอัปเดตแบบ real-time ทุกครั้งที่มีการเปลี่ยนแปลง',
           targetKey: _keySummarySection,
-          spotlightPadding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+          spotlightPadding: const EdgeInsets.symmetric(
+            horizontal: 6,
+            vertical: 8,
+          ),
         ),
         TutorialStep(
           title: 'สร้างสัญญาใหม่',
@@ -248,8 +252,6 @@ class _HomePageState extends State<HomePage> {
       _loadDashboard();
     });
   }
-
-
 
   void _openContractDetail(Map<String, dynamic> contract) {
     try {
@@ -415,7 +417,10 @@ class _HomePageState extends State<HomePage> {
                   ),
                 const SizedBox(height: 12),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 10,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFF8F9FC),
                     borderRadius: BorderRadius.circular(14),
@@ -423,12 +428,21 @@ class _HomePageState extends State<HomePage> {
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.language, color: AppColors.primary, size: 22),
+                      const Icon(
+                        Icons.language,
+                        color: AppColors.primary,
+                        size: 22,
+                      ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          sheetContext.l10n.isThai ? 'ภาษา / Language' : 'Language / ภาษา',
-                          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                          sheetContext.l10n.isThai
+                              ? 'ภาษา / Language'
+                              : 'Language / ภาษา',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                          ),
                         ),
                       ),
                       const LanguageSwitchButton(),
@@ -484,37 +498,58 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _showEditProfileDialog() async {
     final formKey = GlobalKey<FormState>();
-    final fullNameController = TextEditingController(text: _currentUser.fullName);
+    final fullNameController = TextEditingController(
+      text: _currentUser.fullName,
+    );
     final emailController = TextEditingController(text: _currentUser.email);
-    final phoneController = TextEditingController(text: _currentUser.phone ?? '');
-    final idCardController = TextEditingController(text: _currentUser.idCard ?? '');
+    final phoneController = TextEditingController(
+      text: _currentUser.phone ?? '',
+    );
+    final idCardController = TextEditingController(
+      text: _currentUser.idCard ?? '',
+    );
     final houseNumberController = TextEditingController(
-      text: (_currentAddress?['address'] as String?)?.replaceFirst('บ้านเลขที่ ', '').split(' ').first ?? '',
+      text:
+          (_currentAddress?['address'] as String?)
+              ?.replaceFirst('บ้านเลขที่ ', '')
+              .split(' ')
+              .first ??
+          '',
     );
     final villageController = TextEditingController(
       text: (_currentAddress?['address'] as String?)?.contains('หมู่') == true
           ? (_currentAddress?['address'] as String?)
-              ?.split('หมู่')
-              .last
-              .trim()
-              .split(' ')
-              .first ?? ''
+                    ?.split('หมู่')
+                    .last
+                    .trim()
+                    .split(' ')
+                    .first ??
+                ''
           : '',
     );
     final roadController = TextEditingController(
       text: (_currentAddress?['address'] as String?)?.contains('ถนน') == true
           ? (_currentAddress?['address'] as String?)
-              ?.split('ถนน')
-              .last
-              .trim()
-              .split(' ')
-              .first ?? ''
+                    ?.split('ถนน')
+                    .last
+                    .trim()
+                    .split(' ')
+                    .first ??
+                ''
           : '',
     );
-    final subdistrictController = TextEditingController(text: _currentAddress?['subdistrict'] ?? '');
-    final districtController = TextEditingController(text: _currentAddress?['district'] ?? '');
-    final provinceController = TextEditingController(text: _currentAddress?['province'] ?? '');
-    final postalCodeController = TextEditingController(text: _currentAddress?['postal_code'] ?? '');
+    final subdistrictController = TextEditingController(
+      text: _currentAddress?['subdistrict'] ?? '',
+    );
+    final districtController = TextEditingController(
+      text: _currentAddress?['district'] ?? '',
+    );
+    final provinceController = TextEditingController(
+      text: _currentAddress?['province'] ?? '',
+    );
+    final postalCodeController = TextEditingController(
+      text: _currentAddress?['postal_code'] ?? '',
+    );
     final passwordController = TextEditingController();
 
     final result = await showDialog<bool>(
@@ -531,9 +566,13 @@ class _HomePageState extends State<HomePage> {
                 children: [
                   TextFormField(
                     controller: fullNameController,
-                    decoration: const InputDecoration(labelText: 'ชื่อ-นามสกุล'),
+                    decoration: const InputDecoration(
+                      labelText: 'ชื่อ-นามสกุล',
+                    ),
                     validator: (value) =>
-                        (value == null || value.trim().isEmpty) ? 'กรุณากรอกชื่อ-นามสกุล' : null,
+                        (value == null || value.trim().isEmpty)
+                        ? 'กรุณากรอกชื่อ-นามสกุล'
+                        : null,
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
@@ -544,8 +583,9 @@ class _HomePageState extends State<HomePage> {
                       if (value == null || value.trim().isEmpty) {
                         return 'กรุณากรอกอีเมล';
                       }
-                      return RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
-                              .hasMatch(value.trim())
+                      return RegExp(
+                            r'^[^@\s]+@[^@\s]+\.[^@\s]+$',
+                          ).hasMatch(value.trim())
                           ? null
                           : 'รูปแบบอีเมลไม่ถูกต้อง';
                     },
@@ -554,7 +594,9 @@ class _HomePageState extends State<HomePage> {
                   TextFormField(
                     controller: phoneController,
                     keyboardType: TextInputType.phone,
-                    decoration: const InputDecoration(labelText: 'เบอร์โทรศัพท์'),
+                    decoration: const InputDecoration(
+                      labelText: 'เบอร์โทรศัพท์',
+                    ),
                     validator: (value) {
                       final text = value?.trim() ?? '';
                       if (text.isEmpty) return 'กรุณากรอกเบอร์โทรศัพท์';
@@ -567,7 +609,9 @@ class _HomePageState extends State<HomePage> {
                   TextFormField(
                     controller: idCardController,
                     keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(labelText: 'เลขบัตรประชาชน'),
+                    decoration: const InputDecoration(
+                      labelText: 'เลขบัตรประชาชน',
+                    ),
                     validator: (value) {
                       final text = value?.trim() ?? '';
                       if (text.isEmpty) return 'กรุณากรอกเลขบัตรประชาชน';
@@ -610,7 +654,9 @@ class _HomePageState extends State<HomePage> {
                   TextFormField(
                     controller: postalCodeController,
                     keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(labelText: 'รหัสไปรษณีย์'),
+                    decoration: const InputDecoration(
+                      labelText: 'รหัสไปรษณีย์',
+                    ),
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
@@ -670,7 +716,9 @@ class _HomePageState extends State<HomePage> {
       if (!mounted) return;
 
       if (updatedUser != null) {
-        final refreshedAddress = await _database.getUserAddress(_currentUser.userId!);
+        final refreshedAddress = await _database.getUserAddress(
+          _currentUser.userId!,
+        );
         setState(() {
           _currentUser = updatedUser;
           _currentAddress = refreshedAddress;
@@ -741,95 +789,111 @@ class _HomePageState extends State<HomePage> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FC),
-      appBar: _currentIndex == 2 ? null : AppBar(
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.transparent,
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1.0),
-          child: Container(color: Colors.grey.shade200, height: 1.0),
-        ),
-        title: null,
-        actions: [
-          IconButton(
-            tooltip: context.l10n.aiAdvisor,
-            icon: const Icon(Icons.search, color: Colors.black87),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const AiChatPage()),
-              );
-            },
-          ),
-          const SizedBox(width: 4),
-          const Center(child: LanguageSwitchButton()),
-          const SizedBox(width: 8),
-          Container(
-            margin: const EdgeInsets.only(right: 16, top: 8, bottom: 8),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.grey.shade300, width: 1),
+      appBar: _currentIndex == 2
+          ? null
+          : AppBar(
+              elevation: 0,
+              scrolledUnderElevation: 0,
+              backgroundColor: Colors.white,
+              surfaceTintColor: Colors.transparent,
+              bottom: PreferredSize(
+                preferredSize: const Size.fromHeight(1.0),
+                child: Container(color: Colors.grey.shade200, height: 1.0),
+              ),
+              title: null,
+              actions: [
+                IconButton(
+                  tooltip: context.l10n.aiAdvisor,
+                  icon: const Icon(Icons.search, color: Colors.black87),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const AiChatPage(),
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(width: 4),
+                const Center(child: LanguageSwitchButton()),
+                const SizedBox(width: 8),
+                Container(
+                  margin: const EdgeInsets.only(right: 16, top: 8, bottom: 8),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.grey.shade300, width: 1),
+                  ),
+                  child: IconButton(
+                    tooltip: context.l10n.isThai ? 'เมนูหลัก' : 'Main Menu',
+                    icon: const Icon(
+                      Icons.menu,
+                      color: Colors.black87,
+                      size: 20,
+                    ),
+                    onPressed: () {
+                      _showMenuDialog();
+                    },
+                  ),
+                ),
+              ],
             ),
-            child: IconButton(
-              tooltip: context.l10n.isThai ? 'เมนูหลัก' : 'Main Menu',
-              icon: const Icon(Icons.menu, color: Colors.black87, size: 20),
-              onPressed: () {
-                _showMenuDialog();
-              },
-            ),
-          ),
-        ],
-      ),
-      body: _currentIndex == 2 
+      body: _currentIndex == 2
           ? KnowledgePage(user: widget.user)
           : ResponsiveBody(
               child: RefreshIndicator(
-        onRefresh: _loadDashboard,
-        color: const Color(0xFF101828),
-        child: _isLoading
-            ? const Center(
-                child: CircularProgressIndicator(color: Color(0xFF101828)),
-              )
-            : SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: EdgeInsets.fromLTRB(hPadding, 8, hPadding, 28),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        const Text(
-                          'ภาพรวม',
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.w800,
-                            color: Color(0xFF101828),
-                          ),
+                onRefresh: _loadDashboard,
+                color: const Color(0xFF101828),
+                child: _isLoading
+                    ? const Center(
+                        child: CircularProgressIndicator(
+                          color: Color(0xFF101828),
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    _buildWelcomeCard(),
-                    const SizedBox(height: 18),
-                    _buildSummarySection(),
-                    const SizedBox(height: 24),
-                    _buildRecentContractsSection(),
-                    const SizedBox(height: 18),
-                    _buildCreateContractButton(),
-                    const SizedBox(height: 20),
-                  ],
-                ),
+                      )
+                    : SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: EdgeInsets.fromLTRB(hPadding, 8, hPadding, 28),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                const Text(
+                                  'ภาพรวม',
+                                  style: TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.w800,
+                                    color: Color(0xFF101828),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            _buildWelcomeCard(),
+                            const SizedBox(height: 18),
+                            _buildSummarySection(),
+                            const SizedBox(height: 24),
+                            _buildRecentContractsSection(),
+                            const SizedBox(height: 18),
+                            _buildCreateContractButton(),
+                            const SizedBox(height: 20),
+                          ],
+                        ),
+                      ),
               ),
-      ),
-      ),
+            ),
       bottomNavigationBar: _buildBottomNavigationBar(),
     );
   }
 
-  Widget _buildMenuItem(IconData icon, String title, bool isSelected, VoidCallback onTap, {Color? color}) {
+  Widget _buildMenuItem(
+    IconData icon,
+    String title,
+    bool isSelected,
+    VoidCallback onTap, {
+    Color? color,
+  }) {
     final defaultColor = color ?? const Color(0xFF344054);
     return InkWell(
       onTap: onTap,
@@ -900,7 +964,10 @@ class _HomePageState extends State<HomePage> {
                           Container(
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              border: Border.all(color: Colors.grey.shade300, width: 1),
+                              border: Border.all(
+                                color: Colors.grey.shade300,
+                                width: 1,
+                              ),
                             ),
                             child: IconButton(
                               tooltip: 'ปิดเมนู',
@@ -929,9 +996,14 @@ class _HomePageState extends State<HomePage> {
                               height: 42,
                               decoration: const BoxDecoration(
                                 color: Color(0xFFE8F7F1),
-                                borderRadius: BorderRadius.all(Radius.circular(12)),
+                                borderRadius: BorderRadius.all(
+                                  Radius.circular(12),
+                                ),
                               ),
-                              child: const Icon(Icons.person_outline, color: Color(0xFF087443)),
+                              child: const Icon(
+                                Icons.person_outline,
+                                color: Color(0xFF087443),
+                              ),
                             ),
                             const SizedBox(width: 12),
                             Expanded(
@@ -969,24 +1041,36 @@ class _HomePageState extends State<HomePage> {
                     _buildMenuItem(Icons.home_outlined, 'หน้าหลัก', true, () {
                       Navigator.pop(context);
                     }),
-                    _buildMenuItem(Icons.description_outlined, 'สัญญา', false, () {
-                      Navigator.pop(context);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ContractListPage(user: _currentUser),
-                        ),
-                      );
-                    }),
-                    _buildMenuItem(Icons.menu_book_outlined, 'ความรู้', false, () {
-                      Navigator.pop(context);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => KnowledgePage(user: _currentUser),
-                        ),
-                      );
-                    }),
+                    _buildMenuItem(
+                      Icons.description_outlined,
+                      'สัญญา',
+                      false,
+                      () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                ContractListPage(user: _currentUser),
+                          ),
+                        );
+                      },
+                    ),
+                    _buildMenuItem(
+                      Icons.menu_book_outlined,
+                      'ความรู้',
+                      false,
+                      () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                KnowledgePage(user: _currentUser),
+                          ),
+                        );
+                      },
+                    ),
                     _buildMenuItem(Icons.person_outline, 'โปรไฟล์', false, () {
                       Navigator.pop(context);
                       _showProfile();
@@ -997,17 +1081,25 @@ class _HomePageState extends State<HomePage> {
                     ),
                     _buildMenuItem(
                       Icons.language,
-                      context.l10n.isThai ? 'เปลี่ยนภาษา (Switch to English)' : 'Change Language (สลับเป็นภาษาไทย)',
+                      context.l10n.isThai
+                          ? 'เปลี่ยนภาษา (Switch to English)'
+                          : 'Change Language (สลับเป็นภาษาไทย)',
                       false,
                       () {
                         Navigator.pop(context);
                         LanguageController.instance.toggleLanguage();
                       },
                     ),
-                    _buildMenuItem(Icons.logout, 'ออกจากระบบ', false, () {
-                      Navigator.pop(context);
-                      _showLogoutDialog();
-                    }, color: const Color(0xFFD92D20)),
+                    _buildMenuItem(
+                      Icons.logout,
+                      'ออกจากระบบ',
+                      false,
+                      () {
+                        Navigator.pop(context);
+                        _showLogoutDialog();
+                      },
+                      color: const Color(0xFFD92D20),
+                    ),
                     const SizedBox(height: 8),
                   ],
                 ),
