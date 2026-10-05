@@ -7,7 +7,6 @@ import '../widgets/responsive_container.dart';
 import '../widgets/register/register_ui_components.dart';
 import '../widgets/register/account_info_form.dart';
 import '../widgets/register/address_form.dart';
-import '../widgets/register/register_ai_assistant.dart';
 
 // =============================================================================
 // RegisterPage
@@ -18,7 +17,7 @@ import '../widgets/register/register_ai_assistant.dart';
 // Widget ย่อยที่เกี่ยวข้อง (ดูใน lib/widgets/register/):
 //   - account_info_form.dart       → ฟอร์มบัญชี (ชื่อ/อีเมล/รหัสผ่าน/เบอร์/บัตร)
 //   - address_form.dart            → ฟอร์มที่อยู่ (บ้านเลขที่ ถึง ไปรษณีย์)
-//   - register_ai_assistant.dart   → กล่อง "Safa ช่วยตรวจข้อมูล"
+
 //   - register_ui_components.dart  → CategoryHeader, FieldLabel, PasswordRuleRow
 //   - register_validators.dart     → validate phone/idCard/postalCode/password
 // =============================================================================
@@ -55,7 +54,7 @@ class _RegisterPageState extends State<RegisterPage> {
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
-  bool _showAiInsight = false;
+
 
   // ── Lifecycle ──────────────────────────────────────────────────────────────
 
@@ -243,21 +242,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   ),
                   const SizedBox(height: 24),
 
-                  // ── Safa AI Assistant ─────────────────────────────────────
-                  RegisterAiAssistant(
-                    isLoading: _isLoading,
-                    showInsight: _showAiInsight,
-                    onToggleInsight: () =>
-                        setState(() => _showAiInsight = !_showAiInsight),
-                    name: _nameController.text,
-                    email: _emailController.text,
-                    phone: _phoneController.text,
-                    idCard: _idCardController.text,
-                    password: _passwordController.text,
-                    houseNumber: _houseNumberController.text,
-                    province: _provinceController.text,
-                    postalCode: _postalCodeController.text,
-                  ),
+
                   const SizedBox(height: 90),
                 ],
               ),
