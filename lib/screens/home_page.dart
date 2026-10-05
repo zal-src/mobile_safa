@@ -817,24 +817,25 @@ class _HomePageState extends State<HomePage> {
                 const SizedBox(width: 4),
                 const Center(child: LanguageSwitchButton()),
                 const SizedBox(width: 8),
-                Container(
-                  margin: const EdgeInsets.only(right: 16, top: 8, bottom: 8),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.grey.shade300, width: 1),
-                  ),
-                  child: IconButton(
-                    tooltip: context.l10n.isThai ? 'เมนูหลัก' : 'Main Menu',
-                    icon: const Icon(
-                      Icons.menu,
-                      color: Colors.black87,
-                      size: 20,
+                if (_currentIndex != 0)
+                  Container(
+                    margin: const EdgeInsets.only(right: 16, top: 8, bottom: 8),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.grey.shade300, width: 1),
                     ),
-                    onPressed: () {
-                      _showMenuDialog();
-                    },
+                    child: IconButton(
+                      tooltip: context.l10n.isThai ? 'เมนูหลัก' : 'Main Menu',
+                      icon: const Icon(
+                        Icons.menu,
+                        color: Colors.black87,
+                        size: 20,
+                      ),
+                      onPressed: () {
+                        _showMenuDialog();
+                      },
+                    ),
                   ),
-                ),
               ],
             ),
       body: _currentIndex == 2
@@ -1079,17 +1080,7 @@ class _HomePageState extends State<HomePage> {
                       padding: EdgeInsets.symmetric(vertical: 8.0),
                       child: Divider(height: 1, color: Color(0xFFE4E7EC)),
                     ),
-                    _buildMenuItem(
-                      Icons.language,
-                      context.l10n.isThai
-                          ? 'เปลี่ยนภาษา (Switch to English)'
-                          : 'Change Language (สลับเป็นภาษาไทย)',
-                      false,
-                      () {
-                        Navigator.pop(context);
-                        LanguageController.instance.toggleLanguage();
-                      },
-                    ),
+
                     _buildMenuItem(
                       Icons.logout,
                       'ออกจากระบบ',
