@@ -968,7 +968,7 @@ class _HomePageState extends State<HomePage> {
                       padding: EdgeInsets.symmetric(vertical: 8.0),
                       child: Divider(height: 1, color: Color(0xFFE4E7EC)),
                     ),
-                    _buildMenuItem(Icons.light_mode_outlined, 'ธีมและการแสดงผล', false, () {}),
+
                     _buildMenuItem(Icons.logout, 'ออกจากระบบ', false, () {
                       Navigator.pop(context);
                       _showLogoutDialog();
