@@ -1268,19 +1268,6 @@ class _ContractListPageState extends State<ContractListPage> {
               );
             },
           ),
-          const SizedBox(width: 4),
-          Container(
-            margin: const EdgeInsets.only(right: 16, top: 8, bottom: 8),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.grey.shade300, width: 1),
-            ),
-            child: IconButton(
-              tooltip: 'เมนูหลัก',
-              icon: const Icon(Icons.menu, color: Colors.black87, size: 20),
-              onPressed: _showMenuDialog,
-            ),
-          ),
         ],
       ),
 

@@ -817,23 +817,30 @@ class _HomePageState extends State<HomePage> {
                 const SizedBox(width: 4),
                 const Center(child: LanguageSwitchButton()),
                 const SizedBox(width: 8),
-                if (_currentIndex != 0)
-                  Container(
-                    margin: const EdgeInsets.only(right: 16, top: 8, bottom: 8),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.grey.shade300, width: 1),
-                    ),
-                    child: IconButton(
-                      tooltip: context.l10n.isThai ? 'เมนูหลัก' : 'Main Menu',
-                      icon: const Icon(
-                        Icons.menu,
-                        color: Colors.black87,
+                if (_currentIndex == 1)
+                  GestureDetector(
+                    onTap: _showProfile,
+                    child: Container(
+                      margin: const EdgeInsets.only(
+                        right: 16,
+                        top: 8,
+                        bottom: 8,
+                      ),
+                      width: 38,
+                      height: 38,
+                      decoration: BoxDecoration(
+                        color: AppColors.purpleSoft,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Colors.grey.shade200,
+                          width: 1.5,
+                        ),
+                      ),
+                      child: const Icon(
+                        Icons.person_outline,
+                        color: AppColors.primary,
                         size: 20,
                       ),
-                      onPressed: () {
-                        _showMenuDialog();
-                      },
                     ),
                   ),
               ],
@@ -884,6 +891,7 @@ class _HomePageState extends State<HomePage> {
                       ),
               ),
             ),
+
       bottomNavigationBar: _buildBottomNavigationBar(),
     );
   }
