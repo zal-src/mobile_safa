@@ -9,6 +9,8 @@ class ContractDetailsForm extends StatelessWidget {
   final TextEditingController purposeController;
   final TextEditingController notesController;
   final String repaymentType;
+  final bool canUseMonthlyRepayment;
+  final ValueChanged<String> onRepaymentTypeChanged;
   final String todayFormatted;
   final String? Function(String?) validateAmount;
   final String? Function(String?) validateReturnDate;
@@ -23,6 +25,8 @@ class ContractDetailsForm extends StatelessWidget {
     required this.purposeController,
     required this.notesController,
     required this.repaymentType,
+    required this.canUseMonthlyRepayment,
+    required this.onRepaymentTypeChanged,
     required this.todayFormatted,
     required this.validateAmount,
     required this.validateReturnDate,
@@ -92,16 +96,32 @@ class ContractDetailsForm extends StatelessWidget {
         const SizedBox(height: 22),
         ContractFormStyles.buildSectionTitle('รูปแบบการชำระเงิน'),
         const SizedBox(height: 12),
-        TextFormField(
+        DropdownButtonFormField<String>(
+          key: ValueKey(repaymentType),
           initialValue: repaymentType,
-          readOnly: true,
           decoration: const InputDecoration(
-            labelText: 'รูปแบบการชำระเงิน (คำนวณอัตโนมัติ)',
+            labelText: 'รูปแบบการชำระเงิน',
             prefixIcon: Icon(Icons.payments_outlined),
             border: OutlineInputBorder(),
             filled: true,
             fillColor: Color(0xFFF9FAFB),
           ),
+          items: [
+            const DropdownMenuItem(
+              value: 'ครั้งเดียว',
+              child: Text('ชำระครั้งเดียว'),
+            ),
+            if (canUseMonthlyRepayment)
+              const DropdownMenuItem(
+                value: 'รายเดือน',
+                child: Text('ชำระรายเดือน'),
+              ),
+          ],
+          onChanged: isSaving
+              ? null
+              : (value) {
+                  if (value != null) onRepaymentTypeChanged(value);
+                },
         ),
         const SizedBox(height: 22),
         ContractFormStyles.buildSectionTitle('รายละเอียดเพิ่มเติม'),

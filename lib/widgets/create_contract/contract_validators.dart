@@ -26,6 +26,20 @@ class ContractValidators {
     return null;
   }
 
+  /// Optional phone number: when provided, it must contain exactly 10 digits.
+  static String? validateOptionalPhone(String? value) {
+    final phone = value?.trim() ?? '';
+    if (phone.isEmpty || RegExp(r'^\d{10}$').hasMatch(phone)) return null;
+    return 'กรุณากรอกข้อมูลให้ถูกต้อง';
+  }
+
+  /// Optional Thai national ID: when provided, it must contain exactly 13 digits.
+  static String? validateOptionalIdCard(String? value) {
+    final idCard = value?.trim() ?? '';
+    if (idCard.isEmpty || RegExp(r'^\d{13}$').hasMatch(idCard)) return null;
+    return 'กรุณากรอกข้อมูลให้ถูกต้อง';
+  }
+
   /// validate จำนวนเงิน
   static String? validateAmount(String? value) {
     final text = value?.trim().replaceAll(',', '') ?? '';

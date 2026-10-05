@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../utils/responsive.dart';
+import '../widgets/language_switch_button.dart';
 
 abstract final class AppColors {
   static const ink = Color(0xff101828);
@@ -19,6 +21,8 @@ abstract final class AppColors {
 
 abstract final class AppTheme {
   static ThemeData get light {
+    final promptFont = GoogleFonts.prompt();
+
     return ThemeData(
       useMaterial3: true,
       scaffoldBackgroundColor: AppColors.page,
@@ -31,8 +35,8 @@ abstract final class AppTheme {
         onSurface: AppColors.text,
         error: AppColors.error,
       ),
-      fontFamily: 'sans-serif',
-      textTheme: const TextTheme(
+      fontFamily: promptFont.fontFamily,
+      textTheme: GoogleFonts.promptTextTheme(const TextTheme(
         headlineLarge: TextStyle(
           color: AppColors.ink,
           fontSize: 28,
@@ -60,14 +64,14 @@ abstract final class AppTheme {
           height: 1.4,
         ),
         labelLarge: TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
-      ),
-      appBarTheme: const AppBarTheme(
+      )),
+      appBarTheme: AppBarTheme(
         backgroundColor: AppColors.page,
         foregroundColor: AppColors.ink,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
-        titleTextStyle: TextStyle(
+        titleTextStyle: GoogleFonts.prompt(
           color: AppColors.ink,
           fontSize: 17,
           fontWeight: FontWeight.w700,
@@ -174,14 +178,27 @@ abstract final class AppTheme {
   /// สร้าง AppBar แบบ Safa สม่ำเสมอทุกหน้า
   /// [title] - ชื่อหน้า (optional)
   /// [showBackButton] - แสดงปุ่มย้อนกลับ (default: true เมื่อ navigator มี route ก่อนหน้า)
+  /// [showLanguageSwitch] - แสดงปุ่มเปลี่ยนภาษา TH/EN
   static AppBar buildSafaAppBar(
     BuildContext context, {
     String? title,
     bool? showBackButton,
+    bool showLanguageSwitch = false,
     List<Widget> actions = const [],
   }) {
     final canPop = Navigator.of(context).canPop();
     final showBack = showBackButton ?? canPop;
+
+    final allActions = <Widget>[
+      if (showLanguageSwitch) ...[
+        const Center(child: LanguageSwitchButton()),
+        const SizedBox(width: 8),
+      ],
+      ...actions,
+      if (!showBack && actions.isEmpty && !showLanguageSwitch) ...[
+        const SizedBox(width: 12),
+      ],
+    ];
 
     return AppBar(
       elevation: 0,
@@ -205,19 +222,14 @@ abstract final class AppTheme {
       title: title != null
           ? Text(
               title,
-              style: const TextStyle(
+              style: GoogleFonts.prompt(
                 fontSize: 17,
                 fontWeight: FontWeight.w700,
                 color: AppColors.ink,
               ),
             )
           : null,
-      actions: [
-        ...actions,
-        if (!showBack) ...[
-          const SizedBox(width: 12),
-        ],
-      ],
+      actions: allActions,
     );
   }
 

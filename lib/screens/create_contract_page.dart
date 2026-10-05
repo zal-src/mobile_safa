@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../localization/app_localizations.dart';
 import '../models/user.dart';
 import '../services/contract_service.dart';
 import '../services/onboarding_service.dart';
@@ -77,6 +78,13 @@ class _CreateContractPageState extends State<CreateContractPage> {
   String get _counterpartyLabel => _isLender ? 'อีเมลผู้กู้' : 'อีเมลผู้ให้กู้';
   String get _counterpartyHint =>
       _isLender ? 'กรอกอีเมลของผู้กู้' : 'กรอกอีเมลของผู้ให้กู้';
+  bool get _monthlyRepaymentAvailable {
+    final loanDate = ContractDateUtils.parseDate(_loanDateController.text);
+    final returnDate = ContractDateUtils.parseDate(_returnDateController.text);
+    return loanDate != null &&
+        returnDate != null &&
+        canUseMonthlyRepayment(loanDate: loanDate, returnDate: returnDate);
+  }
 
   // -------------------------------------------------------------------------
   // Lifecycle
@@ -168,9 +176,9 @@ class _CreateContractPageState extends State<CreateContractPage> {
       initialDate: initialDate,
       firstDate: today,
       lastDate: DateTime(today.year + 20, today.month, today.day),
-      helpText: 'เลือกวันคืนเงิน',
-      cancelText: 'ยกเลิก',
-      confirmText: 'ยืนยัน',
+      helpText: context.l10n.translate('selectReturnDate', defaultText: 'เลือกวันคืนเงิน'),
+      cancelText: context.l10n.cancel,
+      confirmText: context.l10n.confirm,
     );
 
     if (selectedDate == null || !mounted) return;
@@ -187,9 +195,10 @@ class _CreateContractPageState extends State<CreateContractPage> {
       return;
     }
 
+    final canUseMonthlyRepaymentForSelectedDate = loanDate != null &&
+      canUseMonthlyRepayment(loanDate: loanDate, returnDate: selected);
     if (_repaymentType == 'รายเดือน' &&
-        loanDate != null &&
-        !canUseMonthlyRepayment(loanDate: loanDate, returnDate: selected)) {
+      !canUseMonthlyRepaymentForSelectedDate) {
       setState(() {
         _repaymentType = 'ครั้งเดียว';
       });
@@ -200,15 +209,6 @@ class _CreateContractPageState extends State<CreateContractPage> {
 
     setState(() {
       _returnDateController.text = ContractDateUtils.formatDate(selected);
-      
-      // คำนวณรูปแบบการชำระเงินอัตโนมัติ
-      final loanDateVal = loanDate ?? today;
-      final diffDays = selected.difference(loanDateVal).inDays;
-      if (diffDays >= 30) {
-        _repaymentType = 'รายเดือน';
-      } else {
-        _repaymentType = 'ครั้งเดียว';
-      }
     });
   }
 
@@ -378,7 +378,11 @@ class _CreateContractPageState extends State<CreateContractPage> {
 
     return Scaffold(
       backgroundColor: AppColors.page,
-      appBar: AppTheme.buildSafaAppBar(context, title: 'สร้างสัญญา'),
+      appBar: AppTheme.buildSafaAppBar(
+        context,
+        title: context.l10n.createContract,
+        showLanguageSwitch: true,
+      ),
       bottomNavigationBar: SafeArea(
         top: false,
         child: Container(
@@ -405,10 +409,10 @@ class _CreateContractPageState extends State<CreateContractPage> {
                     ),
               label: Text(
                 _isSaving
-                    ? 'กำลังดำเนินการ...'
+                    ? context.l10n.loading
                     : _currentStep == 0
-                    ? 'ดำเนินการต่อ'
-                    : 'สร้างสัญญา',
+                    ? context.l10n.continueBtn
+                    : context.l10n.createContract,
               ),
             ),
           ),
@@ -472,6 +476,8 @@ class _CreateContractPageState extends State<CreateContractPage> {
                     emailController: _counterpartyEmailController,
                     counterpartyKey: _keyCounterparty,
                     validateEmail: _validateEmail,
+                    validatePhone: ContractValidators.validateOptionalPhone,
+                    validateIdCard: ContractValidators.validateOptionalIdCard,
                   ),
 
                   if (_currentStep == 1) ...[
@@ -484,6 +490,10 @@ class _CreateContractPageState extends State<CreateContractPage> {
                       purposeController: _purposeController,
                       notesController: _notesController,
                       repaymentType: _repaymentType,
+                      canUseMonthlyRepayment: _monthlyRepaymentAvailable,
+                      onRepaymentTypeChanged: (value) {
+                        setState(() => _repaymentType = value);
+                      },
                       todayFormatted: ContractDateUtils.displayDate(
                         ContractDateUtils.formatDate(today),
                       ),
