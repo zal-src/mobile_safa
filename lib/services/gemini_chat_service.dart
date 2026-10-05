@@ -84,6 +84,11 @@ class GeminiChatService {
       return response.text ?? 'ไม่สามารถประมวลผลคำตอบได้';
     } on GenerativeAIException catch (e) {
       debugPrint('Gemini API Error: $e');
+      if (e.message.toLowerCase().contains('high demand') ||
+          e.message.toLowerCase().contains('quota') ||
+          e.message.contains('429')) {
+        return '⏳ ขออภัยค่ะ ขณะนี้ AI มีผู้ใช้งานจำนวนมาก (High demand) กรุณารอสักครู่แล้วลองถามใหม่อีกครั้งนะคะ';
+      }
       return '❌ เกิดข้อผิดพลาดจาก AI: ${e.message}';
     } catch (e) {
       debugPrint('Gemini Error: $e');
@@ -105,7 +110,13 @@ class GeminiChatService {
         if (text != null) yield text;
       }
     } on GenerativeAIException catch (e) {
-      yield '❌ เกิดข้อผิดพลาดจาก AI: ${e.message}';
+      if (e.message.toLowerCase().contains('high demand') ||
+          e.message.toLowerCase().contains('quota') ||
+          e.message.contains('429')) {
+        yield '⏳ ขออภัยค่ะ ขณะนี้ AI มีผู้ใช้งานจำนวนมาก (High demand) กรุณารอสักครู่แล้วลองถามใหม่อีกครั้งนะคะ';
+      } else {
+        yield '❌ เกิดข้อผิดพลาดจาก AI: ${e.message}';
+      }
     } catch (e) {
       yield '❌ ไม่สามารถเชื่อมต่อได้ กรุณาลองใหม่';
     }
