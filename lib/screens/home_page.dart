@@ -1039,39 +1039,6 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    _buildMenuItem(Icons.home_outlined, 'หน้าหลัก', true, () {
-                      Navigator.pop(context);
-                    }),
-                    _buildMenuItem(
-                      Icons.description_outlined,
-                      'สัญญา',
-                      false,
-                      () {
-                        Navigator.pop(context);
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                ContractListPage(user: _currentUser),
-                          ),
-                        );
-                      },
-                    ),
-                    _buildMenuItem(
-                      Icons.menu_book_outlined,
-                      'ความรู้',
-                      false,
-                      () {
-                        Navigator.pop(context);
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                KnowledgePage(user: _currentUser),
-                          ),
-                        );
-                      },
-                    ),
                     _buildMenuItem(Icons.person_outline, 'โปรไฟล์', false, () {
                       Navigator.pop(context);
                       _showProfile();
