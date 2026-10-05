@@ -79,7 +79,7 @@ class PrintablePdfService {
         ),
       ),
       pw.SizedBox(height: 16),
-      _lineRow('ลำดับที่', '____________________', regularFont),
+      _lineRow('ลำดับที่', contract.agreementId, regularFont),
       _lineRow('ทำที่', 'ผ่านระบบออนไลน์ของ SAFA ', regularFont),
       _lineRow('วันที่', '${_formatThaiDate(contract.loanDate)} ', regularFont),
       pw.SizedBox(height: 10),

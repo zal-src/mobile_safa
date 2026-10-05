@@ -17,7 +17,6 @@ import 'knowledge_page.dart';
 import 'ai_chat_page.dart';
 import '../theme/app_theme.dart';
 import '../localization/app_localizations.dart';
-import '../localization/language_controller.dart';
 import '../widgets/language_switch_button.dart';
 
 class HomePage extends StatefulWidget {
