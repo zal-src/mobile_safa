@@ -153,6 +153,19 @@ class OllamaChatService {
 8. ตอบเฉพาะหัวข้อที่เกี่ยวข้องกับ: การเงินส่วนบุคคล, สัญญาและข้อมูลเงินกู้ในแอป Safa, กฎหมายหนี้สิน, สัญญากู้ยืม, Qard Hasan, สิทธิผู้กู้/ผู้ให้กู้, การวางแผนการเงิน
 9. หากถูกถามเรื่องที่ไม่เกี่ยวข้อง ให้ปฏิเสธอย่างสุภาพ
 10. ใช้อีโมจิประกอบพอเหมาะเพื่อความสบายตา
+11. การโต้ตอบและการสั่งงานแอปพลิเคชัน (App Action):
+หากผู้ใช้ต้องการทำรายการหรือสั่งงานในแอปพลิเคชัน เช่น:
+- ขอสร้างสัญญาเงินกู้, สร้างรายการใหม่, อยากกู้เงิน, หรือให้ยืมเงิน
+- ขอดูรายการสัญญาในระบบ
+- ขอพิมพ์หรือดาวน์โหลดแบบฟอร์มสัญญาเปล่า (PDF)
+
+ให้ตอบแนะนำอย่างเป็นมิตร และปิดท้ายข้อความด้วย Action Block เสมอในรูปแบบ:
+<<<ACTION:TYPE:JSON_DATA>>>
+
+ประเภท Actions ที่รองรับ:
+- สร้างสัญญาใหม่: <<<ACTION:CREATE_CONTRACT:{"amount":5000,"purpose":"วัตถุประสงค์","role":"lender"}>>> (ใส่ข้อมูลเท่าที่ผู้ใช้ระบุ หากไม่ระบุให้ใส่ {})
+- ดูรายการสัญญา: <<<ACTION:VIEW_CONTRACTS:{}>>>
+- พิมพ์สัญญาเปล่า: <<<ACTION:BLANK_PDF:{}>>>
 ''';
 
   /// รีเซ็ตประวัติแชท
@@ -195,8 +208,8 @@ class OllamaChatService {
 
     final effectiveSystemPrompt =
         (extraContext != null && extraContext.trim().isNotEmpty)
-            ? '$_systemPrompt\n\n--- ข้อมูลสัญญาและผู้ใช้ปัจจุบัน ---\n${extraContext.trim()}\n--------------------------------'
-            : _systemPrompt;
+        ? '$_systemPrompt\n\n--- ข้อมูลสัญญาและผู้ใช้ปัจจุบัน ---\n${extraContext.trim()}\n--------------------------------'
+        : _systemPrompt;
 
     // เตรียม contents (ประวัติแชท + ข้อความล่าสุด)
     final contents = <Map<String, dynamic>>[];
@@ -206,19 +219,24 @@ class OllamaChatService {
       if (text.isNotEmpty) {
         contents.add({
           'role': role,
-          'parts': [{'text': text}],
+          'parts': [
+            {'text': text},
+          ],
         });
       }
     }
 
     final payload = jsonEncode({
       'system_instruction': {
-        'parts': [{'text': effectiveSystemPrompt}],
+        'parts': [
+          {'text': effectiveSystemPrompt},
+        ],
       },
       'contents': contents,
       'generationConfig': {
         'temperature': 0.7,
         'maxOutputTokens': 1024,
+        'topK': 10,
       },
     });
 
@@ -248,9 +266,9 @@ class OllamaChatService {
         request.headers['Content-Type'] = 'application/json';
         request.body = payload;
 
-        final streamedResponse = await client.send(request).timeout(
-              const Duration(seconds: 35),
-            );
+        final streamedResponse = await client
+            .send(request)
+            .timeout(const Duration(seconds: 35));
 
         if (streamedResponse.statusCode != 200) {
           lastError = 'HTTP ${streamedResponse.statusCode}';
@@ -260,7 +278,9 @@ class OllamaChatService {
 
         success = true;
 
-        await for (final chunk in streamedResponse.stream.transform(utf8.decoder)) {
+        await for (final chunk in streamedResponse.stream.transform(
+          utf8.decoder,
+        )) {
           for (final line in chunk.split('\n')) {
             final trimmed = line.trim();
             if (trimmed.isEmpty) continue;
@@ -319,8 +339,8 @@ class OllamaChatService {
   ) async* {
     final effectiveSystemPrompt =
         (extraContext != null && extraContext.trim().isNotEmpty)
-            ? '$_systemPrompt\n\n--- ข้อมูลสัญญาและผู้ใช้ปัจจุบัน ---\n${extraContext.trim()}\n--------------------------------'
-            : _systemPrompt;
+        ? '$_systemPrompt\n\n--- ข้อมูลสัญญาและผู้ใช้ปัจจุบัน ---\n${extraContext.trim()}\n--------------------------------'
+        : _systemPrompt;
 
     final messages = [
       {'role': 'system', 'content': effectiveSystemPrompt},
@@ -328,10 +348,7 @@ class OllamaChatService {
     ];
 
     try {
-      final request = http.Request(
-        'POST',
-        Uri.parse('$_ollamaUrl/api/chat'),
-      );
+      final request = http.Request('POST', Uri.parse('$_ollamaUrl/api/chat'));
       request.headers['Content-Type'] = 'application/json';
       request.body = jsonEncode({
         'model': _selectedModelId,
@@ -340,12 +357,13 @@ class OllamaChatService {
         'options': {
           'temperature': 0.7,
           'num_predict': 1024,
+          'top_k': 10,
         },
       });
 
       final streamedResponse = await request.send().timeout(
-            const Duration(seconds: 60),
-          );
+        const Duration(seconds: 60),
+      );
 
       if (streamedResponse.statusCode != 200) {
         yield '❌ Ollama ตอบกลับด้วย status ${streamedResponse.statusCode}';
@@ -354,13 +372,16 @@ class OllamaChatService {
 
       final fullResponse = StringBuffer();
 
-      await for (final chunk in streamedResponse.stream.transform(utf8.decoder)) {
+      await for (final chunk in streamedResponse.stream.transform(
+        utf8.decoder,
+      )) {
         for (final line in chunk.split('\n')) {
           if (line.trim().isEmpty) continue;
           try {
             final json = jsonDecode(line) as Map<String, dynamic>;
             final content =
-                (json['message'] as Map<String, dynamic>?)?['content'] as String?;
+                (json['message'] as Map<String, dynamic>?)?['content']
+                    as String?;
             if (content != null && content.isNotEmpty) {
               fullResponse.write(content);
               yield content;

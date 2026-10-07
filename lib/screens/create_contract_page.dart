@@ -38,8 +38,24 @@ bool canUseMonthlyRepayment({
 class CreateContractPage extends StatefulWidget {
   final User user;
   final String role;
+  final double? initialAmount;
+  final String? initialPurpose;
+  final String? initialReturnDate;
+  final String? initialCounterpartyName;
+  final String? initialCounterpartyEmail;
+  final String? initialCounterpartyPhone;
 
-  const CreateContractPage({super.key, required this.user, required this.role});
+  const CreateContractPage({
+    super.key,
+    required this.user,
+    required this.role,
+    this.initialAmount,
+    this.initialPurpose,
+    this.initialReturnDate,
+    this.initialCounterpartyName,
+    this.initialCounterpartyEmail,
+    this.initialCounterpartyPhone,
+  });
 
   @override
   State<CreateContractPage> createState() => _CreateContractPageState();
@@ -97,6 +113,29 @@ class _CreateContractPageState extends State<CreateContractPage> {
     _loanDateController.text = ContractDateUtils.formatDate(
       ContractDateUtils.today(),
     );
+
+    // กรอกข้อมูลเริ่มต้นที่ส่งมาจาก AI หรือการเรียกใช้แบบระบุค่า
+    if (widget.initialAmount != null && widget.initialAmount! > 0) {
+      _amountController.text = widget.initialAmount! % 1 == 0
+          ? widget.initialAmount!.toInt().toString()
+          : widget.initialAmount!.toString();
+    }
+    if (widget.initialPurpose != null && widget.initialPurpose!.isNotEmpty) {
+      _purposeController.text = widget.initialPurpose!;
+    }
+    if (widget.initialReturnDate != null && widget.initialReturnDate!.isNotEmpty) {
+      _returnDateController.text = widget.initialReturnDate!;
+    }
+    if (widget.initialCounterpartyName != null && widget.initialCounterpartyName!.isNotEmpty) {
+      _counterpartyNameController.text = widget.initialCounterpartyName!;
+    }
+    if (widget.initialCounterpartyEmail != null && widget.initialCounterpartyEmail!.isNotEmpty) {
+      _counterpartyEmailController.text = widget.initialCounterpartyEmail!;
+    }
+    if (widget.initialCounterpartyPhone != null && widget.initialCounterpartyPhone!.isNotEmpty) {
+      _counterpartyPhoneController.text = widget.initialCounterpartyPhone!;
+    }
+
     WidgetsBinding.instance.addPostFrameCallback((_) => _maybeShowOnboarding());
   }
 
