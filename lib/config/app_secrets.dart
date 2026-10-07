@@ -1,20 +1,27 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-/// ตัวกลางสำหรับเข้าถึงค่า secret ที่โหลดมาจาก .env หรือใช้ Default Key
+/// ตัวกลางสำหรับเข้าถึงค่า Secret ที่โหลดมาจาก .env หรือ Environment Variable
+/// ⚠️ ห้าม Hardcode API Key หรือข้อมูลลับใดๆ ลงในไฟล์นี้เด็ดขาดตามหลัก Security Best Practice
 abstract final class AppSecrets {
-  /// Default Gemini API Key เพื่อให้เพื่อนที่ Clone โค้ดไปสามารถรันแอปและใช้งาน AI ได้ทันที 100% ฟรี
-  /// ไม่ต้องติดตั้ง Ollama หรือ Python ใดๆ ทั้งสิ้น
-  static const String _defaultGeminiApiKey =
-      'AQ.Ab8RN6KxIwMbEft5VYarv3v6V38PkI4VOsSJxN8qTRoph0T5JA';
-
-  /// ดึง Gemini API Key (ถ้ามีใน .env จะใช้จาก .env ก่อน หากไม่มีจะใช้ Default Key อัตโนมัติ)
+  /// ดึง Gemini API Key จาก .env หรือ --dart-define
   static String get geminiApiKey {
     try {
+      // 1. อ่านจากไฟล์ .env ในเครื่อง
       final envKey = dotenv.env['GEMINI_API_KEY'];
       if (envKey != null && envKey.trim().isNotEmpty) {
         return envKey.trim();
       }
     } catch (_) {}
-    return _defaultGeminiApiKey;
+
+    // 2. อ่านจาก --dart-define (กรณีส่งค่าผ่าน CLI: flutter run --dart-define=GEMINI_API_KEY=xxx)
+    const dartDefineKey = String.fromEnvironment('GEMINI_API_KEY');
+    if (dartDefineKey.isNotEmpty) {
+      return dartDefineKey;
+    }
+
+    return '';
   }
+
+  /// ตรวจสอบว่ามีการตั้งค่า API Key ในระบบแล้วหรือไม่
+  static bool get hasGeminiApiKey => geminiApiKey.isNotEmpty;
 }

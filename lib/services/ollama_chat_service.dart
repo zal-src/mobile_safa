@@ -29,6 +29,20 @@ class OllamaChatService {
     'gemini-flash-latest',
   ];
 
+  String? _customApiKey;
+
+  /// API Key ที่ใช้งานจริง (ดึงจาก Custom Key ก่อน หรือจาก AppSecrets / .env)
+  String get effectiveGeminiApiKey {
+    if (_customApiKey != null && _customApiKey!.trim().isNotEmpty) {
+      return _customApiKey!.trim();
+    }
+    return AppSecrets.geminiApiKey;
+  }
+
+  set customApiKey(String? key) {
+    _customApiKey = key?.trim();
+  }
+
   // ============================================================
   // Ollama Settings (สำหรับผู้ที่ต้องการรัน Local)
   // ============================================================
@@ -86,12 +100,15 @@ class OllamaChatService {
   // ============================================================
 
   /// ทดสอบการเชื่อมต่อ Google Gemini API
-  Future<Map<String, dynamic>> testGeminiConnection() async {
-    final apiKey = AppSecrets.geminiApiKey;
+  Future<Map<String, dynamic>> testGeminiConnection([String? testKey]) async {
+    final apiKey = (testKey != null && testKey.trim().isNotEmpty)
+        ? testKey.trim()
+        : effectiveGeminiApiKey;
+
     if (apiKey.isEmpty) {
       return {
         'success': false,
-        'message': '❌ ไม่พบ Gemini API Key ในระบบ',
+        'message': '❌ ไม่พบ Gemini API Key ในระบบ\nกรุณาใส่ในไฟล์ .env หรือกรอกในช่องด้านล่างนี้',
       };
     }
 
@@ -108,7 +125,7 @@ class OllamaChatService {
       } else {
         return {
           'success': false,
-          'message': '❌ Gemini API ตอบกลับด้วยรหัส ${res.statusCode}',
+          'message': '❌ Gemini API ตอบกลับด้วยรหัส ${res.statusCode} (ตรวจสอบความถูกต้องของ Key)',
         };
       }
     } catch (e) {
@@ -179,9 +196,13 @@ class OllamaChatService {
     String message,
     String? extraContext,
   ) async* {
-    final apiKey = AppSecrets.geminiApiKey;
+    final apiKey = effectiveGeminiApiKey;
     if (apiKey.isEmpty) {
-      yield '❌ ยังไม่ได้ตั้งค่า Gemini API Key';
+      yield '⚠️ ยังไม่ได้ระบุ Gemini API Key ในระบบ\n\n'
+          'วิธีเริ่มใช้งาน (ฟรี 100%):\n'
+          '1. รับ API Key ฟรีจาก https://aistudio.google.com/apikey\n'
+          '2. สร้างไฟล์ `.env` ที่โฟลเดอร์โปรเจกต์: `GEMINI_API_KEY=รหัสของคุณ`\n'
+          '3. หรือกดไอคอน ⚙️ ด้านบนขวา แล้ววาง API Key ลงในแอปได้ทันทีค่ะ';
       return;
     }
 

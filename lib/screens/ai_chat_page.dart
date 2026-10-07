@@ -178,6 +178,7 @@ class _AiChatPageState extends State<AiChatPage> with TickerProviderStateMixin {
   void _showSettingsDialog() {
     var selectedProvider = _ollama.currentProvider;
     final controller = TextEditingController(text: _ollama.baseUrl);
+    final apiKeyCtrl = TextEditingController(text: _ollama.effectiveGeminiApiKey);
     bool testing = false;
     String? testResult;
     bool? testSuccess;
@@ -231,12 +232,34 @@ class _AiChatPageState extends State<AiChatPage> with TickerProviderStateMixin {
                   const SizedBox(height: 10),
                   Text(
                     selectedProvider == AiProvider.gemini
-                        ? '⭐ Google Gemini: ใช้งานได้ฟรีทันทีโดยไม่ต้องเปิดโปรแกรมใดๆ เหมาะสำหรับทุกคน'
-                        : '💻 Local Ollama: สำหรับนักพัฒนาที่รัน ollama serve บนเครื่องตนเอง',
+                        ? '⭐ Google Gemini: ใช้งานได้ฟรีทันที ไม่ต้องเปิดโปรแกรมใดๆ ในเครื่อง'
+                        : '💻 Local Ollama: สำหรับรันออฟไลน์บนเครื่องตนเอง (ต้องเปิด ollama serve)',
                     style: TextStyle(fontSize: 11, color: Colors.grey.shade700),
                   ),
+                  if (selectedProvider == AiProvider.gemini) ...[
+                    const SizedBox(height: 12),
+                    const Text(
+                      'Gemini API Key (อ่านจาก .env หรือวางที่นี่):',
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 4),
+                    TextField(
+                      controller: apiKeyCtrl,
+                      obscureText: true,
+                      decoration: const InputDecoration(
+                        hintText: 'ใส่ API Key (ขอฟรีได้ที่ aistudio.google.com)',
+                        border: OutlineInputBorder(),
+                        isDense: true,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '💡 ขอ Key ฟรีได้ที่ https://aistudio.google.com/apikey',
+                      style: TextStyle(fontSize: 11, color: Colors.blue.shade700),
+                    ),
+                  ],
                   if (selectedProvider == AiProvider.ollama) ...[
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 12),
                     const Text(
                       'Ollama Host URL:',
                       style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
@@ -251,7 +274,7 @@ class _AiChatPageState extends State<AiChatPage> with TickerProviderStateMixin {
                       ),
                     ),
                   ],
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 14),
                   Row(
                     children: [
                       OutlinedButton.icon(
@@ -272,7 +295,7 @@ class _AiChatPageState extends State<AiChatPage> with TickerProviderStateMixin {
                                 });
                                 Map<String, dynamic> res;
                                 if (selectedProvider == AiProvider.gemini) {
-                                  res = await _ollama.testGeminiConnection();
+                                  res = await _ollama.testGeminiConnection(apiKeyCtrl.text);
                                 } else {
                                   res = await _ollama.testOllamaConnection(controller.text);
                                 }
@@ -324,7 +347,9 @@ class _AiChatPageState extends State<AiChatPage> with TickerProviderStateMixin {
               FilledButton(
                 onPressed: () {
                   _ollama.currentProvider = selectedProvider;
-                  if (selectedProvider == AiProvider.ollama) {
+                  if (selectedProvider == AiProvider.gemini) {
+                    _ollama.customApiKey = apiKeyCtrl.text.trim();
+                  } else {
                     _ollama.baseUrl = controller.text;
                   }
                   Navigator.pop(ctx);
