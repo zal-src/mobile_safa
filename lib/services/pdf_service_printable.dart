@@ -156,18 +156,14 @@ class PrintablePdfService {
         ],
       ),
       pw.SizedBox(height: 28),
-      pw.Text(
-        'พยาน: _________________________________________________',
-        style: pw.TextStyle(font: regularFont, fontSize: 10),
-      ),
-      pw.SizedBox(height: 30),
-      pw.Text(
-        'ส่วนเอกสารที่ว่างเปล่า กรุณาใส่ข้อมูลที่ถูกต้องก่อนใช้งานจริง',
-        style: pw.TextStyle(
-          font: regularFont,
-          fontSize: 8,
-          color: PdfColors.grey700,
-        ),
+      pw.Text('พยาน', style: pw.TextStyle(font: boldFont, fontSize: 12)),
+      pw.SizedBox(height: 14),
+      pw.Row(
+        children: [
+          pw.Expanded(child: _blankSignature('พยาน ๑', regularFont)),
+          pw.SizedBox(width: 24),
+          pw.Expanded(child: _blankSignature('พยาน ๒', regularFont)),
+        ],
       ),
     ];
   }
