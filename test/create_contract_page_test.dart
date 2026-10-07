@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:safa_qard/screens/create_contract_page.dart';
 import 'package:safa_qard/widgets/create_contract/counterparty_details_form.dart';
+import 'package:safa_qard/widgets/create_contract/contract_validators.dart';
 
 void main() {
   testWidgets('lender form only shows the registered address', (tester) async {
@@ -37,6 +38,19 @@ void main() {
 
     expect(find.text('ที่อยู่ตามทะเบียนบ้าน'), findsOneWidget);
     expect(find.text('ที่อยู่สำหรับสัญญา'), findsNothing);
+  });
+
+  group('ContractValidators.validateAmount', () {
+    test('rejects amounts below 2,000 baht', () {
+      expect(
+        ContractValidators.validateAmount('1999'),
+        'จำนวนเงินต้องไม่ต่ำกว่า 2,000 บาท',
+      );
+    });
+
+    test('accepts an amount of 2,000 baht', () {
+      expect(ContractValidators.validateAmount('2000'), isNull);
+    });
   });
 
   group('canUseMonthlyRepayment', () {

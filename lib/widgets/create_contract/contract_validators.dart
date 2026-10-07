@@ -48,7 +48,7 @@ class ContractValidators {
 
     final amount = double.tryParse(text);
     if (amount == null) return 'กรุณาระบุจำนวนเงินเป็นตัวเลข';
-    if (amount <= 0) return 'จำนวนเงินต้องมากกว่า 0';
+    if (amount < 2000) return 'จำนวนเงินต้องไม่ต่ำกว่า 2,000 บาท';
 
     return null;
   }

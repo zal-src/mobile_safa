@@ -413,37 +413,6 @@ class _HomePageState extends State<HomePage> {
                     title: 'ที่อยู่',
                     value: _formatAddress(_currentAddress),
                   ),
-                const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 10,
-                  ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF8F9FC),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: const Color(0xFFE4E7EC)),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.language,
-                        color: AppColors.primary,
-                        size: 22,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          'ภาษาไทย',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
                 const SizedBox(height: 16),
                 SizedBox(
                   width: double.infinity,
