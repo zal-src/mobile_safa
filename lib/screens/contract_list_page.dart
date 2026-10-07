@@ -5,10 +5,8 @@ import '../models/user.dart';
 import '../models/loan_contract.dart';
 
 import '../services/contract_service.dart';
-import '../services/onboarding_service.dart';
 import '../utils/responsive.dart';
 import '../widgets/responsive_container.dart';
-import '../widgets/onboarding_bottom_sheet.dart';
 import 'ai_chat_page.dart';
 import 'contract_detail_page.dart';
 import 'contract_role_page.dart';
@@ -34,52 +32,10 @@ class _ContractListPageState extends State<ContractListPage> {
 
   bool _isLoading = true;
 
-  // GlobalKeys สำหรับ spotlight
-  final _keyContractList = GlobalKey();
-  final _keyFab = GlobalKey();
-
   @override
   void initState() {
     super.initState();
     _loadContracts();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _maybeShowOnboarding();
-    });
-  }
-
-
-
-  Future<void> _maybeShowOnboarding() async {
-    final seen = await OnboardingService.instance.hasSeenOnboarding(
-      OnboardingService.keyContracts,
-    );
-    if (!mounted || seen) return;
-    await OnboardingService.instance.markAsSeen(OnboardingService.keyContracts);
-    if (!mounted) return;
-
-    await Future.delayed(const Duration(milliseconds: 500));
-    if (!mounted) return;
-
-    await SpotlightTutorial.show(
-      context,
-      steps: [
-        TutorialStep(
-          title: 'รายการสัญญาของคุณ',
-          description:
-              'ที่นี่คุณจะเห็นสัญญา Qard Hasan ทั้งหมด\nแตะที่สัญญาเพื่อดูสถานะ (รอลงนาม / มีผล / ครบกำหนด)',
-          targetKey: _keyContractList,
-          spotlightPadding: const EdgeInsets.all(8),
-        ),
-        TutorialStep(
-          title: 'เพิ่มสัญญาใหม่',
-          description:
-              'กดปุ่ม "+" เพื่อสร้างสัญญาใหม่\nระบบจะพาคุณกรอกรายละเอียดทีละขั้นตอนอย่างง่ายดาย',
-          targetKey: _keyFab,
-          spotlightPadding: const EdgeInsets.all(4),
-          spotlightRadius: 32,
-        ),
-      ],
-    );
   }
 
   // ============================================================
@@ -722,7 +678,6 @@ class _ContractListPageState extends State<ContractListPage> {
       ),
 
       floatingActionButton: FloatingActionButton.extended(
-        key: _keyFab,
         onPressed: _openCreateContract,
         icon: const Icon(Icons.add),
         label: const Text('เพิ่มสัญญา'),
@@ -733,7 +688,6 @@ class _ContractListPageState extends State<ContractListPage> {
           child: _isLoading
               ? const Center(child: CircularProgressIndicator())
               : RefreshIndicator(
-                  key: _keyContractList,
                   onRefresh: _loadContracts,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,

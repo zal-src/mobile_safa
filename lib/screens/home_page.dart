@@ -7,8 +7,6 @@ import '../models/user.dart';
 import '../services/auth_service.dart';
 import '../utils/responsive.dart';
 import '../widgets/responsive_container.dart';
-import '../widgets/onboarding_bottom_sheet.dart';
-import '../services/onboarding_service.dart';
 import 'contract_detail_page.dart';
 import 'contract_list_page.dart';
 import 'contract_role_page.dart';
@@ -46,71 +44,11 @@ class _HomePageState extends State<HomePage> {
   final NumberFormat _moneyFormat = NumberFormat('#,##0.00', 'en_US');
   final DateFormat _dateFormat = DateFormat('dd/MM/yyyy');
 
-  // GlobalKeys สำหรับ spotlight tutorial
-  final _keyWelcomeCard = GlobalKey();
-  final _keySummarySection = GlobalKey();
-  final _keyCreateButton = GlobalKey();
-  final _keyBottomNav = GlobalKey();
-
   @override
   void initState() {
     super.initState();
     _currentUser = widget.user;
     _loadDashboard();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _maybeShowOnboarding();
-    });
-  }
-
-  Future<void> _maybeShowOnboarding() async {
-    final seen = await OnboardingService.instance.hasSeenOnboarding(
-      OnboardingService.keyHome,
-    );
-    if (!mounted || seen) return;
-    await OnboardingService.instance.markAsSeen(OnboardingService.keyHome);
-    if (!mounted) return;
-
-    // รอให้ UI render ก่อน
-    await Future.delayed(const Duration(milliseconds: 500));
-    if (!mounted) return;
-
-    await SpotlightTutorial.show(
-      context,
-      steps: [
-        TutorialStep(
-          title: 'ยินดีต้อนรับสู่ Safa Qard',
-          description:
-              'หน้านี้คือแดชบอร์ดหลักของคุณ\nดูภาพรวมรายรับ-รายจ่าย และสัญญา Qard Hasan ทั้งหมดได้ที่นี่',
-          targetKey: _keyWelcomeCard,
-          spotlightPadding: const EdgeInsets.all(6),
-        ),
-        TutorialStep(
-          title: 'สรุปยอดเงินของคุณ',
-          description:
-              'ดูยอดเงินที่ให้กู้ เงินที่กู้ และจำนวนสัญญาทั้งหมด\nอัปเดตแบบ real-time ทุกครั้งที่มีการเปลี่ยนแปลง',
-          targetKey: _keySummarySection,
-          spotlightPadding: const EdgeInsets.symmetric(
-            horizontal: 6,
-            vertical: 8,
-          ),
-        ),
-        TutorialStep(
-          title: 'สร้างสัญญาใหม่',
-          description:
-              'กดปุ่มนี้เพื่อสร้างสัญญา Qard Hasan ใหม่\nเลือกบทบาท (ผู้ให้กู้ หรือ ผู้กู้) แล้วกรอกรายละเอียดทีละขั้น',
-          targetKey: _keyCreateButton,
-          spotlightPadding: const EdgeInsets.all(6),
-        ),
-        TutorialStep(
-          title: 'เมนูนำทาง',
-          description:
-              'ใช้แถบนำทางด้านล่างเพื่อสลับระหว่างหน้า\nภาพรวม → สัญญา → ความรู้ → โปรไฟล์',
-          targetKey: _keyBottomNav,
-          spotlightPadding: const EdgeInsets.all(4),
-          spotlightRadius: 0,
-        ),
-      ],
-    );
   }
 
   Future<void> _loadDashboard() async {
@@ -860,7 +798,6 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildWelcomeCard() {
     return Container(
-      key: _keyWelcomeCard,
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
@@ -918,7 +855,6 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildSummarySection() {
     return Column(
-      key: _keySummarySection,
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1200,7 +1136,6 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildCreateContractButton() {
     return SizedBox(
-      key: _keyCreateButton,
       width: double.infinity,
       height: 54,
       child: FilledButton.icon(
@@ -1224,7 +1159,6 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildBottomNavigationBar() {
     return NavigationBar(
-      key: _keyBottomNav,
       selectedIndex: _currentIndex,
       onDestinationSelected: _onBottomNavigationTap,
       backgroundColor: Colors.white,

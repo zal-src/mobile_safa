@@ -3,12 +3,10 @@ import '../../theme/app_theme.dart';
 
 class ContractProgressSteps extends StatelessWidget {
   final int currentStep;
-  final Key? stepsKey;
 
   const ContractProgressSteps({
     super.key,
     required this.currentStep,
-    this.stepsKey,
   });
 
   @override
@@ -16,7 +14,6 @@ class ContractProgressSteps extends StatelessWidget {
     final labels = ['ข้อมูลของคุณ', 'รายละเอียดเงินกู้', 'ตรวจสอบ'];
 
     return Row(
-      key: stepsKey,
       children: List.generate(labels.length, (index) {
         final isActive = index == currentStep;
         final isComplete = index < currentStep;

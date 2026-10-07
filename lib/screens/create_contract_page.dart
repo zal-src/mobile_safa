@@ -3,11 +3,9 @@ import 'package:flutter/material.dart';
 import '../localization/app_localizations.dart';
 import '../models/user.dart';
 import '../services/contract_service.dart';
-import '../services/onboarding_service.dart';
 import '../theme/app_theme.dart';
 import '../utils/responsive.dart';
 import '../widgets/responsive_container.dart';
-import '../widgets/onboarding_bottom_sheet.dart';
 import '../widgets/create_contract/contract_progress_steps.dart';
 import '../widgets/create_contract/counterparty_details_form.dart';
 import '../widgets/create_contract/contract_details_form.dart';
@@ -64,11 +62,6 @@ class CreateContractPage extends StatefulWidget {
 class _CreateContractPageState extends State<CreateContractPage> {
   final ContractService _contractService = ContractService();
   final _formKey = GlobalKey<FormState>();
-
-  // GlobalKeys สำหรับ spotlight tutorial
-  final _keySteps = GlobalKey();
-  final _keyCounterparty = GlobalKey();
-  final _keyActionBtn = GlobalKey();
 
   // Controllers
   final _counterpartyEmailController = TextEditingController();
@@ -136,7 +129,6 @@ class _CreateContractPageState extends State<CreateContractPage> {
       _counterpartyPhoneController.text = widget.initialCounterpartyPhone!;
     }
 
-    WidgetsBinding.instance.addPostFrameCallback((_) => _maybeShowOnboarding());
   }
 
   @override
@@ -152,55 +144,6 @@ class _CreateContractPageState extends State<CreateContractPage> {
     _purposeController.dispose();
     _notesController.dispose();
     super.dispose();
-  }
-
-  // -------------------------------------------------------------------------
-  // Onboarding Tutorial
-  // -------------------------------------------------------------------------
-
-  Future<void> _maybeShowOnboarding() async {
-    final seen = await OnboardingService.instance.hasSeenOnboarding(
-      OnboardingService.keyCreateContract,
-    );
-    if (!mounted || seen) return;
-    await OnboardingService.instance.markAsSeen(
-      OnboardingService.keyCreateContract,
-    );
-    if (!mounted) return;
-
-    await Future.delayed(const Duration(milliseconds: 400));
-    if (!mounted) return;
-
-    await SpotlightTutorial.show(
-      context,
-      steps: [
-        TutorialStep(
-          title: 'ขั้นตอนการสร้างสัญญา',
-          description:
-              'มีทั้งหมด 3 ขั้น: ข้อมูลคู่สัญญา → รายละเอียดเงินกู้ → บันทึก\nทำทีละขั้น ระบบจะตรวจสอบให้อัตโนมัติ',
-          targetKey: _keySteps,
-          spotlightPadding: const EdgeInsets.symmetric(
-            horizontal: 6,
-            vertical: 10,
-          ),
-        ),
-        TutorialStep(
-          title: 'กรอกข้อมูลคู่สัญญา',
-          description:
-              'ใส่อีเมลของคนที่คุณจะทำสัญญาด้วย\nถ้าเขายังไม่มีบัญชี ระบบจะสร้างให้อัตโนมัติ',
-          targetKey: _keyCounterparty,
-          spotlightPadding: const EdgeInsets.all(8),
-        ),
-        TutorialStep(
-          title: 'กดเพื่อไปขั้นต่อไป',
-          description:
-              'เมื่อกรอกครบแล้ว กดปุ่มนี้เพื่อไปขั้นถัดไป\nขั้นสุดท้ายจะสรุปข้อมูลก่อนบันทึกจริง',
-          targetKey: _keyActionBtn,
-          spotlightPadding: const EdgeInsets.all(6),
-          spotlightRadius: 10,
-        ),
-      ],
-    );
   }
 
   // -------------------------------------------------------------------------
@@ -450,7 +393,6 @@ class _CreateContractPageState extends State<CreateContractPage> {
             border: Border(top: BorderSide(color: AppColors.border)),
           ),
           child: SizedBox(
-            key: _keyActionBtn,
             height: 50,
             child: ElevatedButton.icon(
               onPressed: _isSaving ? null : _handlePrimaryAction,
@@ -520,7 +462,6 @@ class _CreateContractPageState extends State<CreateContractPage> {
                   const SizedBox(height: 22),
                   ContractProgressSteps(
                     currentStep: _currentStep,
-                    stepsKey: _keySteps,
                   ),
                   const SizedBox(height: 22),
                   CounterpartyDetailsForm(
@@ -534,7 +475,6 @@ class _CreateContractPageState extends State<CreateContractPage> {
                     idCardController: _counterpartyIdCardController,
                     addressController: _counterpartyAddressController,
                     emailController: _counterpartyEmailController,
-                    counterpartyKey: _keyCounterparty,
                     validateEmail: _validateEmail,
                     validatePhone: ContractValidators.validateOptionalPhone,
                     validateIdCard: ContractValidators.validateOptionalIdCard,

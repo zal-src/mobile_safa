@@ -4,10 +4,8 @@ import 'package:flutter/material.dart';
 import '../models/user.dart';
 import '../models/knowledge_article.dart';
 
-import '../services/onboarding_service.dart';
 import '../utils/responsive.dart';
 import '../widgets/responsive_container.dart';
-import '../widgets/onboarding_bottom_sheet.dart';
 import 'ai_chat_page.dart';
 import 'article_detail_page.dart';
 import 'financial_health_check_page.dart';
@@ -22,58 +20,9 @@ class KnowledgePage extends StatefulWidget {
 }
 
 class _KnowledgePageState extends State<KnowledgePage> {
-
-  // GlobalKeys สำหรับ spotlight
-  final _keyHeader = GlobalKey();
-  final _keyFirstSection = GlobalKey();
-  final _keyAssessment = GlobalKey();
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _maybeShowOnboarding();
-    });
-  }
-
-
-
-  Future<void> _maybeShowOnboarding() async {
-    final seen = await OnboardingService.instance.hasSeenOnboarding(
-      OnboardingService.keyKnowledge,
-    );
-    if (!mounted || seen) return;
-    await OnboardingService.instance.markAsSeen(OnboardingService.keyKnowledge);
-    if (!mounted) return;
-
-    await Future.delayed(const Duration(milliseconds: 500));
-    if (!mounted) return;
-
-    await SpotlightTutorial.show(
-      context,
-      steps: [
-        TutorialStep(
-          title: 'คลังความรู้ด้านการเงิน',
-          description:
-              'หน้านี้รวบรวมความรู้ด้านการเงินอิสลาม\nที่ช่วยให้คุณจัดการเงินได้อย่างถูกต้องตามหลักการ',
-          targetKey: _keyHeader,
-          spotlightPadding: const EdgeInsets.all(8),
-        ),
-        TutorialStep(
-          title: 'อ่านบทความแต่ละหมวด',
-          description:
-              'บทความถูกแบ่งเป็น 4 หมวดหลัก\nกฎหมาย · การเงิน · เรื่องหนี้ · ความปลอดภัย\nแตะสักหัวเพื่อเปิดรายละเอียดทันที',
-          targetKey: _keyFirstSection,
-          spotlightPadding: const EdgeInsets.all(6),
-        ),
-        TutorialStep(
-          title: 'เช็กสุขภาพการเงินของคุณ',
-          description:
-              'กด "เริ่มประเมิน" เพื่อตรวจสุขภาพการเงินพร้อมรับ\nคำแนะนำเฉพาะบุคคลในเวลาไม่กี่นาที',
-          targetKey: _keyAssessment,
-          spotlightPadding: const EdgeInsets.all(6),
-        ),
-      ],
-    );
   }
 
   void _openArticle(BuildContext context, KnowledgeArticle article) {
@@ -143,11 +92,10 @@ class _KnowledgePageState extends State<KnowledgePage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildHeader(key: _keyHeader),
+              _buildHeader(),
               const SizedBox(height: 24),
               _buildSection(
                 context: context,
-                sectionKey: _keyFirstSection,
                 title: 'กฎหมายที่ควรรู้',
                 subtitle: 'เข้าใจสิทธิและหน้าที่',
                 icon: Icons.gavel_rounded,
@@ -190,7 +138,7 @@ class _KnowledgePageState extends State<KnowledgePage> {
                 articles: safeArticles,
               ),
               const SizedBox(height: 24),
-              _buildAssessmentBanner(context, key: _keyAssessment),
+              _buildAssessmentBanner(context),
             ],
           ),
         ),
@@ -198,9 +146,8 @@ class _KnowledgePageState extends State<KnowledgePage> {
     );
   }
 
-  Widget _buildHeader({Key? key}) {
+  Widget _buildHeader() {
     return Row(
-      key: key,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Expanded(
@@ -230,7 +177,6 @@ class _KnowledgePageState extends State<KnowledgePage> {
 
   Widget _buildSection({
     required BuildContext context,
-    Key? sectionKey,
     required String title,
     required String subtitle,
     required IconData icon,
@@ -240,7 +186,6 @@ class _KnowledgePageState extends State<KnowledgePage> {
     required List<KnowledgeArticle> articles,
   }) {
     return Container(
-      key: sectionKey,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
@@ -370,9 +315,8 @@ class _KnowledgePageState extends State<KnowledgePage> {
     );
   }
 
-  Widget _buildAssessmentBanner(BuildContext context, {Key? key}) {
+  Widget _buildAssessmentBanner(BuildContext context) {
     return Container(
-      key: key,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: const Color(0xFFE8F7F1),

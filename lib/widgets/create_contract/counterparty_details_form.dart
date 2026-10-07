@@ -14,7 +14,6 @@ class CounterpartyDetailsForm extends StatelessWidget {
   final TextEditingController idCardController;
   final TextEditingController addressController;
   final TextEditingController emailController;
-  final Key? counterpartyKey;
   final String? Function(String?) validateEmail;
   final String? Function(String?) validatePhone;
   final String? Function(String?) validateIdCard;
@@ -31,7 +30,6 @@ class CounterpartyDetailsForm extends StatelessWidget {
     required this.idCardController,
     required this.addressController,
     required this.emailController,
-    this.counterpartyKey,
     required this.validateEmail,
     required this.validatePhone,
     required this.validateIdCard,
@@ -139,7 +137,6 @@ class CounterpartyDetailsForm extends StatelessWidget {
           ],
           const SizedBox(height: 11),
           TextFormField(
-            key: counterpartyKey,
             controller: emailController,
             enabled: !isSaving,
             keyboardType: TextInputType.emailAddress,
