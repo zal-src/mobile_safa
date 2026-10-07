@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../services/gemini_chat_service.dart';
+import '../services/ollama_chat_service.dart';
 import '../theme/app_theme.dart';
 import '../utils/responsive.dart';
 import '../widgets/responsive_container.dart';
@@ -34,7 +34,7 @@ class AiChatPage extends StatefulWidget {
 }
 
 class _AiChatPageState extends State<AiChatPage> with TickerProviderStateMixin {
-  final GeminiChatService _gemini = GeminiChatService.instance;
+  final OllamaChatService _ollama = OllamaChatService.instance;
   final TextEditingController _inputCtrl = TextEditingController();
   final ScrollController _scrollCtrl = ScrollController();
   final FocusNode _inputFocus = FocusNode();
@@ -50,7 +50,7 @@ class _AiChatPageState extends State<AiChatPage> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    _gemini.initialize();
+    // Ollama ไม่ต้อง initialize (ไม่มี API key)
 
     // ข้อความต้อนรับ
     _messages.add(ChatMessage(
@@ -94,7 +94,7 @@ class _AiChatPageState extends State<AiChatPage> with TickerProviderStateMixin {
 
     // ใช้ Stream เพื่อแสดงทีละส่วน
     final buffer = StringBuffer();
-    await for (final chunk in _gemini.sendMessageStream(text)) {
+    await for (final chunk in _ollama.sendMessageStream(text)) {
       buffer.write(chunk);
       if (!mounted) return;
       setState(() => _streamingText = buffer.toString());
@@ -126,7 +126,7 @@ class _AiChatPageState extends State<AiChatPage> with TickerProviderStateMixin {
           FilledButton(
             onPressed: () {
               Navigator.pop(ctx);
-              _gemini.resetChat();
+              _ollama.resetChat();
               setState(() {
                 _messages.clear();
                 _messages.add(ChatMessage(
