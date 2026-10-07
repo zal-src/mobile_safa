@@ -17,10 +17,6 @@ import 'knowledge_page.dart';
 import 'ai_chat_page.dart';
 import '../theme/app_theme.dart';
 import '../localization/app_localizations.dart';
-<<<<<<< HEAD
-import '../widgets/language_switch_button.dart';
-=======
->>>>>>> 6ff3401cc09ca83ae3a1e6f87c24676d94bb27d4
 
 class HomePage extends StatefulWidget {
   final User user;
@@ -893,13 +889,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-<<<<<<< HEAD
-
-
-
-
-=======
->>>>>>> 6ff3401cc09ca83ae3a1e6f87c24676d94bb27d4
   Widget _buildWelcomeCard() {
     return Container(
       key: _keyWelcomeCard,

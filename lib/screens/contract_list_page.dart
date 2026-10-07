@@ -12,10 +12,7 @@ import '../widgets/onboarding_bottom_sheet.dart';
 import 'ai_chat_page.dart';
 import 'contract_detail_page.dart';
 import 'contract_role_page.dart';
-<<<<<<< HEAD
 
-=======
->>>>>>> 6ff3401cc09ca83ae3a1e6f87c24676d94bb27d4
 import '../theme/app_theme.dart';
 
 class ContractListPage extends StatefulWidget {
@@ -155,10 +152,12 @@ class _ContractListPageState extends State<ContractListPage> {
       filtered = _contracts.where((contract) {
         final status = _statusText(contract);
         if (_selectedFilter == 'มีผลแล้ว' && status == 'มีผลแล้ว') return true;
-        if (_selectedFilter == 'เกินกำหนด' && status == 'เกินกำหนด')
+        if (_selectedFilter == 'เกินกำหนด' && status == 'เกินกำหนด') {
           return true;
-        if (_selectedFilter == 'เสร็จสิ้น' && status == 'ชำระครบแล้ว')
+        }
+        if (_selectedFilter == 'เสร็จสิ้น' && status == 'ชำระครบแล้ว') {
           return true;
+        }
         return false;
       }).toList();
     }
@@ -175,10 +174,11 @@ class _ContractListPageState extends State<ContractListPage> {
     filtered.sort((a, b) {
       final pA = getPriority(a);
       final pB = getPriority(b);
-      if (pA != pB)
+      if (pA != pB) {
         return pB.compareTo(
           pA,
         ); // เรียงจากมากไปน้อย (เกินกำหนด/มีผลแล้ว ขึ้นก่อน)
+      }
 
       final dateA = DateTime.tryParse(a.createdAt ?? '') ?? DateTime(2000);
       final dateB = DateTime.tryParse(b.createdAt ?? '') ?? DateTime(2000);
@@ -692,276 +692,6 @@ class _ContractListPageState extends State<ContractListPage> {
   // Build
   // ============================================================
 
-<<<<<<< HEAD
-=======
-  Future<void> _showEditProfileDialog() async {
-    if (!mounted) return;
-
-    final formKey = GlobalKey<FormState>();
-    final fullNameController = TextEditingController(
-      text: _currentUser.fullName,
-    );
-    final emailController = TextEditingController(text: _currentUser.email);
-    final phoneController = TextEditingController(
-      text: _currentUser.phone ?? '',
-    );
-    final idCardController = TextEditingController(
-      text: _currentUser.idCard ?? '',
-    );
-    final houseNumberController = TextEditingController(
-      text:
-          (_currentAddress?['address'] as String?)
-              ?.replaceFirst('บ้านเลขที่ ', '')
-              .split(' ')
-              .first ??
-          '',
-    );
-    final villageController = TextEditingController(
-      text: (_currentAddress?['address'] as String?)?.contains('หมู่') == true
-          ? (_currentAddress?['address'] as String?)
-                    ?.split('หมู่')
-                    .last
-                    .trim()
-                    .split(' ')
-                    .first ??
-                ''
-          : '',
-    );
-    final roadController = TextEditingController(
-      text: (_currentAddress?['address'] as String?)?.contains('ถนน') == true
-          ? (_currentAddress?['address'] as String?)
-                    ?.split('ถนน')
-                    .last
-                    .trim()
-                    .split(' ')
-                    .first ??
-                ''
-          : '',
-    );
-    final subdistrictController = TextEditingController(
-      text: _currentAddress?['subdistrict'] ?? '',
-    );
-    final districtController = TextEditingController(
-      text: _currentAddress?['district'] ?? '',
-    );
-    final provinceController = TextEditingController(
-      text: _currentAddress?['province'] ?? '',
-    );
-    final postalCodeController = TextEditingController(
-      text: _currentAddress?['postal_code'] ?? '',
-    );
-    final passwordController = TextEditingController();
-
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: const Text('แก้ไขข้อมูลบัญชี'),
-          content: SingleChildScrollView(
-            child: Form(
-              key: formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  TextFormField(
-                    controller: fullNameController,
-                    decoration: const InputDecoration(
-                      labelText: 'ชื่อ-นามสกุล',
-                    ),
-                    validator: (value) =>
-                        (value == null || value.trim().isEmpty)
-                        ? 'กรุณากรอกชื่อ-นามสกุล'
-                        : null,
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    decoration: const InputDecoration(labelText: 'อีเมล'),
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'กรุณากรอกอีเมล';
-                      }
-                      return RegExp(
-                            r'^[^@\s]+@[^@\s]+\.[^@\s]+$',
-                          ).hasMatch(value.trim())
-                          ? null
-                          : 'รูปแบบอีเมลไม่ถูกต้อง';
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: phoneController,
-                    keyboardType: TextInputType.phone,
-                    decoration: const InputDecoration(
-                      labelText: 'เบอร์โทรศัพท์',
-                    ),
-                    validator: (value) {
-                      final text = value?.trim() ?? '';
-                      if (text.isEmpty) return 'กรุณากรอกเบอร์โทรศัพท์';
-                      return RegExp(r'^\d{10}$').hasMatch(text)
-                          ? null
-                          : 'เบอร์โทรศัพท์ต้องมี 10 หลัก';
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: idCardController,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: 'เลขบัตรประชาชน',
-                    ),
-                    validator: (value) {
-                      final text = value?.trim() ?? '';
-                      if (text.isEmpty) return 'กรุณากรอกเลขบัตรประชาชน';
-                      return RegExp(r'^\d{13}$').hasMatch(text)
-                          ? null
-                          : 'เลขบัตรประชาชนต้องมี 13 หลัก';
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: houseNumberController,
-                    decoration: const InputDecoration(labelText: 'บ้านเลขที่'),
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: villageController,
-                    decoration: const InputDecoration(labelText: 'หมู่'),
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: roadController,
-                    decoration: const InputDecoration(labelText: 'ถนน'),
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: subdistrictController,
-                    decoration: const InputDecoration(labelText: 'ตำบล'),
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: districtController,
-                    decoration: const InputDecoration(labelText: 'อำเภอ'),
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: provinceController,
-                    decoration: const InputDecoration(labelText: 'จังหวัด'),
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: postalCodeController,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: 'รหัสไปรษณีย์',
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: passwordController,
-                    obscureText: true,
-                    decoration: const InputDecoration(
-                      labelText: 'รหัสผ่านใหม่ (เว้นว่างถ้าไม่ต้องการเปลี่ยน)',
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext, false),
-              child: const Text('ยกเลิก'),
-            ),
-            FilledButton(
-              onPressed: () {
-                if (formKey.currentState!.validate()) {
-                  Navigator.pop(dialogContext, true);
-                }
-              },
-              child: const Text('บันทึก'),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (result != true || _currentUser.userId == null) return;
-
-    try {
-      final updatedUser = await _authService.updateProfile(
-        userId: _currentUser.userId!,
-        fullName: fullNameController.text,
-        email: emailController.text,
-        password: passwordController.text,
-        phone: phoneController.text,
-        idCard: idCardController.text,
-        houseNumber: houseNumberController.text,
-        village: villageController.text,
-        road: roadController.text,
-        subdistrict: subdistrictController.text,
-        district: districtController.text,
-        province: provinceController.text,
-        postalCode: postalCodeController.text,
-      );
-
-      if (!mounted) return;
-
-      if (updatedUser != null) {
-        final refreshedAddress = await _database.getUserAddress(
-          _currentUser.userId!,
-        );
-        if (!mounted) return;
-        setState(() {
-          _currentUser = updatedUser;
-          _currentAddress = refreshedAddress;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('อัปเดตข้อมูลบัญชีสำเร็จ')),
-        );
-      }
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
-      );
-    }
-  }
-
-  String _formatAddress(Map<String, dynamic>? address) {
-    if (address == null) {
-      return 'ไม่ได้ระบุที่อยู่';
-    }
-
-    final parts = <String>[];
-    final rawAddress = (address['address'] as String?) ?? '';
-    if (rawAddress.trim().isNotEmpty) {
-      parts.add(rawAddress.trim());
-    }
-
-    final subdistrict = (address['subdistrict'] as String?)?.trim();
-    final district = (address['district'] as String?)?.trim();
-    final province = (address['province'] as String?)?.trim();
-    final postalCode = (address['postal_code'] as String?)?.trim();
-
-    if (subdistrict != null && subdistrict.isNotEmpty) {
-      parts.add('ตำบล$subdistrict');
-    }
-    if (district != null && district.isNotEmpty) {
-      parts.add('อำเภอ$district');
-    }
-    if (province != null && province.isNotEmpty) {
-      parts.add('จังหวัด$province');
-    }
-    if (postalCode != null && postalCode.isNotEmpty) {
-      parts.add('รหัสไปรษณีย์ $postalCode');
-    }
-
-    return parts.isNotEmpty ? parts.join(' ') : 'ไม่ได้ระบุที่อยู่';
-  }
->>>>>>> 6ff3401cc09ca83ae3a1e6f87c24676d94bb27d4
 
   @override
   Widget build(BuildContext context) {
