@@ -17,7 +17,6 @@ import 'knowledge_page.dart';
 import 'ai_chat_page.dart';
 import '../theme/app_theme.dart';
 import '../localization/app_localizations.dart';
-import '../widgets/language_switch_button.dart';
 
 class HomePage extends StatefulWidget {
   final User user;
@@ -435,16 +434,13 @@ class _HomePageState extends State<HomePage> {
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          sheetContext.l10n.isThai
-                              ? 'ภาษา / Language'
-                              : 'Language / ภาษา',
+                          'ภาษาไทย',
                           style: const TextStyle(
                             fontWeight: FontWeight.w600,
                             fontSize: 14,
                           ),
                         ),
                       ),
-                      const LanguageSwitchButton(),
                     ],
                   ),
                 ),
@@ -813,8 +809,6 @@ class _HomePageState extends State<HomePage> {
                     );
                   },
                 ),
-                const SizedBox(width: 4),
-                const Center(child: LanguageSwitchButton()),
                 const SizedBox(width: 8),
                 if (_currentIndex == 1)
                   GestureDetector(
@@ -892,187 +886,6 @@ class _HomePageState extends State<HomePage> {
             ),
 
       bottomNavigationBar: _buildBottomNavigationBar(),
-    );
-  }
-
-  Widget _buildMenuItem(
-    IconData icon,
-    String title,
-    bool isSelected,
-    VoidCallback onTap, {
-    Color? color,
-  }) {
-    final defaultColor = color ?? const Color(0xFF344054);
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-        decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFE8F7F1) : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              icon,
-              color: isSelected ? const Color(0xFF087443) : defaultColor,
-              size: 22,
-            ),
-            const SizedBox(width: 16),
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                color: isSelected ? const Color(0xFF087443) : defaultColor,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showMenuDialog() {
-    showGeneralDialog(
-      context: context,
-      barrierDismissible: true,
-      barrierLabel: 'Menu',
-      barrierColor: Colors.black54,
-      transitionDuration: const Duration(milliseconds: 200),
-      pageBuilder: (context, anim1, anim2) {
-        return SafeArea(
-          child: Align(
-            alignment: Alignment.topCenter,
-            child: Container(
-              width: double.infinity,
-              margin: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Material(
-                color: Colors.transparent,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            'เมนู',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Container(
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: Colors.grey.shade300,
-                                width: 1,
-                              ),
-                            ),
-                            child: IconButton(
-                              tooltip: 'ปิดเมนู',
-                              icon: const Icon(Icons.close, size: 20),
-                              onPressed: () => Navigator.pop(context),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const Divider(height: 1, color: Color(0xFFE4E7EC)),
-                    const SizedBox(height: 8),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(14),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF8F9FC),
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 42,
-                              height: 42,
-                              decoration: const BoxDecoration(
-                                color: Color(0xFFE8F7F1),
-                                borderRadius: BorderRadius.all(
-                                  Radius.circular(12),
-                                ),
-                              ),
-                              child: const Icon(
-                                Icons.person_outline,
-                                color: Color(0xFF087443),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    _currentUser.fullName,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w700,
-                                      color: Color(0xFF101828),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    _currentUser.email,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey.shade600,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    _buildMenuItem(Icons.person_outline, 'โปรไฟล์', false, () {
-                      Navigator.pop(context);
-                      _showProfile();
-                    }),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 8.0),
-                      child: Divider(height: 1, color: Color(0xFFE4E7EC)),
-                    ),
-
-                    _buildMenuItem(
-                      Icons.logout,
-                      'ออกจากระบบ',
-                      false,
-                      () {
-                        Navigator.pop(context);
-                        _showLogoutDialog();
-                      },
-                      color: const Color(0xFFD92D20),
-                    ),
-                    const SizedBox(height: 8),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        );
-      },
     );
   }
 

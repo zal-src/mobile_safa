@@ -62,6 +62,9 @@ class AppLocalizations {
       'loginFailed': 'อีเมลหรือรหัสผ่านไม่ถูกต้อง',
       'logout': 'ออกจากระบบ',
       'logoutConfirm': 'คุณต้องการออกจากระบบใช่หรือไม่?',
+      'invalidEmail': 'รูปแบบอีเมลไม่ถูกต้อง',
+      'showPassword': 'แสดงรหัสผ่าน',
+      'hidePassword': 'ซ่อนรหัสผ่าน',
 
       // Navigation
       'navHome': 'หน้าหลัก',
@@ -95,7 +98,11 @@ class AppLocalizations {
       'roleBorrowerTitle': 'ฉันเป็นผู้กู้',
       'roleBorrowerSubtitle': 'ผู้กู้ (Borrower)',
       'roleBorrowerDesc': 'สร้างสัญญาในฐานะผู้กู้ และระบุอีเมลของผู้ให้กู้',
-      'roleAutoFillNotice': 'ข้อมูลของบัญชีที่เข้าสู่ระบบจะถูกใช้เป็นข้อมูลของคุณอัตโนมัติ โดยไม่ต้องกรอกข้อมูลส่วนตัวของคุณซ้ำ',
+      'roleAutoFillNotice':
+          'ข้อมูลของบัญชีที่เข้าสู่ระบบจะถูกใช้เป็นข้อมูลของคุณอัตโนมัติ โดยไม่ต้องกรอกข้อมูลส่วนตัวของคุณซ้ำ',
+      'downloadBlankTemplate': 'โหลดสัญญาเปล่า',
+      'downloadBlankTemplateHint':
+          'PDF นี้ไม่มีข้อมูลผู้กู้ ผู้ให้กู้ หรือข้อมูลส่วนตัว และจะต้องกรอกข้อมูลก่อนใช้งานจริง',
 
       // Contract
       'contractInfo': 'ข้อมูลสัญญา',
@@ -166,6 +173,9 @@ class AppLocalizations {
       'loginFailed': 'Invalid email or password',
       'logout': 'Log Out',
       'logoutConfirm': 'Are you sure you want to log out?',
+      'invalidEmail': 'Invalid email format',
+      'showPassword': 'Show password',
+      'hidePassword': 'Hide password',
 
       // Navigation
       'navHome': 'Home',
@@ -184,9 +194,11 @@ class AppLocalizations {
       'viewAll': 'View All',
       'noContractsYet': 'No contracts found',
       'createContract': 'Create Contract',
-      'createContractDesc': 'Draft an interest-free Shariah-compliant loan agreement',
+      'createContractDesc':
+          'Draft an interest-free Shariah-compliant loan agreement',
       'financialHealthCheck': 'Financial Health Check',
-      'financialHealthCheckDesc': 'Assess debt capacity and readiness before borrowing',
+      'financialHealthCheckDesc':
+          'Assess debt capacity and readiness before borrowing',
       'aiAdvisor': 'AI Financial Advisor',
       'aiAdvisorDesc': 'Consult halal financing and loan contract queries',
 
@@ -198,8 +210,13 @@ class AppLocalizations {
       'roleLenderDesc': 'Draft contract as lender and specify borrower details',
       'roleBorrowerTitle': 'I am the Borrower',
       'roleBorrowerSubtitle': 'Borrower',
-      'roleBorrowerDesc': 'Draft contract as borrower and specify lender details',
-      'roleAutoFillNotice': 'Your logged-in account details will be used automatically as your party information.',
+      'roleBorrowerDesc':
+          'Draft contract as borrower and specify lender details',
+      'roleAutoFillNotice':
+          'Your logged-in account details will be used automatically as your party information.',
+      'downloadBlankTemplate': 'Download Blank PDF Template',
+      'downloadBlankTemplateHint':
+          'This PDF contains no borrower, lender, or personal information. Enter the required details before using it for a real agreement.',
 
       // Contract
       'contractInfo': 'Contract Information',
@@ -282,6 +299,9 @@ class AppLocalizations {
   String get roleLenderTitle => translate('roleLenderTitle');
   String get roleBorrowerTitle => translate('roleBorrowerTitle');
   String get roleAutoFillNotice => translate('roleAutoFillNotice');
+  String get downloadBlankTemplate => translate('downloadBlankTemplate');
+  String get downloadBlankTemplateHint =>
+      translate('downloadBlankTemplateHint');
 
   String get contractInfo => translate('contractInfo');
   String get agreementId => translate('agreementId');

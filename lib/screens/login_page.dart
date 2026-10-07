@@ -5,7 +5,6 @@ import '../models/user.dart';
 import '../services/auth_service.dart';
 import '../theme/app_theme.dart';
 import '../utils/responsive.dart';
-import '../widgets/language_switch_button.dart';
 import '../widgets/responsive_container.dart';
 import 'home_page.dart';
 import 'register_page.dart';
@@ -105,10 +104,6 @@ class _LoginPageState extends State<LoginPage> {
         ),
         title: null,
         automaticallyImplyLeading: false,
-        actions: const [
-          Center(child: LanguageSwitchButton()),
-          SizedBox(width: 16),
-        ],
       ),
       body: SafeArea(
         child: ResponsiveBody(
@@ -145,7 +140,10 @@ class _LoginPageState extends State<LoginPage> {
                   Text(
                     l10n.login,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 14, color: Color(0xff667085)),
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Color(0xff667085),
+                    ),
                   ),
 
                   const SizedBox(height: 40),
@@ -164,10 +162,7 @@ class _LoginPageState extends State<LoginPage> {
                       }
 
                       if (!value.contains('@')) {
-                        return l10n.translate(
-                          'invalidEmail',
-                          defaultText: 'รูปแบบอีเมลไม่ถูกต้อง',
-                        );
+                        return l10n.translate('invalidEmail');
                       }
 
                       return null;
@@ -185,8 +180,8 @@ class _LoginPageState extends State<LoginPage> {
                       border: const OutlineInputBorder(),
                       suffixIcon: IconButton(
                         tooltip: _obscurePassword
-                            ? (l10n.isThai ? 'แสดงรหัสผ่าน' : 'Show password')
-                            : (l10n.isThai ? 'ซ่อนรหัสผ่าน' : 'Hide password'),
+                            ? l10n.translate('showPassword')
+                            : l10n.translate('hidePassword'),
                         onPressed: () {
                           setState(() {
                             _obscurePassword = !_obscurePassword;

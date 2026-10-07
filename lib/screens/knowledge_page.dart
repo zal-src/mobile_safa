@@ -10,9 +10,7 @@ import '../widgets/responsive_container.dart';
 import '../widgets/onboarding_bottom_sheet.dart';
 import 'ai_chat_page.dart';
 import 'article_detail_page.dart';
-import 'contract_list_page.dart';
 import 'financial_health_check_page.dart';
-import 'home_page.dart';
 
 class KnowledgePage extends StatefulWidget {
   final User user;
@@ -56,8 +54,9 @@ class _KnowledgePageState extends State<KnowledgePage> {
   }
 
   Future<void> _maybeShowOnboarding() async {
-    final seen = await OnboardingService.instance
-        .hasSeenOnboarding(OnboardingService.keyKnowledge);
+    final seen = await OnboardingService.instance.hasSeenOnboarding(
+      OnboardingService.keyKnowledge,
+    );
     if (!mounted || seen) return;
     await OnboardingService.instance.markAsSeen(OnboardingService.keyKnowledge);
     if (!mounted) return;
@@ -97,7 +96,8 @@ class _KnowledgePageState extends State<KnowledgePage> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => ArticleDetailPage(article: article, user: widget.user),
+        builder: (context) =>
+            ArticleDetailPage(article: article, user: widget.user),
       ),
     );
   }
@@ -105,63 +105,7 @@ class _KnowledgePageState extends State<KnowledgePage> {
   void _openFinancialCheck(BuildContext context) {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => const FinancialHealthCheckPage(),
-      ),
-    );
-  }
-
-  Widget _buildMenuItem(IconData icon, String title, bool isSelected, VoidCallback onTap, {Color? color}) {
-    final defaultColor = color ?? const Color(0xFF344054);
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-        decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFE8F7F1) : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              icon,
-              color: isSelected ? const Color(0xFF087443) : defaultColor,
-              size: 22,
-            ),
-            const SizedBox(width: 16),
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                color: isSelected ? const Color(0xFF087443) : defaultColor,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _openHomePage() {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => HomePage(user: widget.user)),
-    );
-  }
-
-  void _openContractPage() {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => ContractListPage(user: widget.user)),
-    );
-  }
-
-  void _openKnowledgePage() {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => KnowledgePage(user: widget.user)),
+      MaterialPageRoute(builder: (context) => const FinancialHealthCheckPage()),
     );
   }
 
@@ -169,37 +113,58 @@ class _KnowledgePageState extends State<KnowledgePage> {
     if (!mounted) return;
 
     final formKey = GlobalKey<FormState>();
-    final fullNameController = TextEditingController(text: _currentUser.fullName);
+    final fullNameController = TextEditingController(
+      text: _currentUser.fullName,
+    );
     final emailController = TextEditingController(text: _currentUser.email);
-    final phoneController = TextEditingController(text: _currentUser.phone ?? '');
-    final idCardController = TextEditingController(text: _currentUser.idCard ?? '');
+    final phoneController = TextEditingController(
+      text: _currentUser.phone ?? '',
+    );
+    final idCardController = TextEditingController(
+      text: _currentUser.idCard ?? '',
+    );
     final houseNumberController = TextEditingController(
-      text: (_currentAddress?['address'] as String?)?.replaceFirst('บ้านเลขที่ ', '').split(' ').first ?? '',
+      text:
+          (_currentAddress?['address'] as String?)
+              ?.replaceFirst('บ้านเลขที่ ', '')
+              .split(' ')
+              .first ??
+          '',
     );
     final villageController = TextEditingController(
       text: (_currentAddress?['address'] as String?)?.contains('หมู่') == true
           ? (_currentAddress?['address'] as String?)
-              ?.split('หมู่')
-              .last
-              .trim()
-              .split(' ')
-              .first ?? ''
+                    ?.split('หมู่')
+                    .last
+                    .trim()
+                    .split(' ')
+                    .first ??
+                ''
           : '',
     );
     final roadController = TextEditingController(
       text: (_currentAddress?['address'] as String?)?.contains('ถนน') == true
           ? (_currentAddress?['address'] as String?)
-              ?.split('ถนน')
-              .last
-              .trim()
-              .split(' ')
-              .first ?? ''
+                    ?.split('ถนน')
+                    .last
+                    .trim()
+                    .split(' ')
+                    .first ??
+                ''
           : '',
     );
-    final subdistrictController = TextEditingController(text: _currentAddress?['subdistrict'] ?? '');
-    final districtController = TextEditingController(text: _currentAddress?['district'] ?? '');
-    final provinceController = TextEditingController(text: _currentAddress?['province'] ?? '');
-    final postalCodeController = TextEditingController(text: _currentAddress?['postal_code'] ?? '');
+    final subdistrictController = TextEditingController(
+      text: _currentAddress?['subdistrict'] ?? '',
+    );
+    final districtController = TextEditingController(
+      text: _currentAddress?['district'] ?? '',
+    );
+    final provinceController = TextEditingController(
+      text: _currentAddress?['province'] ?? '',
+    );
+    final postalCodeController = TextEditingController(
+      text: _currentAddress?['postal_code'] ?? '',
+    );
     final passwordController = TextEditingController();
 
     final result = await showDialog<bool>(
@@ -216,9 +181,13 @@ class _KnowledgePageState extends State<KnowledgePage> {
                 children: [
                   TextFormField(
                     controller: fullNameController,
-                    decoration: const InputDecoration(labelText: 'ชื่อ-นามสกุล'),
+                    decoration: const InputDecoration(
+                      labelText: 'ชื่อ-นามสกุล',
+                    ),
                     validator: (value) =>
-                        (value == null || value.trim().isEmpty) ? 'กรุณากรอกชื่อ-นามสกุล' : null,
+                        (value == null || value.trim().isEmpty)
+                        ? 'กรุณากรอกชื่อ-นามสกุล'
+                        : null,
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
@@ -229,7 +198,9 @@ class _KnowledgePageState extends State<KnowledgePage> {
                       if (value == null || value.trim().isEmpty) {
                         return 'กรุณากรอกอีเมล';
                       }
-                      return RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(value.trim())
+                      return RegExp(
+                            r'^[^@\s]+@[^@\s]+\.[^@\s]+$',
+                          ).hasMatch(value.trim())
                           ? null
                           : 'รูปแบบอีเมลไม่ถูกต้อง';
                     },
@@ -238,22 +209,30 @@ class _KnowledgePageState extends State<KnowledgePage> {
                   TextFormField(
                     controller: phoneController,
                     keyboardType: TextInputType.phone,
-                    decoration: const InputDecoration(labelText: 'เบอร์โทรศัพท์'),
+                    decoration: const InputDecoration(
+                      labelText: 'เบอร์โทรศัพท์',
+                    ),
                     validator: (value) {
                       final text = value?.trim() ?? '';
                       if (text.isEmpty) return 'กรุณากรอกเบอร์โทรศัพท์';
-                      return RegExp(r'^\d{10}$').hasMatch(text) ? null : 'เบอร์โทรศัพท์ต้องมี 10 หลัก';
+                      return RegExp(r'^\d{10}$').hasMatch(text)
+                          ? null
+                          : 'เบอร์โทรศัพท์ต้องมี 10 หลัก';
                     },
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: idCardController,
                     keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(labelText: 'เลขบัตรประชาชน'),
+                    decoration: const InputDecoration(
+                      labelText: 'เลขบัตรประชาชน',
+                    ),
                     validator: (value) {
                       final text = value?.trim() ?? '';
                       if (text.isEmpty) return 'กรุณากรอกเลขบัตรประชาชน';
-                      return RegExp(r'^\d{13}$').hasMatch(text) ? null : 'เลขบัตรประชาชนต้องมี 13 หลัก';
+                      return RegExp(r'^\d{13}$').hasMatch(text)
+                          ? null
+                          : 'เลขบัตรประชาชนต้องมี 13 หลัก';
                     },
                   ),
                   const SizedBox(height: 12),
@@ -290,13 +269,17 @@ class _KnowledgePageState extends State<KnowledgePage> {
                   TextFormField(
                     controller: postalCodeController,
                     keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(labelText: 'รหัสไปรษณีย์'),
+                    decoration: const InputDecoration(
+                      labelText: 'รหัสไปรษณีย์',
+                    ),
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: passwordController,
                     obscureText: true,
-                    decoration: const InputDecoration(labelText: 'รหัสผ่านใหม่ (เว้นว่างถ้าไม่ต้องการเปลี่ยน)'),
+                    decoration: const InputDecoration(
+                      labelText: 'รหัสผ่านใหม่ (เว้นว่างถ้าไม่ต้องการเปลี่ยน)',
+                    ),
                   ),
                 ],
               ),
@@ -342,7 +325,9 @@ class _KnowledgePageState extends State<KnowledgePage> {
       if (!mounted) return;
 
       if (updatedUser != null) {
-        final refreshedAddress = await _database.getUserAddress(_currentUser.userId!);
+        final refreshedAddress = await _database.getUserAddress(
+          _currentUser.userId!,
+        );
         if (!mounted) return;
         setState(() {
           _currentUser = updatedUser;
@@ -392,310 +377,20 @@ class _KnowledgePageState extends State<KnowledgePage> {
     return parts.isNotEmpty ? parts.join(' ') : 'ไม่ได้ระบุที่อยู่';
   }
 
-  Future<void> _showProfile() async {
-    if (!mounted) return;
-
-    await showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (sheetContext) {
-        return Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-          ),
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 30),
-          child: SafeArea(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: Container(
-                    width: 42,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade300,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 22),
-                Row(
-                  children: [
-                    Container(
-                      width: 58,
-                      height: 58,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFEDE9FE),
-                        borderRadius: BorderRadius.all(Radius.circular(18)),
-                      ),
-                      child: const Icon(
-                        Icons.person_outline,
-                        color: Color(0xFF4B39EF),
-                        size: 30,
-                      ),
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            _currentUser.fullName,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 19,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFF101828),
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            _currentUser.email,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: Colors.grey.shade600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-                const Text(
-                  'ข้อมูลบัญชี',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF101828),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                _ProfileInfoRow(
-                  icon: Icons.person_outline,
-                  title: 'ชื่อ-นามสกุล',
-                  value: _currentUser.fullName,
-                ),
-                _ProfileInfoRow(
-                  icon: Icons.email_outlined,
-                  title: 'อีเมล',
-                  value: _currentUser.email,
-                ),
-                if (_currentUser.phone != null && _currentUser.phone!.trim().isNotEmpty)
-                  _ProfileInfoRow(
-                    icon: Icons.phone_outlined,
-                    title: 'เบอร์โทรศัพท์',
-                    value: _currentUser.phone!,
-                  ),
-                if (_currentUser.idCard != null && _currentUser.idCard!.trim().isNotEmpty)
-                  _ProfileInfoRow(
-                    icon: Icons.badge_outlined,
-                    title: 'เลขบัตรประชาชน',
-                    value: _currentUser.idCard!,
-                  ),
-                if (_currentAddress != null)
-                  _ProfileInfoRow(
-                    icon: Icons.home_outlined,
-                    title: 'ที่อยู่',
-                    value: _formatAddress(_currentAddress),
-                  ),
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  height: 48,
-                  child: FilledButton.icon(
-                    onPressed: () {
-                      Navigator.pop(sheetContext);
-                      _showEditProfileDialog();
-                    },
-                    icon: const Icon(Icons.edit_outlined),
-                    label: const Text('แก้ไขข้อมูลบัญชี'),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: const Color(0xFF101828),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                SizedBox(
-                  width: double.infinity,
-                  height: 48,
-                  child: OutlinedButton.icon(
-                    onPressed: () {
-                      Navigator.pop(sheetContext);
-                    },
-                    icon: const Icon(Icons.logout),
-                    label: const Text('ออกจากระบบ'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: const Color(0xFFD92D20),
-                      side: const BorderSide(color: Color(0xFFFECACA)),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  void _showMenuDialog() {
-    showGeneralDialog(
-      context: context,
-      barrierDismissible: true,
-      barrierLabel: 'Menu',
-      barrierColor: Colors.black54,
-      transitionDuration: const Duration(milliseconds: 200),
-      pageBuilder: (context, anim1, anim2) {
-        return SafeArea(
-          child: Align(
-            alignment: Alignment.topCenter,
-            child: Container(
-              width: double.infinity,
-              margin: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Material(
-                color: Colors.transparent,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            'เมนู',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Container(
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(color: Colors.grey.shade300, width: 1),
-                            ),
-                            child: IconButton(
-                              tooltip: 'ปิดเมนู',
-                              icon: const Icon(Icons.close, size: 20),
-                              onPressed: () => Navigator.pop(context),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const Divider(height: 1, color: Color(0xFFE4E7EC)),
-                    const SizedBox(height: 8),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(14),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF8F9FC),
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 42,
-                              height: 42,
-                              decoration: const BoxDecoration(
-                                color: Color(0xFFE8F7F1),
-                                borderRadius: BorderRadius.all(Radius.circular(12)),
-                              ),
-                              child: const Icon(Icons.person_outline, color: Color(0xFF087443)),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    widget.user.fullName,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w700,
-                                      color: Color(0xFF101828),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    widget.user.email,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey.shade600,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    _buildMenuItem(Icons.home_outlined, 'หน้าหลัก', false, () {
-                      Navigator.pop(context);
-                      _openHomePage();
-                    }),
-                    _buildMenuItem(Icons.menu_book_outlined, 'ความรู้', true, () {
-                      Navigator.pop(context);
-                      _openKnowledgePage();
-                    }),
-                    _buildMenuItem(Icons.description_outlined, 'สัญญา', false, () {
-                      Navigator.pop(context);
-                      _openContractPage();
-                    }),
-                    _buildMenuItem(Icons.person_outline, 'โปรไฟล์', false, () {
-                      Navigator.pop(context);
-                      _showProfile();
-                    }),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 8.0),
-                      child: Divider(height: 1, color: Color(0xFFE4E7EC)),
-                    ),
-                    _buildMenuItem(Icons.logout, 'ออกจากระบบ', false, () {
-                      Navigator.pop(context);
-                    }, color: const Color(0xFFD92D20)),
-                    const SizedBox(height: 8),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    final lawArticles = KnowledgeData.articles.where((a) => a.category == 'กฎหมายที่ควรรู้').toList();
-    final moneyArticles = KnowledgeData.articles.where((a) => a.category == 'จัดการเงินของฉัน').toList();
-    final debtArticles = KnowledgeData.articles.where((a) => a.category == 'ความรู้เรื่องหนี้').toList();
-    final safeArticles = KnowledgeData.articles.where((a) => a.category == 'ความปลอดภัย').toList();
+    final lawArticles = KnowledgeData.articles
+        .where((a) => a.category == 'กฎหมายที่ควรรู้')
+        .toList();
+    final moneyArticles = KnowledgeData.articles
+        .where((a) => a.category == 'จัดการเงินของฉัน')
+        .toList();
+    final debtArticles = KnowledgeData.articles
+        .where((a) => a.category == 'ความรู้เรื่องหนี้')
+        .toList();
+    final safeArticles = KnowledgeData.articles
+        .where((a) => a.category == 'ความปลอดภัย')
+        .toList();
 
     final hPadding = Responsive.horizontalPadding(context);
 
@@ -785,7 +480,6 @@ class _KnowledgePageState extends State<KnowledgePage> {
     );
   }
 
-
   Widget _buildHeader({Key? key}) {
     return Row(
       key: key,
@@ -807,10 +501,7 @@ class _KnowledgePageState extends State<KnowledgePage> {
               const SizedBox(height: 8),
               Text(
                 'รู้สิทธิ วางแผนเงิน จัดการหนี้อย่างมีวินัย',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey.shade600,
-                ),
+                style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
               ),
             ],
           ),
@@ -877,7 +568,10 @@ class _KnowledgePageState extends State<KnowledgePage> {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFF8F9FC),
                   borderRadius: BorderRadius.circular(20),
@@ -901,7 +595,8 @@ class _KnowledgePageState extends State<KnowledgePage> {
                 .map(
                   (entry) => Padding(
                     padding: EdgeInsets.only(
-                        bottom: entry.key != articles.length - 1 ? 12 : 0),
+                      bottom: entry.key != articles.length - 1 ? 12 : 0,
+                    ),
                     child: _buildListItem(
                       context: context,
                       article: entry.value,
@@ -973,8 +668,11 @@ class _KnowledgePageState extends State<KnowledgePage> {
               color: const Color(0xFF087443).withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.monitor_heart_outlined,
-                color: Color(0xFF087443), size: 28),
+            child: const Icon(
+              Icons.monitor_heart_outlined,
+              color: Color(0xFF087443),
+              size: 28,
+            ),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -993,10 +691,7 @@ class _KnowledgePageState extends State<KnowledgePage> {
                 const SizedBox(height: 2),
                 Text(
                   'ใช้เวลาไม่กี่นาที',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey.shade700,
-                  ),
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
                 ),
               ],
             ),
@@ -1013,8 +708,10 @@ class _KnowledgePageState extends State<KnowledgePage> {
               ),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             ),
-            child: const Text('เริ่มประเมิน',
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+            child: const Text(
+              'เริ่มประเมิน',
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+            ),
           ),
         ],
       ),

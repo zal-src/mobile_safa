@@ -51,6 +51,162 @@ class PrintablePdfService {
     );
   }
 
+  Future<void> printBlankContractTemplate() async {
+    final regularFont = await PdfGoogleFonts.notoSansThaiRegular();
+    final boldFont = await PdfGoogleFonts.notoSansThaiBold();
+    final pdf = pw.Document();
+
+    pdf.addPage(
+      pw.MultiPage(
+        pageFormat: PdfPageFormat.a4,
+        margin: const pw.EdgeInsets.symmetric(horizontal: 42, vertical: 36),
+        theme: pw.ThemeData.withFont(base: regularFont, bold: boldFont),
+        build: (_) =>
+            _buildBlankTemplate(regularFont: regularFont, boldFont: boldFont),
+      ),
+    );
+
+    await Printing.layoutPdf(
+      name: 'safa-loan-contract-template.pdf',
+      onLayout: (_) async => pdf.save(),
+    );
+  }
+
+  List<pw.Widget> _buildBlankTemplate({
+    required pw.Font regularFont,
+    required pw.Font boldFont,
+  }) {
+    return [
+      pw.Center(
+        child: pw.Text(
+          'หนังสือสัญญากู้ยืมเงิน',
+          style: pw.TextStyle(font: boldFont, fontSize: 19),
+        ),
+      ),
+      pw.SizedBox(height: 4),
+      pw.Center(
+        child: pw.Text(
+          'แบบเอกสารเปล่า ไม่ประกอบข้อมูลส่วนตัวหรือข้อมูลสัญญา',
+          style: pw.TextStyle(font: regularFont, fontSize: 9),
+        ),
+      ),
+      pw.SizedBox(height: 16),
+      _blankLineRow('เลขที่สัญญา', regularFont),
+      _blankLineRow('ทำที่', regularFont),
+      _blankLineRow('วันที่', regularFont),
+      pw.SizedBox(height: 10),
+      pw.Text('คู่สัญญา', style: pw.TextStyle(font: boldFont, fontSize: 13)),
+      pw.SizedBox(height: 5),
+      _blankParty('ผู้กู้', regularFont),
+      _blankParty('ผู้ให้กู้', regularFont),
+      pw.SizedBox(height: 10),
+      pw.Text(
+        'ข้อมูลนี้เป็นแบบเอกสารเปล่า กรุณาใส่ข้อมูลที่ถูกต้องและครบถ้วนก่อนลงนาม',
+        style: pw.TextStyle(font: regularFont, fontSize: 10, lineSpacing: 2),
+      ),
+      pw.SizedBox(height: 8),
+      _article(
+        'ข้อ ๑',
+        'จำนวนเงินกู้: ______________________________________________ บาท',
+        regularFont,
+        boldFont,
+      ),
+      _article(
+        'ข้อ ๒',
+        'หลักประกัน: ________________________________________________\n'
+            '________________________________________________________________________________',
+        regularFont,
+        boldFont,
+      ),
+      _article(
+        'ข้อ ๓',
+        'วันครบกำหนด: ______________________________________________',
+        regularFont,
+        boldFont,
+      ),
+      _article(
+        'ข้อ ๔',
+        'ดอกเบี้ยหรือค่าตอบแทน: ____________________________________,',
+        regularFont,
+        boldFont,
+      ),
+      _article(
+        'ข้อ ๕',
+        'การผิดนัด การบอกกล่าว และการดำเนินการต่อไป: __________________',
+        regularFont,
+        boldFont,
+      ),
+      _article(
+        'ข้อ ๖',
+        'เงื่อนไขเพิ่มเติม: __________________________________________',
+        regularFont,
+        boldFont,
+      ),
+      pw.SizedBox(height: 10),
+      pw.Text(
+        'คู่สัญญาต้องตรวจสอบข้อมูลและกรอกข้อความเพิ่มเติมก่อนลงลายมือชื่อ',
+        style: pw.TextStyle(font: regularFont, fontSize: 10, lineSpacing: 2),
+      ),
+      pw.SizedBox(height: 24),
+      pw.Row(
+        children: [
+          pw.Expanded(child: _blankSignature('ผู้กู้', regularFont)),
+          pw.SizedBox(width: 24),
+          pw.Expanded(child: _blankSignature('ผู้ให้กู้', regularFont)),
+        ],
+      ),
+      pw.SizedBox(height: 28),
+      pw.Text(
+        'พยาน: _________________________________________________',
+        style: pw.TextStyle(font: regularFont, fontSize: 10),
+      ),
+      pw.SizedBox(height: 30),
+      pw.Text(
+        'ส่วนเอกสารที่ว่างเปล่า กรุณาใส่ข้อมูลที่ถูกต้องก่อนใช้งานจริง',
+        style: pw.TextStyle(
+          font: regularFont,
+          fontSize: 8,
+          color: PdfColors.grey700,
+        ),
+      ),
+    ];
+  }
+
+  pw.Widget _blankParty(String role, pw.Font font) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.only(bottom: 8),
+      child: pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.Text(role, style: pw.TextStyle(font: font, fontSize: 10)),
+          pw.SizedBox(height: 4),
+          pw.Text(
+            'ชื่อ-นาม: ____________________________________________',
+            style: pw.TextStyle(font: font, fontSize: 10),
+          ),
+          pw.Text(
+            'เลขประจำตัวประชาชน: __________________________________',
+            style: pw.TextStyle(font: font, fontSize: 10),
+          ),
+          pw.Text(
+            'ที่อยู่: _______________________________________________',
+            style: pw.TextStyle(font: font, fontSize: 10),
+          ),
+        ],
+      ),
+    );
+  }
+
+  pw.Widget _blankLineRow(String label, pw.Font font) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.only(bottom: 5),
+      child: pw.Text(
+        '$label ______________________________________________',
+        style: pw.TextStyle(font: font, fontSize: 10),
+      ),
+    );
+  }
+
   List<pw.Widget> _buildAgreement({
     required LoanContract contract,
     required Map<String, dynamic> lender,

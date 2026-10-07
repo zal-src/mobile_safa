@@ -12,8 +12,6 @@ import '../widgets/onboarding_bottom_sheet.dart';
 import 'ai_chat_page.dart';
 import 'contract_detail_page.dart';
 import 'contract_role_page.dart';
-import 'home_page.dart';
-import 'knowledge_page.dart';
 import '../theme/app_theme.dart';
 
 class ContractListPage extends StatefulWidget {
@@ -35,7 +33,7 @@ class _ContractListPageState extends State<ContractListPage> {
 
   List<LoanContract> _contracts = [];
   String? _latestAgreementId;
-  
+
   String _selectedFilter = 'ทั้งหมด';
 
   bool _isLoading = true;
@@ -67,8 +65,9 @@ class _ContractListPageState extends State<ContractListPage> {
   }
 
   Future<void> _maybeShowOnboarding() async {
-    final seen = await OnboardingService.instance
-        .hasSeenOnboarding(OnboardingService.keyContracts);
+    final seen = await OnboardingService.instance.hasSeenOnboarding(
+      OnboardingService.keyContracts,
+    );
     if (!mounted || seen) return;
     await OnboardingService.instance.markAsSeen(OnboardingService.keyContracts);
     if (!mounted) return;
@@ -122,8 +121,10 @@ class _ContractListPageState extends State<ContractListPage> {
       if (contracts.isNotEmpty) {
         final sortedByDate = List<LoanContract>.from(contracts)
           ..sort((a, b) {
-            final dateA = DateTime.tryParse(a.createdAt ?? '') ?? DateTime(2000);
-            final dateB = DateTime.tryParse(b.createdAt ?? '') ?? DateTime(2000);
+            final dateA =
+                DateTime.tryParse(a.createdAt ?? '') ?? DateTime(2000);
+            final dateB =
+                DateTime.tryParse(b.createdAt ?? '') ?? DateTime(2000);
             return dateB.compareTo(dateA);
           });
         latestId = sortedByDate.first.agreementId;
@@ -166,8 +167,10 @@ class _ContractListPageState extends State<ContractListPage> {
       filtered = _contracts.where((contract) {
         final status = _statusText(contract);
         if (_selectedFilter == 'มีผลแล้ว' && status == 'มีผลแล้ว') return true;
-        if (_selectedFilter == 'เกินกำหนด' && status == 'เกินกำหนด') return true;
-        if (_selectedFilter == 'เสร็จสิ้น' && status == 'ชำระครบแล้ว') return true;
+        if (_selectedFilter == 'เกินกำหนด' && status == 'เกินกำหนด')
+          return true;
+        if (_selectedFilter == 'เสร็จสิ้น' && status == 'ชำระครบแล้ว')
+          return true;
         return false;
       }).toList();
     }
@@ -184,11 +187,16 @@ class _ContractListPageState extends State<ContractListPage> {
     filtered.sort((a, b) {
       final pA = getPriority(a);
       final pB = getPriority(b);
-      if (pA != pB) return pB.compareTo(pA); // เรียงจากมากไปน้อย (เกินกำหนด/มีผลแล้ว ขึ้นก่อน)
-      
+      if (pA != pB)
+        return pB.compareTo(
+          pA,
+        ); // เรียงจากมากไปน้อย (เกินกำหนด/มีผลแล้ว ขึ้นก่อน)
+
       final dateA = DateTime.tryParse(a.createdAt ?? '') ?? DateTime(2000);
       final dateB = DateTime.tryParse(b.createdAt ?? '') ?? DateTime(2000);
-      return dateB.compareTo(dateA); // ถ้า priority เท่ากัน เรียงตามวันที่ล่าสุด
+      return dateB.compareTo(
+        dateA,
+      ); // ถ้า priority เท่ากัน เรียงตามวันที่ล่าสุด
     });
 
     return filtered;
@@ -242,7 +250,11 @@ class _ContractListPageState extends State<ContractListPage> {
       final returnDate = DateTime.tryParse(contract.returnDate);
       if (returnDate != null) {
         final today = DateTime.now();
-        final returnDateOnly = DateTime(returnDate.year, returnDate.month, returnDate.day);
+        final returnDateOnly = DateTime(
+          returnDate.year,
+          returnDate.month,
+          returnDate.day,
+        );
         final todayOnly = DateTime(today.year, today.month, today.day);
         if (todayOnly.isAfter(returnDateOnly)) {
           return 'เกินกำหนด';
@@ -270,7 +282,11 @@ class _ContractListPageState extends State<ContractListPage> {
       final returnDate = DateTime.tryParse(contract.returnDate);
       if (returnDate != null) {
         final today = DateTime.now();
-        final returnDateOnly = DateTime(returnDate.year, returnDate.month, returnDate.day);
+        final returnDateOnly = DateTime(
+          returnDate.year,
+          returnDate.month,
+          returnDate.day,
+        );
         final todayOnly = DateTime(today.year, today.month, today.day);
         if (todayOnly.isAfter(returnDateOnly)) {
           return Colors.red;
@@ -298,7 +314,11 @@ class _ContractListPageState extends State<ContractListPage> {
       final returnDate = DateTime.tryParse(contract.returnDate);
       if (returnDate != null) {
         final today = DateTime.now();
-        final returnDateOnly = DateTime(returnDate.year, returnDate.month, returnDate.day);
+        final returnDateOnly = DateTime(
+          returnDate.year,
+          returnDate.month,
+          returnDate.day,
+        );
         final todayOnly = DateTime(today.year, today.month, today.day);
         if (todayOnly.isAfter(returnDateOnly)) {
           return Icons.warning_amber_rounded;
@@ -402,23 +422,43 @@ class _ContractListPageState extends State<ContractListPage> {
                             if (isLatest) ...[
                               const SizedBox(width: 8),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
                                 decoration: BoxDecoration(
                                   color: AppColors.primary,
                                   borderRadius: BorderRadius.circular(4),
                                 ),
-                                child: const Text('ล่าสุด', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                                child: const Text(
+                                  'ล่าสุด',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                               ),
                             ],
                             if (contract.status == 'active') ...[
                               const SizedBox(width: 8),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
                                 decoration: BoxDecoration(
                                   color: Colors.orange.shade700,
                                   borderRadius: BorderRadius.circular(4),
                                 ),
-                                child: const Text('ต้องชำระ', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                                child: const Text(
+                                  'ต้องชำระ',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                               ),
                             ],
                           ],
@@ -664,95 +704,62 @@ class _ContractListPageState extends State<ContractListPage> {
   // Build
   // ============================================================
 
-  Widget _buildMenuItem(IconData icon, String title, bool isSelected, VoidCallback onTap, {Color? color}) {
-    final defaultColor = color ?? const Color(0xFF344054);
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-        decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFE8F7F1) : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              icon,
-              color: isSelected ? const Color(0xFF087443) : defaultColor,
-              size: 22,
-            ),
-            const SizedBox(width: 16),
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                color: isSelected ? const Color(0xFF087443) : defaultColor,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _openHomePage() {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => HomePage(user: widget.user)),
-    );
-  }
-
-  void _openContractPage() {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => ContractListPage(user: widget.user)),
-    );
-  }
-
-  void _openKnowledgePage() {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => KnowledgePage(user: widget.user)),
-    );
-  }
-
   Future<void> _showEditProfileDialog() async {
     if (!mounted) return;
 
     final formKey = GlobalKey<FormState>();
-    final fullNameController = TextEditingController(text: _currentUser.fullName);
+    final fullNameController = TextEditingController(
+      text: _currentUser.fullName,
+    );
     final emailController = TextEditingController(text: _currentUser.email);
-    final phoneController = TextEditingController(text: _currentUser.phone ?? '');
-    final idCardController = TextEditingController(text: _currentUser.idCard ?? '');
+    final phoneController = TextEditingController(
+      text: _currentUser.phone ?? '',
+    );
+    final idCardController = TextEditingController(
+      text: _currentUser.idCard ?? '',
+    );
     final houseNumberController = TextEditingController(
-      text: (_currentAddress?['address'] as String?)?.replaceFirst('บ้านเลขที่ ', '').split(' ').first ?? '',
+      text:
+          (_currentAddress?['address'] as String?)
+              ?.replaceFirst('บ้านเลขที่ ', '')
+              .split(' ')
+              .first ??
+          '',
     );
     final villageController = TextEditingController(
       text: (_currentAddress?['address'] as String?)?.contains('หมู่') == true
           ? (_currentAddress?['address'] as String?)
-              ?.split('หมู่')
-              .last
-              .trim()
-              .split(' ')
-              .first ?? ''
+                    ?.split('หมู่')
+                    .last
+                    .trim()
+                    .split(' ')
+                    .first ??
+                ''
           : '',
     );
     final roadController = TextEditingController(
       text: (_currentAddress?['address'] as String?)?.contains('ถนน') == true
           ? (_currentAddress?['address'] as String?)
-              ?.split('ถนน')
-              .last
-              .trim()
-              .split(' ')
-              .first ?? ''
+                    ?.split('ถนน')
+                    .last
+                    .trim()
+                    .split(' ')
+                    .first ??
+                ''
           : '',
     );
-    final subdistrictController = TextEditingController(text: _currentAddress?['subdistrict'] ?? '');
-    final districtController = TextEditingController(text: _currentAddress?['district'] ?? '');
-    final provinceController = TextEditingController(text: _currentAddress?['province'] ?? '');
-    final postalCodeController = TextEditingController(text: _currentAddress?['postal_code'] ?? '');
+    final subdistrictController = TextEditingController(
+      text: _currentAddress?['subdistrict'] ?? '',
+    );
+    final districtController = TextEditingController(
+      text: _currentAddress?['district'] ?? '',
+    );
+    final provinceController = TextEditingController(
+      text: _currentAddress?['province'] ?? '',
+    );
+    final postalCodeController = TextEditingController(
+      text: _currentAddress?['postal_code'] ?? '',
+    );
     final passwordController = TextEditingController();
 
     final result = await showDialog<bool>(
@@ -769,9 +776,13 @@ class _ContractListPageState extends State<ContractListPage> {
                 children: [
                   TextFormField(
                     controller: fullNameController,
-                    decoration: const InputDecoration(labelText: 'ชื่อ-นามสกุล'),
+                    decoration: const InputDecoration(
+                      labelText: 'ชื่อ-นามสกุล',
+                    ),
                     validator: (value) =>
-                        (value == null || value.trim().isEmpty) ? 'กรุณากรอกชื่อ-นามสกุล' : null,
+                        (value == null || value.trim().isEmpty)
+                        ? 'กรุณากรอกชื่อ-นามสกุล'
+                        : null,
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
@@ -782,7 +793,9 @@ class _ContractListPageState extends State<ContractListPage> {
                       if (value == null || value.trim().isEmpty) {
                         return 'กรุณากรอกอีเมล';
                       }
-                      return RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(value.trim())
+                      return RegExp(
+                            r'^[^@\s]+@[^@\s]+\.[^@\s]+$',
+                          ).hasMatch(value.trim())
                           ? null
                           : 'รูปแบบอีเมลไม่ถูกต้อง';
                     },
@@ -791,22 +804,30 @@ class _ContractListPageState extends State<ContractListPage> {
                   TextFormField(
                     controller: phoneController,
                     keyboardType: TextInputType.phone,
-                    decoration: const InputDecoration(labelText: 'เบอร์โทรศัพท์'),
+                    decoration: const InputDecoration(
+                      labelText: 'เบอร์โทรศัพท์',
+                    ),
                     validator: (value) {
                       final text = value?.trim() ?? '';
                       if (text.isEmpty) return 'กรุณากรอกเบอร์โทรศัพท์';
-                      return RegExp(r'^\d{10}$').hasMatch(text) ? null : 'เบอร์โทรศัพท์ต้องมี 10 หลัก';
+                      return RegExp(r'^\d{10}$').hasMatch(text)
+                          ? null
+                          : 'เบอร์โทรศัพท์ต้องมี 10 หลัก';
                     },
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: idCardController,
                     keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(labelText: 'เลขบัตรประชาชน'),
+                    decoration: const InputDecoration(
+                      labelText: 'เลขบัตรประชาชน',
+                    ),
                     validator: (value) {
                       final text = value?.trim() ?? '';
                       if (text.isEmpty) return 'กรุณากรอกเลขบัตรประชาชน';
-                      return RegExp(r'^\d{13}$').hasMatch(text) ? null : 'เลขบัตรประชาชนต้องมี 13 หลัก';
+                      return RegExp(r'^\d{13}$').hasMatch(text)
+                          ? null
+                          : 'เลขบัตรประชาชนต้องมี 13 หลัก';
                     },
                   ),
                   const SizedBox(height: 12),
@@ -843,13 +864,17 @@ class _ContractListPageState extends State<ContractListPage> {
                   TextFormField(
                     controller: postalCodeController,
                     keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(labelText: 'รหัสไปรษณีย์'),
+                    decoration: const InputDecoration(
+                      labelText: 'รหัสไปรษณีย์',
+                    ),
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: passwordController,
                     obscureText: true,
-                    decoration: const InputDecoration(labelText: 'รหัสผ่านใหม่ (เว้นว่างถ้าไม่ต้องการเปลี่ยน)'),
+                    decoration: const InputDecoration(
+                      labelText: 'รหัสผ่านใหม่ (เว้นว่างถ้าไม่ต้องการเปลี่ยน)',
+                    ),
                   ),
                 ],
               ),
@@ -895,7 +920,9 @@ class _ContractListPageState extends State<ContractListPage> {
       if (!mounted) return;
 
       if (updatedUser != null) {
-        final refreshedAddress = await _database.getUserAddress(_currentUser.userId!);
+        final refreshedAddress = await _database.getUserAddress(
+          _currentUser.userId!,
+        );
         if (!mounted) return;
         setState(() {
           _currentUser = updatedUser;
@@ -945,304 +972,6 @@ class _ContractListPageState extends State<ContractListPage> {
     return parts.isNotEmpty ? parts.join(' ') : 'ไม่ได้ระบุที่อยู่';
   }
 
-  Future<void> _showProfile() async {
-    if (!mounted) return;
-
-    await showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (sheetContext) {
-        return Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-          ),
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 30),
-          child: SafeArea(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: Container(
-                    width: 42,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade300,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 22),
-                Row(
-                  children: [
-                    Container(
-                      width: 58,
-                      height: 58,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFEDE9FE),
-                        borderRadius: BorderRadius.all(Radius.circular(18)),
-                      ),
-                      child: const Icon(
-                        Icons.person_outline,
-                        color: Color(0xFF4B39EF),
-                        size: 30,
-                      ),
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            _currentUser.fullName,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 19,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFF101828),
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            _currentUser.email,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: Colors.grey.shade600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-                const Text(
-                  'ข้อมูลบัญชี',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF101828),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                _ProfileInfoRow(
-                  icon: Icons.person_outline,
-                  title: 'ชื่อ-นามสกุล',
-                  value: _currentUser.fullName,
-                ),
-                _ProfileInfoRow(
-                  icon: Icons.email_outlined,
-                  title: 'อีเมล',
-                  value: _currentUser.email,
-                ),
-                if (_currentUser.phone != null && _currentUser.phone!.trim().isNotEmpty)
-                  _ProfileInfoRow(
-                    icon: Icons.phone_outlined,
-                    title: 'เบอร์โทรศัพท์',
-                    value: _currentUser.phone!,
-                  ),
-                if (_currentUser.idCard != null && _currentUser.idCard!.trim().isNotEmpty)
-                  _ProfileInfoRow(
-                    icon: Icons.badge_outlined,
-                    title: 'เลขบัตรประชาชน',
-                    value: _currentUser.idCard!,
-                  ),
-                if (_currentAddress != null)
-                  _ProfileInfoRow(
-                    icon: Icons.home_outlined,
-                    title: 'ที่อยู่',
-                    value: _formatAddress(_currentAddress),
-                  ),
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  height: 48,
-                  child: FilledButton.icon(
-                    onPressed: () {
-                      Navigator.pop(sheetContext);
-                      _showEditProfileDialog();
-                    },
-                    icon: const Icon(Icons.edit_outlined),
-                    label: const Text('แก้ไขข้อมูลบัญชี'),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: const Color(0xFF101828),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                SizedBox(
-                  width: double.infinity,
-                  height: 48,
-                  child: OutlinedButton.icon(
-                    onPressed: () {
-                      Navigator.pop(sheetContext);
-                    },
-                    icon: const Icon(Icons.logout),
-                    label: const Text('ออกจากระบบ'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: const Color(0xFFD92D20),
-                      side: const BorderSide(color: Color(0xFFFECACA)),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  void _showMenuDialog() {
-    showGeneralDialog(
-      context: context,
-      barrierDismissible: true,
-      barrierLabel: 'Menu',
-      barrierColor: Colors.black54,
-      transitionDuration: const Duration(milliseconds: 200),
-      pageBuilder: (context, anim1, anim2) {
-        return SafeArea(
-          child: Align(
-            alignment: Alignment.topCenter,
-            child: Container(
-              width: double.infinity,
-              margin: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Material(
-                color: Colors.transparent,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            'เมนู',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Container(
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(color: Colors.grey.shade300, width: 1),
-                            ),
-                            child: IconButton(
-                              tooltip: 'ปิดเมนู',
-                              icon: const Icon(Icons.close, size: 20),
-                              onPressed: () => Navigator.pop(context),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const Divider(height: 1, color: Color(0xFFE4E7EC)),
-                    const SizedBox(height: 8),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(14),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF8F9FC),
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 42,
-                              height: 42,
-                              decoration: const BoxDecoration(
-                                color: Color(0xFFE8F7F1),
-                                borderRadius: BorderRadius.all(Radius.circular(12)),
-                              ),
-                              child: const Icon(Icons.person_outline, color: Color(0xFF087443)),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    _currentUser.fullName,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w700,
-                                      color: Color(0xFF101828),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    _currentUser.email,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey.shade600,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    _buildMenuItem(Icons.home_outlined, 'หน้าหลัก', false, () {
-                      Navigator.pop(context);
-                      _openHomePage();
-                    }),
-                    _buildMenuItem(Icons.description_outlined, 'สัญญา', true, () {
-                      Navigator.pop(context);
-                      _openContractPage();
-                    }),
-                    _buildMenuItem(Icons.menu_book_outlined, 'ความรู้', false, () {
-                      Navigator.pop(context);
-                      _openKnowledgePage();
-                    }),
-                    _buildMenuItem(Icons.person_outline, 'โปรไฟล์', false, () {
-                      Navigator.pop(context);
-                      _showProfile();
-                    }),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 8.0),
-                      child: Divider(height: 1, color: Color(0xFFE4E7EC)),
-                    ),
-                    _buildMenuItem(Icons.logout, 'ออกจากระบบ', false, () {
-                      Navigator.pop(context);
-                    }, color: const Color(0xFFD92D20)),
-                    const SizedBox(height: 8),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -1281,79 +1010,96 @@ class _ContractListPageState extends State<ContractListPage> {
       body: SafeArea(
         child: ResponsiveBody(
           child: _isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : RefreshIndicator(
-                key: _keyContractList,
-                onRefresh: _loadContracts,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // ตัวกรองสถานะ
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      padding: EdgeInsets.symmetric(
-                        horizontal: Responsive.horizontalPadding(context),
-                        vertical: 12,
-                      ),
-                      child: Row(
-                        children: ['ทั้งหมด', 'มีผลแล้ว', 'เกินกำหนด', 'เสร็จสิ้น'].map((filter) {
-                          final isSelected = _selectedFilter == filter;
-                          return Padding(
-                            padding: const EdgeInsets.only(right: 8),
-                            child: ChoiceChip(
-                              label: Text(filter),
-                              selected: isSelected,
-                              onSelected: (selected) {
-                                if (selected) {
-                                  setState(() => _selectedFilter = filter);
-                                }
-                              },
-                              selectedColor: AppColors.primary,
-                              labelStyle: TextStyle(
-                                color: isSelected ? Colors.white : Colors.black87,
-                                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                    ),
-                    
-                    // รายการสัญญา
-                    Expanded(
-                      child: _filteredContracts.isEmpty
-                          ? LayoutBuilder(
-                              builder: (context, constraints) {
-                                return SingleChildScrollView(
-                                  physics: const AlwaysScrollableScrollPhysics(),
-                                  child: SizedBox(
-                                    height: constraints.maxHeight,
-                                    child: _buildEmptyState(),
+              ? const Center(child: CircularProgressIndicator())
+              : RefreshIndicator(
+                  key: _keyContractList,
+                  onRefresh: _loadContracts,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // ตัวกรองสถานะ
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        padding: EdgeInsets.symmetric(
+                          horizontal: Responsive.horizontalPadding(context),
+                          vertical: 12,
+                        ),
+                        child: Row(
+                          children:
+                              [
+                                'ทั้งหมด',
+                                'มีผลแล้ว',
+                                'เกินกำหนด',
+                                'เสร็จสิ้น',
+                              ].map((filter) {
+                                final isSelected = _selectedFilter == filter;
+                                return Padding(
+                                  padding: const EdgeInsets.only(right: 8),
+                                  child: ChoiceChip(
+                                    label: Text(filter),
+                                    selected: isSelected,
+                                    onSelected: (selected) {
+                                      if (selected) {
+                                        setState(
+                                          () => _selectedFilter = filter,
+                                        );
+                                      }
+                                    },
+                                    selectedColor: AppColors.primary,
+                                    labelStyle: TextStyle(
+                                      color: isSelected
+                                          ? Colors.white
+                                          : Colors.black87,
+                                      fontWeight: isSelected
+                                          ? FontWeight.bold
+                                          : FontWeight.normal,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
                                   ),
                                 );
-                              },
-                            )
-                          : ListView.builder(
-                              physics: const AlwaysScrollableScrollPhysics(),
-                              padding: EdgeInsets.fromLTRB(
-                                Responsive.horizontalPadding(context), 4,
-                                Responsive.horizontalPadding(context), 100,
+                              }).toList(),
+                        ),
+                      ),
+
+                      // รายการสัญญา
+                      Expanded(
+                        child: _filteredContracts.isEmpty
+                            ? LayoutBuilder(
+                                builder: (context, constraints) {
+                                  return SingleChildScrollView(
+                                    physics:
+                                        const AlwaysScrollableScrollPhysics(),
+                                    child: SizedBox(
+                                      height: constraints.maxHeight,
+                                      child: _buildEmptyState(),
+                                    ),
+                                  );
+                                },
+                              )
+                            : ListView.builder(
+                                physics: const AlwaysScrollableScrollPhysics(),
+                                padding: EdgeInsets.fromLTRB(
+                                  Responsive.horizontalPadding(context),
+                                  4,
+                                  Responsive.horizontalPadding(context),
+                                  100,
+                                ),
+                                itemCount: _filteredContracts.length,
+                                itemBuilder: (context, index) {
+                                  return _buildContractCard(
+                                    _filteredContracts[index],
+                                    isLatest:
+                                        _filteredContracts[index].agreementId ==
+                                        _latestAgreementId,
+                                  );
+                                },
                               ),
-                              itemCount: _filteredContracts.length,
-                              itemBuilder: (context, index) {
-                                return _buildContractCard(
-                                  _filteredContracts[index],
-                                  isLatest: _filteredContracts[index].agreementId == _latestAgreementId,
-                                );
-                              },
-                            ),
-                    ),
-                  ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
         ),
       ),
     );
