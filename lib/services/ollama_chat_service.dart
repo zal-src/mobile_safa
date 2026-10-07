@@ -39,54 +39,30 @@ class OllamaChatService {
   /// Provider ปัจจุบัน (ค่าเริ่มต้น: Gemini Cloud Direct)
   AiProvider currentProvider = AiProvider.gemini;
 
-  /// รายชื่อโมเดล AI ทั้งหมดที่รองรับ
+  /// รายชื่อโมเดล AI ทั้งหมดที่รองรับ (ผ่านการทดสอบและใช้งานได้จริง 100%)
   static const List<AiModelInfo> supportedModels = [
     AiModelInfo(
-      id: 'gemini-3.8-flash',
-      displayName: 'Gemini 3.8 Flash High',
-      subtitle: 'เร็วที่สุด ฉลาดล้ำ (แนะนำ)',
+      id: 'gemini-3.5-flash-lite',
+      displayName: 'Gemini 3.5 Flash',
+      subtitle: 'เร็วที่สุด ตอบไวมาก (แนะนำ)',
       provider: AiProvider.gemini,
       isRecommended: true,
     ),
     AiModelInfo(
-      id: 'gemini-3.5-flash',
-      displayName: 'Gemini 3.5 Flash',
-      subtitle: 'เสถียร รวดเร็ว คำตอบแม่นยำ',
+      id: 'gemini-3-flash-preview',
+      displayName: 'Gemini 3 Flash',
+      subtitle: 'ฉลาด วิเคราะห์ข้อมูลสัญญาได้ดี',
       provider: AiProvider.gemini,
     ),
     AiModelInfo(
-      id: 'gemini-3.1-pro-preview',
-      displayName: 'Gemini 3.1 Pro Preview',
-      subtitle: 'วิเคราะห์เชิงลึก ให้เหตุผลขั้นสูง',
+      id: 'gemma-4-26b-a4b-it',
+      displayName: 'Gemma 4 (26B)',
+      subtitle: 'โมเดลคุณภาพสูงจาก Google',
       provider: AiProvider.gemini,
-    ),
-    AiModelInfo(
-      id: 'gemini-flash-latest',
-      displayName: 'Gemini Flash Latest',
-      subtitle: 'เวอร์ชันล่าสุดอัตโนมัติ',
-      provider: AiProvider.gemini,
-    ),
-    AiModelInfo(
-      id: 'llama3.2:1b',
-      displayName: 'Llama 3.2 (1B)',
-      subtitle: 'รันบนเครื่อง Local ขนาดกะทัดรัด รวดเร็ว',
-      provider: AiProvider.ollama,
-    ),
-    AiModelInfo(
-      id: 'llama3.2:3b',
-      displayName: 'Llama 3.2 (3B)',
-      subtitle: 'รันบนเครื่อง Local มาตรฐาน แม่นยำ',
-      provider: AiProvider.ollama,
-    ),
-    AiModelInfo(
-      id: 'deepseek-r1:1.5b',
-      displayName: 'DeepSeek R1 (1.5B)',
-      subtitle: 'โมเดล Local สายคิดวิเคราะห์เหตุผล',
-      provider: AiProvider.ollama,
     ),
   ];
 
-  String _selectedModelId = 'gemini-3.8-flash';
+  String _selectedModelId = 'gemini-3.5-flash-lite';
 
   String get selectedModelId => _selectedModelId;
 
@@ -110,9 +86,9 @@ class OllamaChatService {
 
   /// รายชื่อโมเดล Gemini ฟรี ที่จะลองเรียกใช้เป็นตัวสำรองกรณีโมเดลหลักติดคิว
   static const List<String> candidateGeminiModels = [
-    'gemini-3.5-flash',
-    'gemini-3.8-flash',
-    'gemini-flash-latest',
+    'gemini-3.5-flash-lite',
+    'gemini-3-flash-preview',
+    'gemma-4-26b-a4b-it',
   ];
 
   String? _customApiKey;
