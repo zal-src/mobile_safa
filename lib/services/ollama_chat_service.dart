@@ -12,6 +12,23 @@ enum AiProvider {
   ollama, // Local Ollama (รันบนเครื่องตนเอง)
 }
 
+/// ข้อมูลโมเดล AI แต่ละตัว
+class AiModelInfo {
+  final String id;
+  final String displayName;
+  final String subtitle;
+  final AiProvider provider;
+  final bool isRecommended;
+
+  const AiModelInfo({
+    required this.id,
+    required this.displayName,
+    required this.subtitle,
+    required this.provider,
+    this.isRecommended = false,
+  });
+}
+
 /// Service สำหรับเชื่อมต่อ AI ของแอป Safa
 /// โดยค่าเริ่มต้นจะใช้ Google Gemini API (ฟรี ไม่ต้องลงโปรแกรมหรือรันเซิร์ฟเวอร์ใดๆ)
 /// เหมาะสำหรับการทำงานร่วมกันบน GitHub — เพื่อน Clone โค้ดไปก็ใช้งานได้ทันที
@@ -22,7 +39,76 @@ class OllamaChatService {
   /// Provider ปัจจุบัน (ค่าเริ่มต้น: Gemini Cloud Direct)
   AiProvider currentProvider = AiProvider.gemini;
 
-  /// รายชื่อโมเดล Gemini ฟรี ที่จะลองเรียกใช้ตามลำดับ
+  /// รายชื่อโมเดล AI ทั้งหมดที่รองรับ
+  static const List<AiModelInfo> supportedModels = [
+    AiModelInfo(
+      id: 'gemini-3.8-flash',
+      displayName: 'Gemini 3.8 Flash High',
+      subtitle: 'เร็วที่สุด ฉลาดล้ำ (แนะนำ)',
+      provider: AiProvider.gemini,
+      isRecommended: true,
+    ),
+    AiModelInfo(
+      id: 'gemini-3.5-flash',
+      displayName: 'Gemini 3.5 Flash',
+      subtitle: 'เสถียร รวดเร็ว คำตอบแม่นยำ',
+      provider: AiProvider.gemini,
+    ),
+    AiModelInfo(
+      id: 'gemini-3.1-pro-preview',
+      displayName: 'Gemini 3.1 Pro Preview',
+      subtitle: 'วิเคราะห์เชิงลึก ให้เหตุผลขั้นสูง',
+      provider: AiProvider.gemini,
+    ),
+    AiModelInfo(
+      id: 'gemini-flash-latest',
+      displayName: 'Gemini Flash Latest',
+      subtitle: 'เวอร์ชันล่าสุดอัตโนมัติ',
+      provider: AiProvider.gemini,
+    ),
+    AiModelInfo(
+      id: 'llama3.2:1b',
+      displayName: 'Llama 3.2 (1B)',
+      subtitle: 'รันบนเครื่อง Local ขนาดกะทัดรัด รวดเร็ว',
+      provider: AiProvider.ollama,
+    ),
+    AiModelInfo(
+      id: 'llama3.2:3b',
+      displayName: 'Llama 3.2 (3B)',
+      subtitle: 'รันบนเครื่อง Local มาตรฐาน แม่นยำ',
+      provider: AiProvider.ollama,
+    ),
+    AiModelInfo(
+      id: 'deepseek-r1:1.5b',
+      displayName: 'DeepSeek R1 (1.5B)',
+      subtitle: 'โมเดล Local สายคิดวิเคราะห์เหตุผล',
+      provider: AiProvider.ollama,
+    ),
+  ];
+
+  String _selectedModelId = 'gemini-3.8-flash';
+
+  String get selectedModelId => _selectedModelId;
+
+  set selectedModelId(String id) {
+    _selectedModelId = id;
+    final model = supportedModels.firstWhere(
+      (m) => m.id == id,
+      orElse: () => supportedModels.first,
+    );
+    currentProvider = model.provider;
+  }
+
+  AiModelInfo get currentModel {
+    return supportedModels.firstWhere(
+      (m) => m.id == _selectedModelId,
+      orElse: () => supportedModels.first,
+    );
+  }
+
+  String get selectedModelDisplayName => currentModel.displayName;
+
+  /// รายชื่อโมเดล Gemini ฟรี ที่จะลองเรียกใช้เป็นตัวสำรองกรณีโมเดลหลักติดคิว
   static const List<String> candidateGeminiModels = [
     'gemini-3.5-flash',
     'gemini-3.8-flash',
@@ -68,8 +154,6 @@ class OllamaChatService {
     _ollamaUrl = trimmed.replaceAll(RegExp(r'/+$'), '');
   }
 
-  static const String _ollamaModel = 'llama3.2:1b';
-
   /// ประวัติแชท (เพื่อให้โมเดลจำบริบทการสนทนา)
   final List<Map<String, String>> _history = [];
 
@@ -94,79 +178,6 @@ class OllamaChatService {
 9. หากถูกถามเรื่องที่ไม่เกี่ยวข้อง ให้ปฏิเสธอย่างสุภาพ
 10. ใช้อีโมจิประกอบพอเหมาะเพื่อความสบายตา
 ''';
-
-  // ============================================================
-  // Testing & Verification
-  // ============================================================
-
-  /// ทดสอบการเชื่อมต่อ Google Gemini API
-  Future<Map<String, dynamic>> testGeminiConnection([String? testKey]) async {
-    final apiKey = (testKey != null && testKey.trim().isNotEmpty)
-        ? testKey.trim()
-        : effectiveGeminiApiKey;
-
-    if (apiKey.isEmpty) {
-      return {
-        'success': false,
-        'message': '❌ ไม่พบ Gemini API Key ในระบบ\nกรุณาใส่ในไฟล์ .env หรือกรอกในช่องด้านล่างนี้',
-      };
-    }
-
-    try {
-      final url = Uri.parse(
-        'https://generativelanguage.googleapis.com/v1beta/models?key=$apiKey',
-      );
-      final res = await http.get(url).timeout(const Duration(seconds: 5));
-      if (res.statusCode == 200) {
-        return {
-          'success': true,
-          'message': '✅ เชื่อมต่อ Google Gemini สำเร็จ (ใช้งานได้ฟรี ไม่ต้องเปิดเซิร์ฟเวอร์)',
-        };
-      } else {
-        return {
-          'success': false,
-          'message': '❌ Gemini API ตอบกลับด้วยรหัส ${res.statusCode} (ตรวจสอบความถูกต้องของ Key)',
-        };
-      }
-    } catch (e) {
-      return {
-        'success': false,
-        'message': '❌ ไม่สามารถเชื่อมต่อกับ Google AI ได้ (ตรวจสอบอินเทอร์เน็ต)',
-      };
-    }
-  }
-
-  /// ทดสอบการเชื่อมต่อ Ollama
-  Future<Map<String, dynamic>> testOllamaConnection([String? customUrl]) async {
-    final target = customUrl ?? _ollamaUrl;
-    try {
-      final res = await http
-          .get(Uri.parse('$target/api/tags'))
-          .timeout(const Duration(seconds: 3));
-      if (res.statusCode == 200) {
-        return {
-          'success': true,
-          'message': '✅ เชื่อมต่อ Local Ollama สำเร็จ ($target)',
-        };
-      }
-    } catch (_) {}
-
-    return {
-      'success': false,
-      'message': '❌ ไม่พบ Ollama บน $target (ต้องเปิด ollama serve)',
-    };
-  }
-
-  /// เช็คสถานะ Provider ปัจจุบัน
-  Future<bool> isServerRunning() async {
-    if (currentProvider == AiProvider.gemini) {
-      final res = await testGeminiConnection();
-      return res['success'] == true;
-    } else {
-      final res = await testOllamaConnection();
-      return res['success'] == true;
-    }
-  }
 
   /// รีเซ็ตประวัติแชท
   void resetChat() {
@@ -201,8 +212,8 @@ class OllamaChatService {
       yield '⚠️ ยังไม่ได้ระบุ Gemini API Key ในระบบ\n\n'
           'วิธีเริ่มใช้งาน (ฟรี 100%):\n'
           '1. รับ API Key ฟรีจาก https://aistudio.google.com/apikey\n'
-          '2. สร้างไฟล์ `.env` ที่โฟลเดอร์โปรเจกต์: `GEMINI_API_KEY=รหัสของคุณ`\n'
-          '3. หรือกดไอคอน ⚙️ ด้านบนขวา แล้ววาง API Key ลงในแอปได้ทันทีค่ะ';
+          '2. ระบุในไฟล์ `.env` ที่โฟลเดอร์โปรเจกต์: `GEMINI_API_KEY=รหัสของคุณ`\n'
+          '3. ใช้งานได้ทันทีโดยไม่ต้องลงโปรแกรมหรือรันเซิร์ฟเวอร์ใดๆ ค่ะ';
       return;
     }
 
@@ -239,8 +250,18 @@ class OllamaChatService {
     bool success = false;
     String lastError = '';
 
-    // วนทดสอบ candidate models หากตัวใดตัวหนึ่งติดขัด (เช่น Spikes in demand)
-    for (final model in candidateGeminiModels) {
+    // จัดลำดับโมเดล: นำโมเดลที่ผู้ใช้เลือกขึ้นก่อน หากติดขัด (เช่น Spikes in demand) จะสลับไปโมเดลสำรองให้อัตโนมัติ
+    final modelsToTry = <String>[];
+    if (currentModel.provider == AiProvider.gemini) {
+      modelsToTry.add(_selectedModelId);
+    }
+    for (final candidate in candidateGeminiModels) {
+      if (!modelsToTry.contains(candidate)) {
+        modelsToTry.add(candidate);
+      }
+    }
+
+    for (final model in modelsToTry) {
       final url = Uri.parse(
         'https://generativelanguage.googleapis.com/v1beta/models/$model:streamGenerateContent?alt=sse&key=$apiKey',
       );
@@ -337,7 +358,7 @@ class OllamaChatService {
       );
       request.headers['Content-Type'] = 'application/json';
       request.body = jsonEncode({
-        'model': _ollamaModel,
+        'model': _selectedModelId,
         'messages': messages,
         'stream': true,
         'options': {
@@ -381,7 +402,7 @@ class OllamaChatService {
       }
     } catch (e) {
       yield '❌ ไม่สามารถเชื่อมต่อ Ollama ได้ ($e)\n'
-          'คำแนะนำ: แนะนำให้กดปุ่ม ⚙️ ด้านบนแล้วเลือกโหมด Google Gemini (ฟรี ไม่ต้องลงโปรแกรม)';
+          'คำแนะนำ: แนะนำให้เลือกโมเดล Google Gemini ที่แถบด้านล่าง (ใช้งานได้ฟรี ไม่ต้องลงโปรแกรม)';
       if (_history.isNotEmpty && _history.last['role'] == 'user') {
         _history.removeLast();
       }
@@ -390,6 +411,5 @@ class OllamaChatService {
 
   bool get isReady => true;
 
-  String get modelName =>
-      currentProvider == AiProvider.gemini ? 'Google Gemini (Cloud Free)' : _ollamaModel;
+  String get modelName => selectedModelDisplayName;
 }

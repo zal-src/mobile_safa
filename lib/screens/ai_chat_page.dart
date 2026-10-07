@@ -37,7 +37,7 @@ class AiChatPage extends StatefulWidget {
   State<AiChatPage> createState() => _AiChatPageState();
 }
 
-class _AiChatPageState extends State<AiChatPage> with TickerProviderStateMixin {
+class _AiChatPageState extends State<AiChatPage> {
   final OllamaChatService _ollama = OllamaChatService.instance;
   final TextEditingController _inputCtrl = TextEditingController();
   final ScrollController _scrollCtrl = ScrollController();
@@ -48,19 +48,16 @@ class _AiChatPageState extends State<AiChatPage> with TickerProviderStateMixin {
   String _streamingText = '';
   String? _contractContext;
 
-  // ============================================================
-  // Lifecycle
-  // ============================================================
-
   @override
   void initState() {
     super.initState();
+    _inputCtrl.addListener(_onInputChanged);
     _loadUserContracts();
 
-    // ข้อความต้อนรับ
+    // ข้อความเริ่มต้นต้อนรับ
     _messages.add(ChatMessage(
       text: 'สวัสดีค่ะ! 👋\n\n'
-          'ฉันคือ **Safa AI** ผู้ช่วยด้านความรู้การเงิน กฎหมาย และข้อมูลสัญญาของคุณ\n\n'
+          'ฉันคือ **Safa AI** ผู้ช่วยด้านการเงิน กฎหมาย และข้อมูลสัญญาของคุณ\n\n'
           'คุณสามารถถามฉันเกี่ยวกับ:\n'
           '• 📋 สรุปข้อมูลสัญญาที่ทำไว้\n'
           '• 💰 การจัดการเงินส่วนบุคคล\n'
@@ -69,6 +66,10 @@ class _AiChatPageState extends State<AiChatPage> with TickerProviderStateMixin {
           'ถามมาได้เลยค่ะ!',
       isUser: false,
     ));
+  }
+
+  void _onInputChanged() {
+    setState(() {});
   }
 
   Future<void> _loadUserContracts() async {
@@ -98,6 +99,7 @@ class _AiChatPageState extends State<AiChatPage> with TickerProviderStateMixin {
 
   @override
   void dispose() {
+    _inputCtrl.removeListener(_onInputChanged);
     _inputCtrl.dispose();
     _scrollCtrl.dispose();
     _inputFocus.dispose();
@@ -108,11 +110,13 @@ class _AiChatPageState extends State<AiChatPage> with TickerProviderStateMixin {
   // Actions
   // ============================================================
 
-  Future<void> _sendMessage() async {
-    final text = _inputCtrl.text.trim();
+  Future<void> _sendMessage([String? presetText]) async {
+    final text = (presetText ?? _inputCtrl.text).trim();
     if (text.isEmpty || _isTyping) return;
 
-    _inputCtrl.clear();
+    if (presetText == null) {
+      _inputCtrl.clear();
+    }
 
     setState(() {
       _messages.add(ChatMessage(text: text, isUser: true));
@@ -122,7 +126,6 @@ class _AiChatPageState extends State<AiChatPage> with TickerProviderStateMixin {
 
     _scrollToBottom();
 
-    // ใช้ Stream เพื่อแสดงทีละส่วน พร้อมบริบทสัญญา
     final buffer = StringBuffer();
     await for (final chunk in _ollama.sendMessageStream(
       text,
@@ -149,21 +152,34 @@ class _AiChatPageState extends State<AiChatPage> with TickerProviderStateMixin {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('เริ่มแชทใหม่'),
-        content: const Text('ต้องการลบประวัติแชททั้งหมดและเริ่มใหม่หรือไม่?'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Icon(Icons.refresh_rounded, color: AppColors.primary),
+            SizedBox(width: 8),
+            Text('เริ่มแชทใหม่'),
+          ],
+        ),
+        content: const Text('ต้องการล้างประวัติการสนทนานี้และเริ่มใหม่หรือไม่?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: const Text('ยกเลิก'),
           ),
           FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
             onPressed: () {
               Navigator.pop(ctx);
               _ollama.resetChat();
               setState(() {
                 _messages.clear();
                 _messages.add(ChatMessage(
-                  text: 'เริ่มต้นใหม่แล้วค่ะ! 🔄\n\nถามมาได้เลยค่ะ',
+                  text: 'เริ่มต้นการสนทนาใหม่แล้วค่ะ 🔄\n\nถามข้อมูลสัญญาหรือการเงินได้เลยค่ะ',
                   isUser: false,
                 ));
               });
@@ -175,199 +191,208 @@ class _AiChatPageState extends State<AiChatPage> with TickerProviderStateMixin {
     );
   }
 
-  void _showSettingsDialog() {
-    var selectedProvider = _ollama.currentProvider;
-    final controller = TextEditingController(text: _ollama.baseUrl);
-    final apiKeyCtrl = TextEditingController(text: _ollama.effectiveGeminiApiKey);
-    bool testing = false;
-    String? testResult;
-    bool? testSuccess;
-
-    showDialog(
+  void _showModelPickerSheet() {
+    showModalBottomSheet(
       context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (dialogCtx, setDialogState) {
-          return AlertDialog(
-            title: const Row(
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (sheetCtx) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+          child: SafeArea(
+            top: false,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.tune_rounded, color: AppColors.primary),
-                SizedBox(width: 8),
-                Text('ตั้งค่าระบบ AI', style: TextStyle(fontSize: 18)),
-              ],
-            ),
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'เลือกโหมดการทำงาน:',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                  ),
-                  const SizedBox(height: 10),
-                  SizedBox(
-                    width: double.infinity,
-                    child: SegmentedButton<AiProvider>(
-                      segments: const [
-                        ButtonSegment(
-                          value: AiProvider.gemini,
-                          icon: Icon(Icons.cloud_outlined),
-                          label: Text('Gemini (ฟรี)'),
-                        ),
-                        ButtonSegment(
-                          value: AiProvider.ollama,
-                          icon: Icon(Icons.smart_toy_outlined),
-                          label: Text('Ollama (Local)'),
-                        ),
-                      ],
-                      selected: {selectedProvider},
-                      onSelectionChanged: (newSelection) {
-                        setDialogState(() {
-                          selectedProvider = newSelection.first;
-                          testResult = null;
-                        });
-                      },
+                Center(
+                  child: Container(
+                    width: 38,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade300,
+                      borderRadius: BorderRadius.circular(2),
                     ),
                   ),
-                  const SizedBox(height: 10),
-                  Text(
-                    selectedProvider == AiProvider.gemini
-                        ? '⭐ Google Gemini: ใช้งานได้ฟรีทันที ไม่ต้องเปิดโปรแกรมใดๆ ในเครื่อง'
-                        : '💻 Local Ollama: สำหรับรันออฟไลน์บนเครื่องตนเอง (ต้องเปิด ollama serve)',
-                    style: TextStyle(fontSize: 11, color: Colors.grey.shade700),
-                  ),
-                  if (selectedProvider == AiProvider.gemini) ...[
-                    const SizedBox(height: 12),
-                    const Text(
-                      'Gemini API Key (อ่านจาก .env หรือวางที่นี่):',
-                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 4),
-                    TextField(
-                      controller: apiKeyCtrl,
-                      obscureText: true,
-                      decoration: const InputDecoration(
-                        hintText: 'ใส่ API Key (ขอฟรีได้ที่ aistudio.google.com)',
-                        border: OutlineInputBorder(),
-                        isDense: true,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '💡 ขอ Key ฟรีได้ที่ https://aistudio.google.com/apikey',
-                      style: TextStyle(fontSize: 11, color: Colors.blue.shade700),
-                    ),
-                  ],
-                  if (selectedProvider == AiProvider.ollama) ...[
-                    const SizedBox(height: 12),
-                    const Text(
-                      'Ollama Host URL:',
-                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 4),
-                    TextField(
-                      controller: controller,
-                      decoration: const InputDecoration(
-                        hintText: 'http://10.0.2.2:11434',
-                        border: OutlineInputBorder(),
-                        isDense: true,
-                      ),
-                    ),
-                  ],
-                  const SizedBox(height: 14),
-                  Row(
-                    children: [
-                      OutlinedButton.icon(
-                        icon: testing
-                            ? const SizedBox(
-                                width: 14,
-                                height: 14,
-                                child: CircularProgressIndicator(strokeWidth: 2),
-                              )
-                            : const Icon(Icons.bolt, size: 18),
-                        label: const Text('ทดสอบการเชื่อมต่อ'),
-                        onPressed: testing
-                            ? null
-                            : () async {
-                                setDialogState(() {
-                                  testing = true;
-                                  testResult = null;
-                                });
-                                Map<String, dynamic> res;
-                                if (selectedProvider == AiProvider.gemini) {
-                                  res = await _ollama.testGeminiConnection(apiKeyCtrl.text);
-                                } else {
-                                  res = await _ollama.testOllamaConnection(controller.text);
-                                }
-                                if (!dialogCtx.mounted) return;
-                                setDialogState(() {
-                                  testing = false;
-                                  testSuccess = res['success'] == true;
-                                  testResult = res['message'] as String?;
-                                });
-                              },
-                      ),
-                    ],
-                  ),
-                  if (testResult != null) ...[
-                    const SizedBox(height: 10),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: testSuccess == true
-                            ? Colors.green.shade50
-                            : Colors.red.shade50,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: testSuccess == true
-                              ? Colors.green.shade200
-                              : Colors.red.shade200,
-                        ),
+                        color: AppColors.primarySoft,
+                        borderRadius: BorderRadius.circular(10),
                       ),
-                      child: Text(
-                        testResult!,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: testSuccess == true
-                              ? Colors.green.shade800
-                              : Colors.red.shade800,
-                          fontWeight: FontWeight.w500,
-                        ),
+                      child: const Icon(
+                        Icons.auto_awesome_rounded,
+                        color: AppColors.primary,
+                        size: 20,
                       ),
+                    ),
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'เลือกโมเดล AI',
+                            style: TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.ink,
+                            ),
+                          ),
+                          Text(
+                            'เลือกโมเดลที่ต้องการให้ตอบคำถามในการสนทนานี้',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppColors.muted,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close_rounded, size: 20),
+                      onPressed: () => Navigator.pop(sheetCtx),
                     ),
                   ],
-                ],
-              ),
+                ),
+                const SizedBox(height: 14),
+                ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxHeight: MediaQuery.of(sheetCtx).size.height * 0.55,
+                  ),
+                  child: ListView(
+                    shrinkWrap: true,
+                    children: OllamaChatService.supportedModels.map((m) {
+                      final isSelected = _ollama.selectedModelId == m.id;
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? AppColors.primarySoft
+                              : const Color(0xFFF9FAFB),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color: isSelected
+                                ? AppColors.primary
+                                : const Color(0xFFEAECF0),
+                            width: isSelected ? 1.5 : 1,
+                          ),
+                        ),
+                        child: ListTile(
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 2,
+                          ),
+                          leading: Container(
+                            width: 38,
+                            height: 38,
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? AppColors.primary
+                                  : Colors.white,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: isSelected
+                                    ? AppColors.primary
+                                    : const Color(0xFFD0D5DD),
+                              ),
+                            ),
+                            child: Icon(
+                              m.provider == AiProvider.gemini
+                                  ? Icons.bolt_rounded
+                                  : Icons.laptop_rounded,
+                              size: 20,
+                              color: isSelected ? Colors.white : AppColors.ink,
+                            ),
+                          ),
+                          title: Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  m.displayName,
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: isSelected
+                                        ? FontWeight.bold
+                                        : FontWeight.w600,
+                                    color: isSelected
+                                        ? AppColors.primaryDark
+                                        : AppColors.ink,
+                                  ),
+                                ),
+                              ),
+                              if (m.isRecommended) ...[
+                                const SizedBox(width: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFECFDF3),
+                                    borderRadius: BorderRadius.circular(6),
+                                    border: Border.all(
+                                      color: const Color(0xFF6CE9A6),
+                                    ),
+                                  ),
+                                  child: const Text(
+                                    'แนะนำ',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF027A48),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                          subtitle: Text(
+                            m.subtitle,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: isSelected
+                                  ? AppColors.primaryDark.withValues(alpha: 0.8)
+                                  : AppColors.muted,
+                            ),
+                          ),
+                          trailing: isSelected
+                              ? const Icon(
+                                  Icons.check_circle_rounded,
+                                  color: AppColors.primary,
+                                  size: 22,
+                                )
+                              : null,
+                          onTap: () {
+                            setState(() {
+                              _ollama.selectedModelId = m.id;
+                            });
+                            Navigator.pop(sheetCtx);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('เปลี่ยนเป็นโมเดล: ${m.displayName}'),
+                                duration: const Duration(seconds: 1),
+                              ),
+                            );
+                          },
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ],
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: const Text('ยกเลิก'),
-              ),
-              FilledButton(
-                onPressed: () {
-                  _ollama.currentProvider = selectedProvider;
-                  if (selectedProvider == AiProvider.gemini) {
-                    _ollama.customApiKey = apiKeyCtrl.text.trim();
-                  } else {
-                    _ollama.baseUrl = controller.text;
-                  }
-                  Navigator.pop(ctx);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        'บันทึกโหมด: ${_ollama.modelName}',
-                      ),
-                      duration: const Duration(seconds: 2),
-                    ),
-                  );
-                },
-                child: const Text('บันทึก'),
-              ),
-            ],
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 
@@ -384,14 +409,14 @@ class _AiChatPageState extends State<AiChatPage> with TickerProviderStateMixin {
   }
 
   // ============================================================
-  // Quick suggestions
+  // Suggestions
   // ============================================================
 
   static const List<String> _suggestions = [
-    'สรุปข้อมูลสัญญาของฉัน',
-    'Qard Hasan คืออะไร?',
-    'สิทธิของผู้กู้มีอะไรบ้าง?',
-    'วิธีวางแผนชำระหนี้',
+    '📋 สรุปข้อมูลสัญญาของฉัน',
+    '🤝 Qard Hasan คืออะไร?',
+    '⚖️ สิทธิของผู้กู้มีอะไรบ้าง?',
+    '💰 วิธีวางแผนชำระหนี้',
   ];
 
   // ============================================================
@@ -402,29 +427,94 @@ class _AiChatPageState extends State<AiChatPage> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.page,
-      appBar: AppTheme.buildSafaAppBar(
-        context,
-        title: 'Safa AI',
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+          color: AppColors.ink,
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: AppColors.primarySoft,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppColors.primaryBorder),
+              ),
+              child: const Icon(
+                Icons.auto_awesome,
+                size: 18,
+                color: AppColors.primary,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Safa AI',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.ink,
+                  ),
+                ),
+                Row(
+                  children: [
+                    Container(
+                      width: 6,
+                      height: 6,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFF12B76A),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    const Text(
+                      'ผู้ช่วยอัจฉริยะ',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: AppColors.muted,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        ),
+        centerTitle: true,
         actions: [
           IconButton(
-            tooltip: 'ตั้งค่าการเชื่อมต่อ Ollama',
-            icon: const Icon(Icons.settings_outlined),
-            onPressed: _showSettingsDialog,
-          ),
-          IconButton(
             tooltip: 'เริ่มแชทใหม่',
-            icon: const Icon(Icons.refresh_rounded),
+            icon: const Icon(Icons.refresh_rounded, size: 22),
+            color: AppColors.ink,
             onPressed: _clearChat,
           ),
           const SizedBox(width: 8),
         ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(
+            color: const Color(0xFFEAECF0),
+            height: 1,
+          ),
+        ),
       ),
       body: SafeArea(
         child: ResponsiveBody(
           maxWidth: Responsive.formMaxWidth(context),
           child: Column(
             children: [
-              // ---- Chat Messages ----
+              // ---- Chat Messages List ----
               Expanded(
                 child: ListView.builder(
                   controller: _scrollCtrl,
@@ -436,9 +526,8 @@ class _AiChatPageState extends State<AiChatPage> with TickerProviderStateMixin {
                   ),
                   itemCount: _messages.length +
                       (_isTyping && _streamingText.isNotEmpty ? 1 : 0) +
-                      (_messages.length == 1 ? 1 : 0), // suggestions
+                      (_messages.length == 1 ? 1 : 0),
                   itemBuilder: (context, index) {
-                    // แสดง suggestions หลังข้อความต้อนรับ
                     if (_messages.length == 1 && index == 1) {
                       return _buildSuggestions();
                     }
@@ -446,7 +535,6 @@ class _AiChatPageState extends State<AiChatPage> with TickerProviderStateMixin {
                     final adjustedIndex =
                         (_messages.length == 1 && index > 1) ? index - 1 : index;
 
-                    // ข้อความ streaming ที่กำลังพิมพ์
                     if (adjustedIndex >= _messages.length) {
                       return _buildMessageBubble(
                         ChatMessage(text: _streamingText, isUser: false),
@@ -459,11 +547,11 @@ class _AiChatPageState extends State<AiChatPage> with TickerProviderStateMixin {
                 ),
               ),
 
-              // ---- Typing indicator ----
+              // ---- Typing Indicator ----
               if (_isTyping && _streamingText.isEmpty)
                 _buildTypingIndicator(),
 
-              // ---- Input bar ----
+              // ---- Redesigned Input Bar ----
               _buildInputBar(),
             ],
           ),
@@ -483,20 +571,25 @@ class _AiChatPageState extends State<AiChatPage> with TickerProviderStateMixin {
         spacing: 8,
         runSpacing: 8,
         children: _suggestions.map((text) {
-          return ActionChip(
-            label: Text(
-              text,
-              style: const TextStyle(fontSize: 12, color: AppColors.primary),
+          return InkWell(
+            onTap: () => _sendMessage(text.replaceFirst(RegExp(r'^[\u{1F300}-\u{1F9FF}\s]+', unicode: true), '')),
+            borderRadius: BorderRadius.circular(20),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                color: AppColors.primarySoft,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: AppColors.primaryBorder),
+              ),
+              child: Text(
+                text,
+                style: const TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.primaryDark,
+                ),
+              ),
             ),
-            backgroundColor: AppColors.primarySoft,
-            side: const BorderSide(color: AppColors.primaryBorder),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            onPressed: () {
-              _inputCtrl.text = text;
-              _sendMessage();
-            },
           );
         }).toList(),
       ),
@@ -517,35 +610,34 @@ class _AiChatPageState extends State<AiChatPage> with TickerProviderStateMixin {
             Container(
               width: 32,
               height: 32,
-              decoration: const BoxDecoration(
-                color: AppColors.primary,
+              decoration: BoxDecoration(
+                color: AppColors.primarySoft,
                 shape: BoxShape.circle,
+                border: Border.all(color: AppColors.primaryBorder),
               ),
               child: const Icon(
-                Icons.auto_awesome,
-                color: Colors.white,
-                size: 18,
+                Icons.auto_awesome_rounded,
+                color: AppColors.primary,
+                size: 17,
               ),
             ),
             const SizedBox(width: 8),
           ],
           Flexible(
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
               decoration: BoxDecoration(
                 color: isUser ? AppColors.primary : Colors.white,
                 borderRadius: BorderRadius.only(
-                  topLeft: const Radius.circular(16),
-                  topRight: const Radius.circular(16),
-                  bottomLeft: Radius.circular(isUser ? 16 : 4),
-                  bottomRight: Radius.circular(isUser ? 4 : 16),
+                  topLeft: const Radius.circular(18),
+                  topRight: const Radius.circular(18),
+                  bottomLeft: Radius.circular(isUser ? 18 : 4),
+                  bottomRight: Radius.circular(isUser ? 4 : 18),
                 ),
-                border: isUser
-                    ? null
-                    : Border.all(color: const Color(0xFFE4E7EC)),
+                border: isUser ? null : Border.all(color: const Color(0xFFE4E7EC)),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.04),
+                    color: Colors.black.withValues(alpha: 0.03),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
@@ -560,31 +652,38 @@ class _AiChatPageState extends State<AiChatPage> with TickerProviderStateMixin {
                   ),
                   if (!isUser && !isStreaming) ...[
                     const SizedBox(height: 8),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        InkWell(
-                          borderRadius: BorderRadius.circular(6),
-                          onTap: () {
-                            Clipboard.setData(
-                                ClipboardData(text: message.text));
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('คัดลอกข้อความแล้ว'),
-                                duration: Duration(seconds: 1),
-                              ),
-                            );
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.all(4),
-                            child: Icon(
+                    InkWell(
+                      borderRadius: BorderRadius.circular(6),
+                      onTap: () {
+                        Clipboard.setData(ClipboardData(text: message.text));
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('คัดลอกข้อความแล้ว'),
+                            duration: Duration(seconds: 1),
+                          ),
+                        );
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.all(4),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
                               Icons.copy_rounded,
-                              size: 14,
+                              size: 13,
                               color: Colors.grey.shade400,
                             ),
-                          ),
+                            const SizedBox(width: 4),
+                            Text(
+                              'คัดลอก',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Colors.grey.shade500,
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
                   ],
                 ],
@@ -597,12 +696,9 @@ class _AiChatPageState extends State<AiChatPage> with TickerProviderStateMixin {
     );
   }
 
-  /// แสดงข้อความแบบ formatted (bold, bullet points)
   Widget _buildFormattedText(String text, {required bool isUser}) {
     final color = isUser ? Colors.white : AppColors.ink;
     final spans = <TextSpan>[];
-
-    // แปลง **bold** เป็น TextSpan
     final boldRegex = RegExp(r'\*\*(.*?)\*\*');
     int lastEnd = 0;
 
@@ -632,9 +728,7 @@ class _AiChatPageState extends State<AiChatPage> with TickerProviderStateMixin {
       ));
     }
 
-    return RichText(
-      text: TextSpan(children: spans),
-    );
+    return RichText(text: TextSpan(children: spans));
   }
 
   Widget _buildTypingIndicator() {
@@ -648,19 +742,20 @@ class _AiChatPageState extends State<AiChatPage> with TickerProviderStateMixin {
           Container(
             width: 32,
             height: 32,
-            decoration: const BoxDecoration(
-              color: AppColors.primary,
+            decoration: BoxDecoration(
+              color: AppColors.primarySoft,
               shape: BoxShape.circle,
+              border: Border.all(color: AppColors.primaryBorder),
             ),
             child: const Icon(
-              Icons.auto_awesome,
-              color: Colors.white,
-              size: 18,
+              Icons.auto_awesome_rounded,
+              color: AppColors.primary,
+              size: 17,
             ),
           ),
           const SizedBox(width: 8),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),
@@ -700,22 +795,37 @@ class _AiChatPageState extends State<AiChatPage> with TickerProviderStateMixin {
     );
   }
 
+  /// แถบพิมพ์ข้อความดีไซน์ใหม่ที่กลมกลืนกับแอป สวยงาม สะอาดตา
   Widget _buildInputBar() {
+    final canSend = !_isTyping && _inputCtrl.text.trim().isNotEmpty;
+
     return Container(
-      padding: const EdgeInsets.fromLTRB(12, 10, 12, 14),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Color(0xFFE4E7EC))),
+      padding: EdgeInsets.fromLTRB(
+        Responsive.horizontalPadding(context),
+        6,
+        Responsive.horizontalPadding(context),
+        10,
       ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                color: const Color(0xFFF7F8FA),
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: const Color(0xFFE4E7EC)),
-              ),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: const Color(0xFFD0D5DD), width: 1.2),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // TextField ปรับแต่งให้ไม่มีพื้นหลังซ้ำซ้อน
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
               child: TextField(
                 controller: _inputCtrl,
                 focusNode: _inputFocus,
@@ -723,40 +833,102 @@ class _AiChatPageState extends State<AiChatPage> with TickerProviderStateMixin {
                 minLines: 1,
                 textInputAction: TextInputAction.send,
                 onSubmitted: (_) => _sendMessage(),
+                style: const TextStyle(
+                  color: AppColors.ink,
+                  fontSize: 14.5,
+                  height: 1.4,
+                ),
+                cursorColor: AppColors.primary,
                 decoration: const InputDecoration(
-                  hintText: 'ถามอะไรก็ได้เกี่ยวกับการเงิน...',
+                  hintText: 'ถามอะไรก็ได้เกี่ยวกับสัญญาหรือการเงิน...',
                   hintStyle: TextStyle(
                     color: Color(0xFF98A2B3),
                     fontSize: 14,
                   ),
+                  filled: false,
+                  fillColor: Colors.transparent,
                   border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 10,
-                  ),
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  errorBorder: InputBorder.none,
+                  disabledBorder: InputBorder.none,
+                  contentPadding: EdgeInsets.zero,
+                  isDense: true,
                 ),
               ),
             ),
-          ),
-          const SizedBox(width: 8),
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: _isTyping ? Colors.grey.shade300 : AppColors.primary,
-              shape: BoxShape.circle,
-            ),
-            child: IconButton(
-              tooltip: 'ส่งข้อความ',
-              onPressed: _isTyping ? null : _sendMessage,
-              icon: Icon(
-                Icons.send_rounded,
-                color: _isTyping ? Colors.grey.shade500 : Colors.white,
-                size: 20,
+
+            // แถบล่าง: [เลือกโมเดล AI ⌃] ... [ปุ่มส่ง ➔]
+            Padding(
+              padding: const EdgeInsets.fromLTRB(10, 4, 10, 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // ปุ่มเลือกโมเดล AI
+                  InkWell(
+                    onTap: _showModelPickerSheet,
+                    borderRadius: BorderRadius.circular(20),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF2F4F7),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: const Color(0xFFEAECF0)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.auto_awesome,
+                            size: 13,
+                            color: AppColors.primary,
+                          ),
+                          const SizedBox(width: 5),
+                          Text(
+                            _ollama.selectedModelDisplayName,
+                            style: const TextStyle(
+                              color: Color(0xFF344054),
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          const Icon(
+                            Icons.keyboard_arrow_up_rounded,
+                            size: 16,
+                            color: Color(0xFF667085),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  // ปุ่มส่งข้อความ
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: canSend ? AppColors.primary : const Color(0xFFEAECF0),
+                    ),
+                    child: IconButton(
+                      padding: EdgeInsets.zero,
+                      tooltip: 'ส่งข้อความ',
+                      onPressed: canSend ? () => _sendMessage() : null,
+                      icon: Icon(
+                        Icons.arrow_upward_rounded,
+                        size: 19,
+                        color: canSend ? Colors.white : const Color(0xFF98A2B3),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
