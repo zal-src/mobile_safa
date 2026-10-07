@@ -714,7 +714,7 @@ class _ContractListPageState extends State<ContractListPage> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const AiChatPage()),
+                MaterialPageRoute(builder: (context) => AiChatPage(user: widget.user)),
               );
             },
           ),

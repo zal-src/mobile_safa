@@ -131,7 +131,7 @@ class _KnowledgePageState extends State<KnowledgePage> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const AiChatPage()),
+                MaterialPageRoute(builder: (context) => AiChatPage(user: widget.user)),
               );
             },
           ),

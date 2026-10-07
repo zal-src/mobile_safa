@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../models/user.dart';
+import '../services/contract_service.dart';
 import '../services/ollama_chat_service.dart';
 import '../theme/app_theme.dart';
 import '../utils/responsive.dart';
@@ -27,7 +29,9 @@ class ChatMessage {
 // ============================================================
 
 class AiChatPage extends StatefulWidget {
-  const AiChatPage({super.key});
+  final User? user;
+
+  const AiChatPage({super.key, this.user});
 
   @override
   State<AiChatPage> createState() => _AiChatPageState();
@@ -42,6 +46,7 @@ class _AiChatPageState extends State<AiChatPage> with TickerProviderStateMixin {
   final List<ChatMessage> _messages = [];
   bool _isTyping = false;
   String _streamingText = '';
+  String? _contractContext;
 
   // ============================================================
   // Lifecycle
@@ -50,20 +55,46 @@ class _AiChatPageState extends State<AiChatPage> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    // Ollama ไม่ต้อง initialize (ไม่มี API key)
+    _loadUserContracts();
+    _ollama.findWorkingBaseUrl();
 
     // ข้อความต้อนรับ
     _messages.add(ChatMessage(
       text: 'สวัสดีค่ะ! 👋\n\n'
-          'ฉันคือ **Safa AI** ผู้ช่วยด้านความรู้การเงินและกฎหมาย\n\n'
+          'ฉันคือ **Safa AI** ผู้ช่วยด้านความรู้การเงิน กฎหมาย และข้อมูลสัญญาของคุณ\n\n'
           'คุณสามารถถามฉันเกี่ยวกับ:\n'
+          '• 📋 สรุปข้อมูลสัญญาที่ทำไว้\n'
           '• 💰 การจัดการเงินส่วนบุคคล\n'
-          '• 📋 สัญญากู้ยืมเงิน & Qard Hasan\n'
           '• ⚖️ กฎหมายหนี้สินและสิทธิของคุณ\n'
-          '• 📊 การวางแผนการเงิน\n\n'
+          '• 🤝 สัญญากู้ยืมเงิน & Qard Hasan\n\n'
           'ถามมาได้เลยค่ะ!',
       isUser: false,
     ));
+  }
+
+  Future<void> _loadUserContracts() async {
+    final user = widget.user;
+    if (user?.userId == null) return;
+
+    try {
+      final contracts = await ContractService().getUserContracts(user!.userId!);
+      if (contracts.isNotEmpty) {
+        final buffer = StringBuffer();
+        buffer.writeln('ผู้ใช้ปัจจุบัน: ${user.fullName} (อีเมล: ${user.email})');
+        buffer.writeln('รายการสัญญาในระบบ (${contracts.length} รายการ):');
+        for (final c in contracts) {
+          final isLender = c.lenderId == user.userId;
+          final role = isLender ? 'ผู้ให้กู้' : 'ผู้กู้';
+          buffer.writeln(
+            '- เลขที่สัญญา: ${c.agreementId}, บทบาท: $role, ยอดเงิน: ${c.amount} บาท, สถานะ: ${c.status}, วันที่กู้: ${c.loanDate}, วันครบกำหนด: ${c.returnDate}'
+            '${c.purpose != null && c.purpose!.isNotEmpty ? ', วัตถุประสงค์: ${c.purpose}' : ''}',
+          );
+        }
+        _contractContext = buffer.toString();
+      }
+    } catch (e) {
+      debugPrint('Could not load user contracts for AI context: $e');
+    }
   }
 
   @override
@@ -92,9 +123,12 @@ class _AiChatPageState extends State<AiChatPage> with TickerProviderStateMixin {
 
     _scrollToBottom();
 
-    // ใช้ Stream เพื่อแสดงทีละส่วน
+    // ใช้ Stream เพื่อแสดงทีละส่วน พร้อมบริบทสัญญา
     final buffer = StringBuffer();
-    await for (final chunk in _ollama.sendMessageStream(text)) {
+    await for (final chunk in _ollama.sendMessageStream(
+      text,
+      extraContext: _contractContext,
+    )) {
       buffer.write(chunk);
       if (!mounted) return;
       setState(() => _streamingText = buffer.toString());
@@ -142,6 +176,145 @@ class _AiChatPageState extends State<AiChatPage> with TickerProviderStateMixin {
     );
   }
 
+  void _showSettingsDialog() {
+    final controller = TextEditingController(text: _ollama.baseUrl);
+    bool testing = false;
+    String? testResult;
+    bool? testSuccess;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (dialogCtx, setDialogState) {
+          return AlertDialog(
+            title: const Row(
+              children: [
+                Icon(Icons.tune_rounded, color: AppColors.primary),
+                SizedBox(width: 8),
+                Text('ตั้งค่า Ollama Server', style: TextStyle(fontSize: 18)),
+              ],
+            ),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'URL ของ Ollama บนเครื่อง Local:',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: controller,
+                    decoration: const InputDecoration(
+                      hintText: 'http://10.0.2.2:11434',
+                      border: OutlineInputBorder(),
+                      isDense: true,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'ตัวเลือกด่วน:',
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 4,
+                    children: [
+                      ActionChip(
+                        label: const Text('Android (10.0.2.2)'),
+                        onPressed: () {
+                          setDialogState(() {
+                            controller.text = 'http://10.0.2.2:11434';
+                            testResult = null;
+                          });
+                        },
+                      ),
+                      ActionChip(
+                        label: const Text('Localhost (127.0.0.1)'),
+                        onPressed: () {
+                          setDialogState(() {
+                            controller.text = 'http://127.0.0.1:11434';
+                            testResult = null;
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  Row(
+                    children: [
+                      OutlinedButton.icon(
+                        icon: testing
+                            ? const SizedBox(
+                                width: 14,
+                                height: 14,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : const Icon(Icons.bolt, size: 18),
+                        label: const Text('ทดสอบการเชื่อมต่อ'),
+                        onPressed: testing
+                            ? null
+                            : () async {
+                                setDialogState(() {
+                                  testing = true;
+                                  testResult = null;
+                                });
+                                final ok = await _ollama.testUrl(controller.text);
+                                if (!dialogCtx.mounted) return;
+                                setDialogState(() {
+                                  testing = false;
+                                  testSuccess = ok;
+                                  testResult = ok
+                                      ? '✅ เชื่อมต่อสำเร็จ พร้อมใช้งาน'
+                                      : '❌ ไม่สามารถเชื่อมต่อได้ ตรวจสอบว่าเปิด ollama serve แล้วหรือยัง';
+                                });
+                              },
+                      ),
+                    ],
+                  ),
+                  if (testResult != null) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      testResult!,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: testSuccess == true
+                            ? Colors.green.shade700
+                            : Colors.red.shade700,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('ยกเลิก'),
+              ),
+              FilledButton(
+                onPressed: () {
+                  _ollama.baseUrl = controller.text;
+                  Navigator.pop(ctx);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('บันทึก Server URL: ${_ollama.baseUrl}'),
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
+                },
+                child: const Text('บันทึก'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollCtrl.hasClients) {
@@ -159,10 +332,10 @@ class _AiChatPageState extends State<AiChatPage> with TickerProviderStateMixin {
   // ============================================================
 
   static const List<String> _suggestions = [
+    'สรุปข้อมูลสัญญาของฉัน',
     'Qard Hasan คืออะไร?',
     'สิทธิของผู้กู้มีอะไรบ้าง?',
     'วิธีวางแผนชำระหนี้',
-    'กฎหมายเกี่ยวกับสัญญากู้ยืม',
   ];
 
   // ============================================================
@@ -177,6 +350,11 @@ class _AiChatPageState extends State<AiChatPage> with TickerProviderStateMixin {
         context,
         title: 'Safa AI',
         actions: [
+          IconButton(
+            tooltip: 'ตั้งค่าการเชื่อมต่อ Ollama',
+            icon: const Icon(Icons.settings_outlined),
+            onPressed: _showSettingsDialog,
+          ),
           IconButton(
             tooltip: 'เริ่มแชทใหม่',
             icon: const Icon(Icons.refresh_rounded),
