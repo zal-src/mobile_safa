@@ -47,6 +47,8 @@ app.*.map.json
 # API Keys / Secrets
 # ไฟล์จริง → ignore (ไม่ขึ้น Git)
 .env
-lib/config/app_secrets.dart
+backend/.env
 # ไฟล์ตัวอย่าง → อนุญาตให้ขึ้น Git ได้
 !.env.example
+__pycache__/
+backend/__pycache__/

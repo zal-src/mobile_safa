@@ -56,7 +56,6 @@ class _AiChatPageState extends State<AiChatPage> with TickerProviderStateMixin {
   void initState() {
     super.initState();
     _loadUserContracts();
-    _ollama.findWorkingBaseUrl();
 
     // ข้อความต้อนรับ
     _messages.add(ChatMessage(
@@ -177,6 +176,7 @@ class _AiChatPageState extends State<AiChatPage> with TickerProviderStateMixin {
   }
 
   void _showSettingsDialog() {
+    var selectedProvider = _ollama.currentProvider;
     final controller = TextEditingController(text: _ollama.baseUrl);
     bool testing = false;
     String? testResult;
@@ -191,7 +191,7 @@ class _AiChatPageState extends State<AiChatPage> with TickerProviderStateMixin {
               children: [
                 Icon(Icons.tune_rounded, color: AppColors.primary),
                 SizedBox(width: 8),
-                Text('ตั้งค่า Ollama Server', style: TextStyle(fontSize: 18)),
+                Text('ตั้งค่าระบบ AI', style: TextStyle(fontSize: 18)),
               ],
             ),
             content: SingleChildScrollView(
@@ -200,49 +200,58 @@ class _AiChatPageState extends State<AiChatPage> with TickerProviderStateMixin {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'URL ของ Ollama บนเครื่อง Local:',
+                    'เลือกโหมดการทำงาน:',
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                   ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: controller,
-                    decoration: const InputDecoration(
-                      hintText: 'http://10.0.2.2:11434',
-                      border: OutlineInputBorder(),
-                      isDense: true,
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    width: double.infinity,
+                    child: SegmentedButton<AiProvider>(
+                      segments: const [
+                        ButtonSegment(
+                          value: AiProvider.gemini,
+                          icon: Icon(Icons.cloud_outlined),
+                          label: Text('Gemini (ฟรี)'),
+                        ),
+                        ButtonSegment(
+                          value: AiProvider.ollama,
+                          icon: Icon(Icons.smart_toy_outlined),
+                          label: Text('Ollama (Local)'),
+                        ),
+                      ],
+                      selected: {selectedProvider},
+                      onSelectionChanged: (newSelection) {
+                        setDialogState(() {
+                          selectedProvider = newSelection.first;
+                          testResult = null;
+                        });
+                      },
                     ),
                   ),
+                  const SizedBox(height: 10),
+                  Text(
+                    selectedProvider == AiProvider.gemini
+                        ? '⭐ Google Gemini: ใช้งานได้ฟรีทันทีโดยไม่ต้องเปิดโปรแกรมใดๆ เหมาะสำหรับทุกคน'
+                        : '💻 Local Ollama: สำหรับนักพัฒนาที่รัน ollama serve บนเครื่องตนเอง',
+                    style: TextStyle(fontSize: 11, color: Colors.grey.shade700),
+                  ),
+                  if (selectedProvider == AiProvider.ollama) ...[
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Ollama Host URL:',
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 4),
+                    TextField(
+                      controller: controller,
+                      decoration: const InputDecoration(
+                        hintText: 'http://10.0.2.2:11434',
+                        border: OutlineInputBorder(),
+                        isDense: true,
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 12),
-                  const Text(
-                    'ตัวเลือกด่วน:',
-                    style: TextStyle(fontSize: 12, color: Colors.grey),
-                  ),
-                  const SizedBox(height: 6),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 4,
-                    children: [
-                      ActionChip(
-                        label: const Text('Android (10.0.2.2)'),
-                        onPressed: () {
-                          setDialogState(() {
-                            controller.text = 'http://10.0.2.2:11434';
-                            testResult = null;
-                          });
-                        },
-                      ),
-                      ActionChip(
-                        label: const Text('Localhost (127.0.0.1)'),
-                        onPressed: () {
-                          setDialogState(() {
-                            controller.text = 'http://127.0.0.1:11434';
-                            testResult = null;
-                          });
-                        },
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 14),
                   Row(
                     children: [
                       OutlinedButton.icon(
@@ -261,29 +270,46 @@ class _AiChatPageState extends State<AiChatPage> with TickerProviderStateMixin {
                                   testing = true;
                                   testResult = null;
                                 });
-                                final ok = await _ollama.testUrl(controller.text);
+                                Map<String, dynamic> res;
+                                if (selectedProvider == AiProvider.gemini) {
+                                  res = await _ollama.testGeminiConnection();
+                                } else {
+                                  res = await _ollama.testOllamaConnection(controller.text);
+                                }
                                 if (!dialogCtx.mounted) return;
                                 setDialogState(() {
                                   testing = false;
-                                  testSuccess = ok;
-                                  testResult = ok
-                                      ? '✅ เชื่อมต่อสำเร็จ พร้อมใช้งาน'
-                                      : '❌ ไม่สามารถเชื่อมต่อได้ ตรวจสอบว่าเปิด ollama serve แล้วหรือยัง';
+                                  testSuccess = res['success'] == true;
+                                  testResult = res['message'] as String?;
                                 });
                               },
                       ),
                     ],
                   ),
                   if (testResult != null) ...[
-                    const SizedBox(height: 8),
-                    Text(
-                      testResult!,
-                      style: TextStyle(
-                        fontSize: 13,
+                    const SizedBox(height: 10),
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
                         color: testSuccess == true
-                            ? Colors.green.shade700
-                            : Colors.red.shade700,
-                        fontWeight: FontWeight.w600,
+                            ? Colors.green.shade50
+                            : Colors.red.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: testSuccess == true
+                              ? Colors.green.shade200
+                              : Colors.red.shade200,
+                        ),
+                      ),
+                      child: Text(
+                        testResult!,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: testSuccess == true
+                              ? Colors.green.shade800
+                              : Colors.red.shade800,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
                   ],
@@ -297,11 +323,16 @@ class _AiChatPageState extends State<AiChatPage> with TickerProviderStateMixin {
               ),
               FilledButton(
                 onPressed: () {
-                  _ollama.baseUrl = controller.text;
+                  _ollama.currentProvider = selectedProvider;
+                  if (selectedProvider == AiProvider.ollama) {
+                    _ollama.baseUrl = controller.text;
+                  }
                   Navigator.pop(ctx);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('บันทึก Server URL: ${_ollama.baseUrl}'),
+                      content: Text(
+                        'บันทึกโหมด: ${_ollama.modelName}',
+                      ),
                       duration: const Duration(seconds: 2),
                     ),
                   );
