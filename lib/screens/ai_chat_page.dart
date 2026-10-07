@@ -1175,6 +1175,8 @@ class _AiChatPageState extends State<AiChatPage> {
     final refs = _extractReferences(text);
     if (refs.isEmpty) return const SizedBox.shrink();
 
+    final maxChipTextWidth = (MediaQuery.of(context).size.width * 0.52).clamp(110.0, 190.0);
+
     return Container(
       margin: const EdgeInsets.only(top: 10),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
@@ -1190,12 +1192,16 @@ class _AiChatPageState extends State<AiChatPage> {
             children: [
               Icon(Icons.link_rounded, size: 15, color: AppColors.primary),
               SizedBox(width: 6),
-              Text(
-                'แหล่งอ้างอิงทางการ (แตะเพื่อเปิดเว็บไซต์จริง):',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.primaryDark,
+              Expanded(
+                child: Text(
+                  'แหล่งอ้างอิงทางการ (แตะเพื่อเปิดเว็บไซต์จริง):',
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primaryDark,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],
@@ -1209,7 +1215,7 @@ class _AiChatPageState extends State<AiChatPage> {
                 onTap: () => _launchExternalUrl(ref.url),
                 borderRadius: BorderRadius.circular(8),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(8),
@@ -1228,13 +1234,13 @@ class _AiChatPageState extends State<AiChatPage> {
                       const Icon(Icons.public_rounded, size: 13, color: AppColors.primary),
                       const SizedBox(width: 5),
                       ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 220),
+                        constraints: BoxConstraints(maxWidth: maxChipTextWidth),
                         child: Text(
                           ref.title,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
-                            fontSize: 12,
+                            fontSize: 11.5,
                             fontWeight: FontWeight.w600,
                             color: AppColors.ink,
                           ),
