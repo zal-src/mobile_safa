@@ -125,30 +125,6 @@ class CounterpartyDetailsForm extends StatelessWidget {
                 label: 'ที่อยู่ตามทะเบียนบ้าน',
               ),
             ),
-            Row(
-              children: [
-                const Icon(
-                  Icons.info_outline,
-                  size: 16,
-                  color: AppColors.muted,
-                ),
-                const SizedBox(width: 7),
-                const Expanded(
-                  child: Text(
-                    'กรอกที่อยู่ที่ต้องการแสดงในสัญญา',
-                    style: TextStyle(fontSize: 11, color: AppColors.muted),
-                  ),
-                ),
-              ],
-            ),
-            TextFormField(
-              enabled: !isSaving,
-              maxLines: 2,
-              decoration: ContractFormStyles.fieldDecoration(
-                'ระบุที่อยู่ที่ต้องการแสดงในสัญญา',
-                label: 'ที่อยู่สำหรับสัญญา',
-              ),
-            ),
           ] else ...[
             const SizedBox(height: 11),
             TextFormField(
@@ -177,11 +153,7 @@ class CounterpartyDetailsForm extends StatelessWidget {
           const SizedBox(height: 8),
           const Row(
             children: [
-              Icon(
-                Icons.info_outline,
-                size: 15,
-                color: AppColors.primary,
-              ),
+              Icon(Icons.info_outline, size: 15, color: AppColors.primary),
               SizedBox(width: 6),
               Expanded(
                 child: Text(

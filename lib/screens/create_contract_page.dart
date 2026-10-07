@@ -94,7 +94,9 @@ class _CreateContractPageState extends State<CreateContractPage> {
   void initState() {
     super.initState();
     // วันให้กู้/วันเริ่มสัญญาเป็นวันนี้เท่านั้น
-    _loanDateController.text = ContractDateUtils.formatDate(ContractDateUtils.today());
+    _loanDateController.text = ContractDateUtils.formatDate(
+      ContractDateUtils.today(),
+    );
     WidgetsBinding.instance.addPostFrameCallback((_) => _maybeShowOnboarding());
   }
 
@@ -118,10 +120,13 @@ class _CreateContractPageState extends State<CreateContractPage> {
   // -------------------------------------------------------------------------
 
   Future<void> _maybeShowOnboarding() async {
-    final seen = await OnboardingService.instance
-        .hasSeenOnboarding(OnboardingService.keyCreateContract);
+    final seen = await OnboardingService.instance.hasSeenOnboarding(
+      OnboardingService.keyCreateContract,
+    );
     if (!mounted || seen) return;
-    await OnboardingService.instance.markAsSeen(OnboardingService.keyCreateContract);
+    await OnboardingService.instance.markAsSeen(
+      OnboardingService.keyCreateContract,
+    );
     if (!mounted) return;
 
     await Future.delayed(const Duration(milliseconds: 400));
@@ -135,7 +140,10 @@ class _CreateContractPageState extends State<CreateContractPage> {
           description:
               'มีทั้งหมด 3 ขั้น: ข้อมูลคู่สัญญา → รายละเอียดเงินกู้ → บันทึก\nทำทีละขั้น ระบบจะตรวจสอบให้อัตโนมัติ',
           targetKey: _keySteps,
-          spotlightPadding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
+          spotlightPadding: const EdgeInsets.symmetric(
+            horizontal: 6,
+            vertical: 10,
+          ),
         ),
         TutorialStep(
           title: 'กรอกข้อมูลคู่สัญญา',
@@ -176,7 +184,10 @@ class _CreateContractPageState extends State<CreateContractPage> {
       initialDate: initialDate,
       firstDate: today,
       lastDate: DateTime(today.year + 20, today.month, today.day),
-      helpText: context.l10n.translate('selectReturnDate', defaultText: 'เลือกวันคืนเงิน'),
+      helpText: context.l10n.translate(
+        'selectReturnDate',
+        defaultText: 'เลือกวันคืนเงิน',
+      ),
       cancelText: context.l10n.cancel,
       confirmText: context.l10n.confirm,
     );
@@ -195,10 +206,11 @@ class _CreateContractPageState extends State<CreateContractPage> {
       return;
     }
 
-    final canUseMonthlyRepaymentForSelectedDate = loanDate != null &&
-      canUseMonthlyRepayment(loanDate: loanDate, returnDate: selected);
+    final canUseMonthlyRepaymentForSelectedDate =
+        loanDate != null &&
+        canUseMonthlyRepayment(loanDate: loanDate, returnDate: selected);
     if (_repaymentType == 'รายเดือน' &&
-      !canUseMonthlyRepaymentForSelectedDate) {
+        !canUseMonthlyRepaymentForSelectedDate) {
       setState(() {
         _repaymentType = 'ครั้งเดียว';
       });
@@ -217,10 +229,10 @@ class _CreateContractPageState extends State<CreateContractPage> {
   // -------------------------------------------------------------------------
 
   String? _validateEmail(String? value) => ContractValidators.validateEmail(
-        value,
-        counterpartyText: _counterpartyText,
-        currentUserEmail: widget.user.email,
-      );
+    value,
+    counterpartyText: _counterpartyText,
+    currentUserEmail: widget.user.email,
+  );
 
   String? _validateAmount(String? value) =>
       ContractValidators.validateAmount(value);
@@ -250,12 +262,18 @@ class _CreateContractPageState extends State<CreateContractPage> {
     final loanDate = ContractDateUtils.parseDate(_loanDateController.text);
     final returnDate = ContractDateUtils.parseDate(_returnDateController.text);
 
-    if (loanDate == null) { _showError('ไม่พบวันให้กู้'); return; }
+    if (loanDate == null) {
+      _showError('ไม่พบวันให้กู้');
+      return;
+    }
     if (!ContractDateUtils.isSameDate(loanDate, today)) {
       _showError('วันให้กู้ต้องเป็นวันที่ปัจจุบันเท่านั้น');
       return;
     }
-    if (returnDate == null) { _showError('กรุณาเลือกวันคืนเงิน'); return; }
+    if (returnDate == null) {
+      _showError('กรุณาเลือกวันคืนเงิน');
+      return;
+    }
     if (returnDate.isBefore(today)) {
       _showError('วันคืนเงินต้องไม่เป็นวันที่ย้อนหลัง');
       return;
@@ -279,7 +297,9 @@ class _CreateContractPageState extends State<CreateContractPage> {
       return;
     }
 
-    final counterpartyEmail = _counterpartyEmailController.text.trim().toLowerCase();
+    final counterpartyEmail = _counterpartyEmailController.text
+        .trim()
+        .toLowerCase();
     if (counterpartyEmail.isEmpty) {
       _showError('กรุณาระบุอีเมล$_counterpartyText');
       return;
@@ -381,7 +401,6 @@ class _CreateContractPageState extends State<CreateContractPage> {
       appBar: AppTheme.buildSafaAppBar(
         context,
         title: context.l10n.createContract,
-        showLanguageSwitch: true,
       ),
       bottomNavigationBar: SafeArea(
         top: false,
@@ -425,8 +444,10 @@ class _CreateContractPageState extends State<CreateContractPage> {
             key: _formKey,
             child: SingleChildScrollView(
               padding: EdgeInsets.fromLTRB(
-                Responsive.horizontalPadding(context), 8,
-                Responsive.horizontalPadding(context), 28,
+                Responsive.horizontalPadding(context),
+                8,
+                Responsive.horizontalPadding(context),
+                28,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,

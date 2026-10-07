@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../localization/app_localizations.dart';
 import '../models/user.dart';
+import '../services/pdf_service_printable.dart';
 import '../theme/app_theme.dart';
 import '../utils/responsive.dart';
 import '../widgets/responsive_container.dart';
@@ -31,16 +32,30 @@ class ContractRolePage extends StatelessWidget {
     );
   }
 
+  Future<void> _downloadBlankTemplate(BuildContext context) async {
+    final service = PrintablePdfService();
+
+    try {
+      await service.printBlankContractTemplate();
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'โหลด PDF เปล่าไม่สำเร็จ: '
+            '${e.toString().replaceFirst('Exception: ', '')}',
+          ),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
 
     return Scaffold(
-      appBar: AppTheme.buildSafaAppBar(
-        context,
-        title: l10n.createContract,
-        showLanguageSwitch: true,
-      ),
+      appBar: AppTheme.buildSafaAppBar(context, title: l10n.createContract),
       body: SafeArea(
         child: ResponsiveBody(
           maxWidth: Responsive.formMaxWidth(context),
@@ -103,6 +118,34 @@ class ContractRolePage extends StatelessWidget {
                   description: l10n.translate('roleBorrowerDesc'),
                   color: AppColors.accent,
                   onTap: () => _selectRole(context, 'borrower'),
+                ),
+                const SizedBox(height: 14),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () => _downloadBlankTemplate(context),
+                    icon: const Icon(Icons.picture_as_pdf_outlined),
+                    label: Text(l10n.downloadBlankTemplate),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      side: BorderSide(color: AppColors.primary),
+                      foregroundColor: AppColors.primary,
+                      textStyle: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  l10n.downloadBlankTemplateHint,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: AppColors.muted,
+                    fontSize: 12,
+                    height: 1.4,
+                  ),
                 ),
                 const SizedBox(height: 24),
                 Container(

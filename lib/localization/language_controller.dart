@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:sqflite/sqflite.dart';
 import '../database/database_helper.dart';
 
 class LanguageController {
@@ -8,7 +7,6 @@ class LanguageController {
 
   static const String _settingKey = 'app_language';
   static const Locale thLocale = Locale('th', 'TH');
-  static const Locale enLocale = Locale('en', 'US');
 
   final ValueNotifier<Locale> localeNotifier = ValueNotifier<Locale>(thLocale);
 
@@ -34,52 +32,13 @@ class LanguageController {
 
       if (result.isNotEmpty) {
         final langCode = result.first['value'] as String?;
-        if (langCode == 'en') {
-          localeNotifier.value = enLocale;
-          return;
+        if (langCode != 'th') {
+          localeNotifier.value = thLocale;
         }
       }
-      localeNotifier.value = thLocale;
     } catch (e) {
       debugPrint('LanguageController init error: $e');
       localeNotifier.value = thLocale;
-    }
-  }
-
-  /// เปลี่ยนภาษาและบันทึกลงฐานข้อมูล
-  Future<void> changeLanguage(Locale newLocale) async {
-    if (localeNotifier.value == newLocale) return;
-
-    localeNotifier.value = newLocale;
-
-    try {
-      final db = await DatabaseHelper.instance.database;
-      await db.execute('''
-        CREATE TABLE IF NOT EXISTS app_settings (
-          key TEXT PRIMARY KEY,
-          value TEXT
-        )
-      ''');
-
-      await db.insert(
-        'app_settings',
-        {
-          'key': _settingKey,
-          'value': newLocale.languageCode,
-        },
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
-    } catch (e) {
-      debugPrint('LanguageController save error: $e');
-    }
-  }
-
-  /// สลับภาษาระหว่าง ไทย <-> อังกฤษ
-  Future<void> toggleLanguage() async {
-    if (isThai) {
-      await changeLanguage(enLocale);
-    } else {
-      await changeLanguage(thLocale);
     }
   }
 }

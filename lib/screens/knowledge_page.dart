@@ -38,8 +38,9 @@ class _KnowledgePageState extends State<KnowledgePage> {
 
 
   Future<void> _maybeShowOnboarding() async {
-    final seen = await OnboardingService.instance
-        .hasSeenOnboarding(OnboardingService.keyKnowledge);
+    final seen = await OnboardingService.instance.hasSeenOnboarding(
+      OnboardingService.keyKnowledge,
+    );
     if (!mounted || seen) return;
     await OnboardingService.instance.markAsSeen(OnboardingService.keyKnowledge);
     if (!mounted) return;
@@ -79,7 +80,8 @@ class _KnowledgePageState extends State<KnowledgePage> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => ArticleDetailPage(article: article, user: widget.user),
+        builder: (context) =>
+            ArticleDetailPage(article: article, user: widget.user),
       ),
     );
   }
@@ -87,6 +89,7 @@ class _KnowledgePageState extends State<KnowledgePage> {
   void _openFinancialCheck(BuildContext context) {
     Navigator.push(
       context,
+<<<<<<< HEAD
       MaterialPageRoute(
         builder: (context) => const FinancialHealthCheckPage(),
       ),
@@ -94,13 +97,294 @@ class _KnowledgePageState extends State<KnowledgePage> {
   }
 
 
+=======
+      MaterialPageRoute(builder: (context) => const FinancialHealthCheckPage()),
+    );
+  }
+
+  Future<void> _showEditProfileDialog() async {
+    if (!mounted) return;
+
+    final formKey = GlobalKey<FormState>();
+    final fullNameController = TextEditingController(
+      text: _currentUser.fullName,
+    );
+    final emailController = TextEditingController(text: _currentUser.email);
+    final phoneController = TextEditingController(
+      text: _currentUser.phone ?? '',
+    );
+    final idCardController = TextEditingController(
+      text: _currentUser.idCard ?? '',
+    );
+    final houseNumberController = TextEditingController(
+      text:
+          (_currentAddress?['address'] as String?)
+              ?.replaceFirst('บ้านเลขที่ ', '')
+              .split(' ')
+              .first ??
+          '',
+    );
+    final villageController = TextEditingController(
+      text: (_currentAddress?['address'] as String?)?.contains('หมู่') == true
+          ? (_currentAddress?['address'] as String?)
+                    ?.split('หมู่')
+                    .last
+                    .trim()
+                    .split(' ')
+                    .first ??
+                ''
+          : '',
+    );
+    final roadController = TextEditingController(
+      text: (_currentAddress?['address'] as String?)?.contains('ถนน') == true
+          ? (_currentAddress?['address'] as String?)
+                    ?.split('ถนน')
+                    .last
+                    .trim()
+                    .split(' ')
+                    .first ??
+                ''
+          : '',
+    );
+    final subdistrictController = TextEditingController(
+      text: _currentAddress?['subdistrict'] ?? '',
+    );
+    final districtController = TextEditingController(
+      text: _currentAddress?['district'] ?? '',
+    );
+    final provinceController = TextEditingController(
+      text: _currentAddress?['province'] ?? '',
+    );
+    final postalCodeController = TextEditingController(
+      text: _currentAddress?['postal_code'] ?? '',
+    );
+    final passwordController = TextEditingController();
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('แก้ไขข้อมูลบัญชี'),
+          content: SingleChildScrollView(
+            child: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TextFormField(
+                    controller: fullNameController,
+                    decoration: const InputDecoration(
+                      labelText: 'ชื่อ-นามสกุล',
+                    ),
+                    validator: (value) =>
+                        (value == null || value.trim().isEmpty)
+                        ? 'กรุณากรอกชื่อ-นามสกุล'
+                        : null,
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: const InputDecoration(labelText: 'อีเมล'),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'กรุณากรอกอีเมล';
+                      }
+                      return RegExp(
+                            r'^[^@\s]+@[^@\s]+\.[^@\s]+$',
+                          ).hasMatch(value.trim())
+                          ? null
+                          : 'รูปแบบอีเมลไม่ถูกต้อง';
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: phoneController,
+                    keyboardType: TextInputType.phone,
+                    decoration: const InputDecoration(
+                      labelText: 'เบอร์โทรศัพท์',
+                    ),
+                    validator: (value) {
+                      final text = value?.trim() ?? '';
+                      if (text.isEmpty) return 'กรุณากรอกเบอร์โทรศัพท์';
+                      return RegExp(r'^\d{10}$').hasMatch(text)
+                          ? null
+                          : 'เบอร์โทรศัพท์ต้องมี 10 หลัก';
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: idCardController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: 'เลขบัตรประชาชน',
+                    ),
+                    validator: (value) {
+                      final text = value?.trim() ?? '';
+                      if (text.isEmpty) return 'กรุณากรอกเลขบัตรประชาชน';
+                      return RegExp(r'^\d{13}$').hasMatch(text)
+                          ? null
+                          : 'เลขบัตรประชาชนต้องมี 13 หลัก';
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: houseNumberController,
+                    decoration: const InputDecoration(labelText: 'บ้านเลขที่'),
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: villageController,
+                    decoration: const InputDecoration(labelText: 'หมู่'),
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: roadController,
+                    decoration: const InputDecoration(labelText: 'ถนน'),
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: subdistrictController,
+                    decoration: const InputDecoration(labelText: 'ตำบล'),
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: districtController,
+                    decoration: const InputDecoration(labelText: 'อำเภอ'),
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: provinceController,
+                    decoration: const InputDecoration(labelText: 'จังหวัด'),
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: postalCodeController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: 'รหัสไปรษณีย์',
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: passwordController,
+                    obscureText: true,
+                    decoration: const InputDecoration(
+                      labelText: 'รหัสผ่านใหม่ (เว้นว่างถ้าไม่ต้องการเปลี่ยน)',
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('ยกเลิก'),
+            ),
+            FilledButton(
+              onPressed: () {
+                if (formKey.currentState!.validate()) {
+                  Navigator.pop(dialogContext, true);
+                }
+              },
+              child: const Text('บันทึก'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (result != true || _currentUser.userId == null) return;
+
+    try {
+      final updatedUser = await _authService.updateProfile(
+        userId: _currentUser.userId!,
+        fullName: fullNameController.text,
+        email: emailController.text,
+        password: passwordController.text,
+        phone: phoneController.text,
+        idCard: idCardController.text,
+        houseNumber: houseNumberController.text,
+        village: villageController.text,
+        road: roadController.text,
+        subdistrict: subdistrictController.text,
+        district: districtController.text,
+        province: provinceController.text,
+        postalCode: postalCodeController.text,
+      );
+
+      if (!mounted) return;
+
+      if (updatedUser != null) {
+        final refreshedAddress = await _database.getUserAddress(
+          _currentUser.userId!,
+        );
+        if (!mounted) return;
+        setState(() {
+          _currentUser = updatedUser;
+          _currentAddress = refreshedAddress;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('อัปเดตข้อมูลบัญชีสำเร็จ')),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
+      );
+    }
+  }
+
+  String _formatAddress(Map<String, dynamic>? address) {
+    if (address == null) {
+      return 'ไม่ได้ระบุที่อยู่';
+    }
+
+    final parts = <String>[];
+    final rawAddress = (address['address'] as String?) ?? '';
+    if (rawAddress.trim().isNotEmpty) {
+      parts.add(rawAddress.trim());
+    }
+
+    final subdistrict = (address['subdistrict'] as String?)?.trim();
+    final district = (address['district'] as String?)?.trim();
+    final province = (address['province'] as String?)?.trim();
+    final postalCode = (address['postal_code'] as String?)?.trim();
+
+    if (subdistrict != null && subdistrict.isNotEmpty) {
+      parts.add('ตำบล$subdistrict');
+    }
+    if (district != null && district.isNotEmpty) {
+      parts.add('อำเภอ$district');
+    }
+    if (province != null && province.isNotEmpty) {
+      parts.add('จังหวัด$province');
+    }
+    if (postalCode != null && postalCode.isNotEmpty) {
+      parts.add('รหัสไปรษณีย์ $postalCode');
+    }
+
+    return parts.isNotEmpty ? parts.join(' ') : 'ไม่ได้ระบุที่อยู่';
+  }
+>>>>>>> 6ff3401cc09ca83ae3a1e6f87c24676d94bb27d4
 
   @override
   Widget build(BuildContext context) {
-    final lawArticles = KnowledgeData.articles.where((a) => a.category == 'กฎหมายที่ควรรู้').toList();
-    final moneyArticles = KnowledgeData.articles.where((a) => a.category == 'จัดการเงินของฉัน').toList();
-    final debtArticles = KnowledgeData.articles.where((a) => a.category == 'ความรู้เรื่องหนี้').toList();
-    final safeArticles = KnowledgeData.articles.where((a) => a.category == 'ความปลอดภัย').toList();
+    final lawArticles = KnowledgeData.articles
+        .where((a) => a.category == 'กฎหมายที่ควรรู้')
+        .toList();
+    final moneyArticles = KnowledgeData.articles
+        .where((a) => a.category == 'จัดการเงินของฉัน')
+        .toList();
+    final debtArticles = KnowledgeData.articles
+        .where((a) => a.category == 'ความรู้เรื่องหนี้')
+        .toList();
+    final safeArticles = KnowledgeData.articles
+        .where((a) => a.category == 'ความปลอดภัย')
+        .toList();
 
     final hPadding = Responsive.horizontalPadding(context);
 
@@ -190,7 +474,6 @@ class _KnowledgePageState extends State<KnowledgePage> {
     );
   }
 
-
   Widget _buildHeader({Key? key}) {
     return Row(
       key: key,
@@ -212,10 +495,7 @@ class _KnowledgePageState extends State<KnowledgePage> {
               const SizedBox(height: 8),
               Text(
                 'รู้สิทธิ วางแผนเงิน จัดการหนี้อย่างมีวินัย',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey.shade600,
-                ),
+                style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
               ),
             ],
           ),
@@ -282,7 +562,10 @@ class _KnowledgePageState extends State<KnowledgePage> {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFF8F9FC),
                   borderRadius: BorderRadius.circular(20),
@@ -306,7 +589,8 @@ class _KnowledgePageState extends State<KnowledgePage> {
                 .map(
                   (entry) => Padding(
                     padding: EdgeInsets.only(
-                        bottom: entry.key != articles.length - 1 ? 12 : 0),
+                      bottom: entry.key != articles.length - 1 ? 12 : 0,
+                    ),
                     child: _buildListItem(
                       context: context,
                       article: entry.value,
@@ -378,8 +662,11 @@ class _KnowledgePageState extends State<KnowledgePage> {
               color: const Color(0xFF087443).withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.monitor_heart_outlined,
-                color: Color(0xFF087443), size: 28),
+            child: const Icon(
+              Icons.monitor_heart_outlined,
+              color: Color(0xFF087443),
+              size: 28,
+            ),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -398,10 +685,7 @@ class _KnowledgePageState extends State<KnowledgePage> {
                 const SizedBox(height: 2),
                 Text(
                   'ใช้เวลาไม่กี่นาที',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey.shade700,
-                  ),
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
                 ),
               ],
             ),
@@ -418,8 +702,10 @@ class _KnowledgePageState extends State<KnowledgePage> {
               ),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             ),
-            child: const Text('เริ่มประเมิน',
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+            child: const Text(
+              'เริ่มประเมิน',
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+            ),
           ),
         ],
       ),

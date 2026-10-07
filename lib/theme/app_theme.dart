@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../utils/responsive.dart';
-import '../widgets/language_switch_button.dart';
 
 abstract final class AppColors {
   static const ink = Color(0xff101828);
@@ -36,35 +35,41 @@ abstract final class AppTheme {
         error: AppColors.error,
       ),
       fontFamily: promptFont.fontFamily,
-      textTheme: GoogleFonts.promptTextTheme(const TextTheme(
-        headlineLarge: TextStyle(
-          color: AppColors.ink,
-          fontSize: 28,
-          fontWeight: FontWeight.w800,
+      textTheme: GoogleFonts.promptTextTheme(
+        const TextTheme(
+          headlineLarge: TextStyle(
+            color: AppColors.ink,
+            fontSize: 28,
+            fontWeight: FontWeight.w800,
+          ),
+          headlineMedium: TextStyle(
+            color: AppColors.ink,
+            fontSize: 22,
+            fontWeight: FontWeight.w800,
+          ),
+          titleLarge: TextStyle(
+            color: AppColors.ink,
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+          ),
+          titleMedium: TextStyle(
+            color: AppColors.ink,
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
+          ),
+          bodyLarge: TextStyle(
+            color: AppColors.text,
+            fontSize: 14,
+            height: 1.45,
+          ),
+          bodyMedium: TextStyle(
+            color: AppColors.muted,
+            fontSize: 13,
+            height: 1.4,
+          ),
+          labelLarge: TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
         ),
-        headlineMedium: TextStyle(
-          color: AppColors.ink,
-          fontSize: 22,
-          fontWeight: FontWeight.w800,
-        ),
-        titleLarge: TextStyle(
-          color: AppColors.ink,
-          fontSize: 18,
-          fontWeight: FontWeight.w700,
-        ),
-        titleMedium: TextStyle(
-          color: AppColors.ink,
-          fontSize: 15,
-          fontWeight: FontWeight.w700,
-        ),
-        bodyLarge: TextStyle(color: AppColors.text, fontSize: 14, height: 1.45),
-        bodyMedium: TextStyle(
-          color: AppColors.muted,
-          fontSize: 13,
-          height: 1.4,
-        ),
-        labelLarge: TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
-      )),
+      ),
       appBarTheme: AppBarTheme(
         backgroundColor: AppColors.page,
         foregroundColor: AppColors.ink,
@@ -178,26 +183,18 @@ abstract final class AppTheme {
   /// สร้าง AppBar แบบ Safa สม่ำเสมอทุกหน้า
   /// [title] - ชื่อหน้า (optional)
   /// [showBackButton] - แสดงปุ่มย้อนกลับ (default: true เมื่อ navigator มี route ก่อนหน้า)
-  /// [showLanguageSwitch] - แสดงปุ่มเปลี่ยนภาษา TH/EN
   static AppBar buildSafaAppBar(
     BuildContext context, {
     String? title,
     bool? showBackButton,
-    bool showLanguageSwitch = false,
     List<Widget> actions = const [],
   }) {
     final canPop = Navigator.of(context).canPop();
     final showBack = showBackButton ?? canPop;
 
     final allActions = <Widget>[
-      if (showLanguageSwitch) ...[
-        const Center(child: LanguageSwitchButton()),
-        const SizedBox(width: 8),
-      ],
       ...actions,
-      if (!showBack && actions.isEmpty && !showLanguageSwitch) ...[
-        const SizedBox(width: 12),
-      ],
+      if (!showBack && actions.isEmpty) ...[const SizedBox(width: 12)],
     ];
 
     return AppBar(
@@ -213,8 +210,11 @@ abstract final class AppTheme {
       leading: showBack
           ? IconButton(
               tooltip: 'ย้อนกลับ',
-              icon: const Icon(Icons.arrow_back_ios_new,
-                  color: AppColors.ink, size: 20),
+              icon: const Icon(
+                Icons.arrow_back_ios_new,
+                color: AppColors.ink,
+                size: 20,
+              ),
               onPressed: () => Navigator.of(context).pop(),
             )
           : null,
@@ -254,34 +254,20 @@ abstract final class AppTheme {
         headlineMedium: baseTextTheme.headlineMedium?.copyWith(
           fontSize: 22 * scale,
         ),
-        titleLarge: baseTextTheme.titleLarge?.copyWith(
-          fontSize: 18 * scale,
-        ),
-        titleMedium: baseTextTheme.titleMedium?.copyWith(
-          fontSize: 15 * scale,
-        ),
-        bodyLarge: baseTextTheme.bodyLarge?.copyWith(
-          fontSize: 14 * scale,
-        ),
-        bodyMedium: baseTextTheme.bodyMedium?.copyWith(
-          fontSize: 13 * scale,
-        ),
-        labelLarge: baseTextTheme.labelLarge?.copyWith(
-          fontSize: 13 * scale,
-        ),
+        titleLarge: baseTextTheme.titleLarge?.copyWith(fontSize: 18 * scale),
+        titleMedium: baseTextTheme.titleMedium?.copyWith(fontSize: 15 * scale),
+        bodyLarge: baseTextTheme.bodyLarge?.copyWith(fontSize: 14 * scale),
+        bodyMedium: baseTextTheme.bodyMedium?.copyWith(fontSize: 13 * scale),
+        labelLarge: baseTextTheme.labelLarge?.copyWith(fontSize: 13 * scale),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: base.elevatedButtonTheme.style?.copyWith(
-          minimumSize: WidgetStatePropertyAll(
-            Size.fromHeight(48 * scale),
-          ),
+          minimumSize: WidgetStatePropertyAll(Size.fromHeight(48 * scale)),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: base.outlinedButtonTheme.style?.copyWith(
-          minimumSize: WidgetStatePropertyAll(
-            Size.fromHeight(48 * scale),
-          ),
+          minimumSize: WidgetStatePropertyAll(Size.fromHeight(48 * scale)),
         ),
       ),
     );

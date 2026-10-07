@@ -46,10 +46,7 @@ class MyApp extends StatelessWidget {
           title: 'Safa',
           theme: AppTheme.light,
           locale: currentLocale,
-          supportedLocales: const [
-            Locale('th', 'TH'),
-            Locale('en', 'US'),
-          ],
+          supportedLocales: const [Locale('th', 'TH')],
           localizationsDelegates: const [
             AppLocalizations.delegate,
             GlobalMaterialLocalizations.delegate,
