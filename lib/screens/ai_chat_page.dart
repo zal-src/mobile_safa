@@ -1,7 +1,11 @@
 import 'dart:convert';
+import 'dart:io';
 
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../models/user.dart';
 import '../services/contract_service.dart';
@@ -16,6 +20,13 @@ import 'create_contract_page.dart';
 // ============================================================
 // Data Model & Actions
 // ============================================================
+
+class WebReference {
+  final String title;
+  final String url;
+
+  const WebReference({required this.title, required this.url});
+}
 
 class AppChatAction {
   final String type; // 'CREATE_CONTRACT', 'VIEW_CONTRACTS', 'BLANK_PDF'
@@ -176,6 +187,48 @@ class _AiChatPageState extends State<AiChatPage> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('ไม่สามารถเปิด PDF เปล่าได้: $e')),
+      );
+    }
+  }
+
+  Future<void> _launchExternalUrl(String rawUrl) async {
+    var url = rawUrl.trim();
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      url = 'https://$url';
+    }
+
+    final uri = Uri.tryParse(url);
+    if (uri == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('ลิงก์ไม่ถูกต้อง: $rawUrl')),
+        );
+      }
+      return;
+    }
+
+    bool launched = false;
+    try {
+      if (await canLaunchUrl(uri)) {
+        launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      }
+    } catch (e) {
+      debugPrint('launchUrl error: $e');
+    }
+
+    // Fallback on Windows if platform plugins are restricted
+    if (!launched && !kIsWeb && Platform.isWindows) {
+      try {
+        final result = await Process.run('cmd', ['/c', 'start', '', url]);
+        if (result.exitCode == 0) {
+          launched = true;
+        }
+      } catch (_) {}
+    }
+
+    if (!launched && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('ไม่สามารถเปิดลิงก์ภายนอกได้: $url')),
       );
     }
   }
@@ -1033,6 +1086,8 @@ class _AiChatPageState extends State<AiChatPage> {
                     message.text,
                     isUser: isUser,
                   ),
+                  if (!isUser && !isStreaming)
+                    _buildReferencesSection(message.text),
                   if (message.action != null && !isStreaming)
                     _buildActionCard(message.action!),
                   if (!isUser && !isStreaming) ...[
@@ -1081,9 +1136,193 @@ class _AiChatPageState extends State<AiChatPage> {
     );
   }
 
+  List<WebReference> _extractReferences(String text) {
+    final list = <WebReference>[];
+    final seen = <String>{};
+
+    // 1. [Title](URL)
+    final mdRegex = RegExp(
+      r'\[(.*?)\]\(((?:https?:\/\/|www\.)[^\s\)]+)\)',
+      caseSensitive: false,
+    );
+    for (final m in mdRegex.allMatches(text)) {
+      final title = m.group(1)?.trim() ?? '';
+      var url = m.group(2)?.trim() ?? '';
+      if (url.isNotEmpty && !seen.contains(url)) {
+        seen.add(url);
+        list.add(WebReference(title: title.isNotEmpty ? title : url, url: url));
+      }
+    }
+
+    // 2. Standalone URL
+    final urlRegex = RegExp(
+      r'((?:https?:\/\/)[^\s\)\],]+)',
+      caseSensitive: false,
+    );
+    for (final m in urlRegex.allMatches(text)) {
+      final url = m.group(1)?.trim() ?? '';
+      if (url.isNotEmpty && !seen.contains(url)) {
+        seen.add(url);
+        final domain = Uri.tryParse(url)?.host ?? url;
+        list.add(WebReference(title: domain, url: url));
+      }
+    }
+
+    return list;
+  }
+
+  Widget _buildReferencesSection(String text) {
+    final refs = _extractReferences(text);
+    if (refs.isEmpty) return const SizedBox.shrink();
+
+    return Container(
+      margin: const EdgeInsets.only(top: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF0FDF4),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFBBF7D0)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.link_rounded, size: 15, color: AppColors.primary),
+              SizedBox(width: 6),
+              Text(
+                'แหล่งอ้างอิงทางการ (แตะเพื่อเปิดเว็บไซต์จริง):',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primaryDark,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: refs.map((ref) {
+              return InkWell(
+                onTap: () => _launchExternalUrl(ref.url),
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: const Color(0xFF86EFAC)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.02),
+                        blurRadius: 4,
+                        offset: const Offset(0, 1),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.public_rounded, size: 13, color: AppColors.primary),
+                      const SizedBox(width: 5),
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 220),
+                        child: Text(
+                          ref.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.ink,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      const Icon(Icons.open_in_new_rounded, size: 11, color: AppColors.primary),
+                    ],
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildFormattedText(String text, {required bool isUser}) {
     final color = isUser ? Colors.white : AppColors.ink;
-    final spans = <TextSpan>[];
+    final linkColor = isUser ? const Color(0xFFE0F2FE) : const Color(0xFF0284C7);
+
+    // Match Markdown link: [Title](URL) or standalone (https?://...)
+    final linkRegex = RegExp(
+      r'\[(.*?)\]\(((?:https?:\/\/|www\.)[^\s\)]+)\)|((?:https?:\/\/)[^\s\)\],]+)',
+      caseSensitive: false,
+    );
+
+    final spans = <InlineSpan>[];
+    int lastEnd = 0;
+
+    for (final match in linkRegex.allMatches(text)) {
+      if (match.start > lastEnd) {
+        final preceding = text.substring(lastEnd, match.start);
+        spans.addAll(_parseBoldSpans(preceding, color));
+      }
+
+      if (match.group(1) != null && match.group(2) != null) {
+        final title = match.group(1)!;
+        final url = match.group(2)!;
+        spans.add(
+          TextSpan(
+            text: '$title ↗',
+            style: TextStyle(
+              color: linkColor,
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              decoration: TextDecoration.underline,
+              decorationColor: linkColor,
+            ),
+            recognizer: TapGestureRecognizer()
+              ..onTap = () => _launchExternalUrl(url),
+          ),
+        );
+      } else if (match.group(3) != null) {
+        final url = match.group(3)!;
+        spans.add(
+          TextSpan(
+            text: '$url ↗',
+            style: TextStyle(
+              color: linkColor,
+              fontSize: 13.5,
+              fontWeight: FontWeight.w500,
+              decoration: TextDecoration.underline,
+              decorationColor: linkColor,
+            ),
+            recognizer: TapGestureRecognizer()
+              ..onTap = () => _launchExternalUrl(url),
+          ),
+        );
+      }
+
+      lastEnd = match.end;
+    }
+
+    if (lastEnd < text.length) {
+      final remaining = text.substring(lastEnd);
+      spans.addAll(_parseBoldSpans(remaining, color));
+    }
+
+    return Text.rich(
+      TextSpan(children: spans),
+      style: const TextStyle(height: 1.5),
+    );
+  }
+
+  List<InlineSpan> _parseBoldSpans(String text, Color defaultColor) {
+    final spans = <InlineSpan>[];
     final boldRegex = RegExp(r'\*\*(.*?)\*\*');
     int lastEnd = 0;
 
@@ -1091,13 +1330,13 @@ class _AiChatPageState extends State<AiChatPage> {
       if (match.start > lastEnd) {
         spans.add(TextSpan(
           text: text.substring(lastEnd, match.start),
-          style: TextStyle(color: color, fontSize: 14, height: 1.5),
+          style: TextStyle(color: defaultColor, fontSize: 14, height: 1.5),
         ));
       }
       spans.add(TextSpan(
         text: match.group(1),
         style: TextStyle(
-          color: color,
+          color: defaultColor,
           fontSize: 14,
           fontWeight: FontWeight.bold,
           height: 1.5,
@@ -1109,11 +1348,11 @@ class _AiChatPageState extends State<AiChatPage> {
     if (lastEnd < text.length) {
       spans.add(TextSpan(
         text: text.substring(lastEnd),
-        style: TextStyle(color: color, fontSize: 14, height: 1.5),
+        style: TextStyle(color: defaultColor, fontSize: 14, height: 1.5),
       ));
     }
 
-    return RichText(text: TextSpan(children: spans));
+    return spans;
   }
 
   Widget _buildTypingIndicator() {

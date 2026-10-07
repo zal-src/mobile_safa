@@ -5,7 +5,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'database/database_helper.dart';
 import 'localization/app_localizations.dart';
 import 'localization/language_controller.dart';
-import 'screens/login_page.dart';
+import 'screens/splash_screen.dart';
 import 'services/contract_service.dart';
 import 'theme/app_theme.dart';
 
@@ -62,7 +62,7 @@ class MyApp extends StatelessWidget {
               child: child ?? const SizedBox.shrink(),
             );
           },
-          home: const LoginPage(),
+          home: const SplashScreen(),
         );
       },
     );
